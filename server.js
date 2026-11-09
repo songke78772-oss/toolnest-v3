@@ -78,7 +78,7 @@ app.set('views', path.join(__dirname, 'views'));
 // Home
 app.get('/', (req, res) => {
   const tools = db.prepare('SELECT * FROM tools ORDER BY id DESC').all();
-  res.render('index', { tools, user: req.session.userId ? true : false });
+  res.render('index', { tools, loggedIn: !!req.session.userId });
 });
 
 // Auth
