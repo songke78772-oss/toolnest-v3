@@ -6,10 +6,17 @@ const path = require('path');
 const Database = require('better-sqlite3');
 const crypto = require('crypto');
 const { Resend } = require('resend');
+const { Creem } = require('creem');
 
 const app = express();
 const db = new Database(path.join(__dirname, 'data', 'app.db'));
 const resend = new Resend(process.env.RESEND_API_KEY);
+
+// Creem client
+const creem = new Creem({
+  apiKey: process.env.CREEM_API_KEY,
+  server: 'test'
+});
 
 // Database init
 db.exec(`
@@ -20,6 +27,8 @@ db.exec(`
     verified INTEGER DEFAULT 0,
     verification_code TEXT,
     session_token TEXT,
+    subscription_status TEXT DEFAULT 'inactive',
+    creem_customer_id TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
   );
 
@@ -77,6 +86,15 @@ function requireValidSession(req, res, next) {
   next();
 }
 
+function requireSubscription(req, res, next) {
+  if (!req.session.userId) return res.redirect('/login');
+  const user = db.prepare('SELECT subscription_status FROM users WHERE id = ?').get(req.session.userId);
+  if (!user || user.subscription_status !== 'active') {
+    return res.redirect('/subscribe');
+  }
+  next();
+}
+
 function requireAdmin(req, res, next) {
   if (!req.session.isAdmin) return res.redirect('/admin');
   next();
@@ -114,7 +132,7 @@ app.get('/', (req, res) => {
 });
 
 // ========== Tool Page (iframe) ==========
-app.get('/tool/:id', requireValidSession, (req, res) => {
+app.get('/tool/:id', requireValidSession, requireSubscription, (req, res) => {
   const tool = db.prepare('SELECT * FROM tools WHERE id = ? AND is_active = 1').get(req.params.id);
   if (!tool) return res.redirect('/');
   db.prepare('UPDATE tools SET usage_count = usage_count + 1 WHERE id = ?').run(tool.id);
@@ -193,7 +211,7 @@ app.get('/logout', (req, res) => {
 
 // ========== Dashboard ==========
 app.get('/dashboard', requireValidSession, (req, res) => {
-  const user = db.prepare('SELECT email FROM users WHERE id = ?').get(req.session.userId);
+  const user = db.prepare('SELECT email, subscription_status FROM users WHERE id = ?').get(req.session.userId);
   const favorites = db.prepare(`
     SELECT t.* FROM tools t
     JOIN favorites f ON t.id = f.tool_id
@@ -223,6 +241,46 @@ app.post('/request-tool', (req, res) => {
   res.redirect('/?requested=1');
 });
 
+// ========== Subscribe ==========
+app.get('/subscribe', requireValidSession, (req, res) => {
+  res.render('subscribe');
+});
+
+app.post('/create-checkout', requireValidSession, async (req, res) => {
+  try {
+    const user = db.prepare('SELECT * FROM users WHERE id = ?').get(req.session.userId);
+    const checkout = await creem.checkouts.create({
+      productId: process.env.CREEM_PRODUCT_ID,
+      successUrl: `http://${req.headers.host}/success`,
+      customer: { email: user.email },
+      metadata: { userId: String(user.id) }
+    });
+    res.redirect(checkout.checkoutUrl);
+  } catch (e) {
+    console.error(e);
+    res.status(500).send('Checkout failed');
+  }
+});
+
+app.get('/success', requireValidSession, (req, res) => {
+  res.render('success');
+});
+
+app.post('/webhook/creem', express.raw({ type: 'application/json' }), (req, res) => {
+  try {
+    const event = JSON.parse(req.body.toString());
+    if (event.type === 'subscription.active' || event.type === 'subscription.paid') {
+      const userId = event.metadata?.userId;
+      if (userId) {
+        db.prepare('UPDATE users SET subscription_status = ? WHERE id = ?').run('active', userId);
+      }
+    }
+  } catch (e) {
+    console.error(e);
+  }
+  res.json({ received: true });
+});
+
 // ========== Admin ==========
 app.get('/admin', (req, res) => {
   if (req.session.isAdmin) return res.redirect('/admin/dashboard');
@@ -239,7 +297,7 @@ app.post('/admin/login', (req, res) => {
 
 app.get('/admin/dashboard', requireAdmin, (req, res) => {
   const tools = db.prepare('SELECT * FROM tools ORDER BY id DESC').all();
-  const users = db.prepare('SELECT id, email, verified, created_at FROM users ORDER BY id DESC').all();
+  const users = db.prepare('SELECT id, email, verified, subscription_status, created_at FROM users ORDER BY id DESC').all();
   const requests = db.prepare('SELECT * FROM tool_requests ORDER BY id DESC LIMIT 50').all();
   res.render('admin', { tools, users, requests });
 });
