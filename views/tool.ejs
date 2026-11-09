@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= tool.name %> - ToolNest</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 h-screen flex flex-col">
+<nav class="bg-white border-b px-4 py-3 flex items-center justify-between">
+  <div class="flex items-center gap-4">
+    <a href="/" class="text-xl font-bold text-blue-600">ToolNest</a>
+    <span class="text-gray-400">/</span>
+    <span class="text-gray-700"><%= tool.icon %> <%= tool.name %></span>
+  </div>
+  <a href="/" class="text-sm text-gray-600">← Back</a>
+</nav>
+<iframe src="<%= tool.url %>" class="flex-1 w-full border-0" allow="fullscreen"></iframe>
+</body>
+</html>
