@@ -94,6 +94,11 @@ app.post('/login', (req, res) => {
   res.redirect('/dashboard');
 });
 
+//tools
+app.get('/compress', (req, res) => {
+  res.render('compress');
+});
+
 app.get('/register', (req, res) => res.render('register', { error: null }));
 app.post('/register', (req, res) => {
   const { email, password } = req.body;
