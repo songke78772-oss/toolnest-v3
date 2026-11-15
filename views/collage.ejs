@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Collage Maker - ToolNest</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50">
+  <nav class="bg-white border-b">
+    <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
+      <a href="/" class="text-xl font-bold text-gray-800">ToolNest</a>
+      <a href="/" class="text-sm text-gray-600 hover:text-gray-800">← Back to Tools</a>
+    </div>
+  </nav>
+  <div class="max-w-4xl mx-auto p-6">
+    <div class="mb-6">
+      <h1 class="text-3xl font-bold text-gray-800">Collage Maker</h1>
+      <p class="text-gray-600 mt-2">Create a simple 2x2 collage. All processing happens in your browser.</p>
+    </div>
+    <div class="bg-white rounded-xl shadow-sm border p-6 space-y-4">
+      <div class="grid grid-cols-2 gap-4">
+        <input type="file" id="f1" accept="image/*" class="border rounded p-2">
+        <input type="file" id="f2" accept="image/*" class="border rounded p-2">
+        <input type="file" id="f3" accept="image/*" class="border rounded p-2">
+        <input type="file" id="f4" accept="image/*" class="border rounded p-2">
+      </div>
+      <button id="makeBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-lg">Make Collage</button>
+      <img id="result" class="max-w-full rounded border mt-4 hidden">
+      <button id="downloadBtn" class="hidden bg-green-600 hover:bg-green-700 text-white px-6 py-2.5 rounded-lg">Download</button>
+    </div>
+  </div>
+  <script>
+    const makeBtn = document.getElementById('makeBtn');
+    const result = document.getElementById('result');
+    const downloadBtn = document.getElementById('downloadBtn');
+    let resultBlob;
+
+    makeBtn.addEventListener('click', async () => {
+      const files = [document.getElementById('f1'), document.getElementById('f2'), document.getElementById('f3'), document.getElementById('f4')];
+      const imgs = [];
+      for (const f of files) {
+        if (!f.files[0]) return alert('Please select 4 images');
+        const img = await new Promise(res => {
+          const i = new Image();
+          i.onload = () => res(i);
+          i.src = URL.createObjectURL(f.files[0]);
+        });
+        imgs.push(img);
+      }
+      const size = 800;
+      const canvas = document.createElement('canvas');
+      canvas.width = size; canvas.height = size;
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, size, size);
+      const half = size / 2;
+      ctx.drawImage(imgs[0], 0, 0, half, half);
+      ctx.drawImage(imgs[1], half, 0, half, half);
+      ctx.drawImage(imgs[2], 0, half, half, half);
+      ctx.drawImage(imgs[3], half, half, half, half);
+      canvas.toBlob(blob => {
+        resultBlob = blob;
+        result.src = URL.createObjectURL(blob);
+        result.classList.remove('hidden');
+        downloadBtn.classList.remove('hidden');
+      }, 'image/jpeg', 0.9);
+    });
+
+    downloadBtn.addEventListener('click', () => {
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(resultBlob);
+      a.download = 'collage.jpg';
+      a.click();
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Combine Images - ToolNest</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50">
+  <nav class="bg-white border-b">
+    <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
+      <a href="/" class="text-xl font-bold text-gray-800">ToolNest</a>
+      <a href="/" class="text-sm text-gray-600 hover:text-gray-800">← Back to Tools</a>
+    </div>
+  </nav>
+  <div class="max-w-4xl mx-auto p-6">
+    <div class="mb-6">
+      <h1 class="text-3xl font-bold text-gray-800">Combine Images</h1>
+      <p class="text-gray-600 mt-2">Combine two images side by side or stacked. All processing happens in your browser.</p>
+    </div>
+    <div class="bg-white rounded-xl shadow-sm border p-6 space-y-4">
+      <div>
+        <label class="block text-sm mb-1">Image 1</label>
+        <input type="file" id="file1" accept="image/*" class="border rounded p-2 w-full">
+      </div>
+      <div>
+        <label class="block text-sm mb-1">Image 2</label>
+        <input type="file" id="file2" accept="image/*" class="border rounded p-2 w-full">
+      </div>
+      <div>
+        <label class="text-sm">Direction:</label>
+        <select id="direction" class="border rounded px-3 py-2 ml-2">
+          <option value="horizontal">Horizontal (side by side)</option>
+          <option value="vertical">Vertical (stacked)</option>
+        </select>
+      </div>
+      <button id="combineBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-lg">Combine</button>
+      <img id="result" class="max-w-full rounded border mt-4 hidden">
+      <button id="downloadBtn" class="hidden bg-green-600 hover:bg-green-700 text-white px-6 py-2.5 rounded-lg">Download</button>
+    </div>
+  </div>
+  <script>
+    const file1 = document.getElementById('file1');
+    const file2 = document.getElementById('file2');
+    const direction = document.getElementById('direction');
+    const combineBtn = document.getElementById('combineBtn');
+    const result = document.getElementById('result');
+    const downloadBtn = document.getElementById('downloadBtn');
+    let resultBlob;
+
+    combineBtn.addEventListener('click', () => {
+      if (!file1.files[0] || !file2.files[0]) return alert('Please select two images');
+      const img1 = new Image();
+      const img2 = new Image();
+      let loaded = 0;
+      const check = () => {
+        if (++loaded < 2) return;
+        const horizontal = direction.value === 'horizontal';
+        const canvas = document.createElement('canvas');
+        if (horizontal) {
+          canvas.width = img1.width + img2.width;
+          canvas.height = Math.max(img1.height, img2.height);
+        } else {
+          canvas.width = Math.max(img1.width, img2.width);
+          canvas.height = img1.height + img2.height;
+        }
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        if (horizontal) {
+          ctx.drawImage(img1, 0, 0);
+          ctx.drawImage(img2, img1.width, 0);
+        } else {
+          ctx.drawImage(img1, 0, 0);
+          ctx.drawImage(img2, 0, img1.height);
+        }
+        canvas.toBlob(blob => {
+          resultBlob = blob;
+          result.src = URL.createObjectURL(blob);
+          result.classList.remove('hidden');
+          downloadBtn.classList.remove('hidden');
+        }, 'image/jpeg', 0.92);
+      };
+      img1.onload = check;
+      img2.onload = check;
+      img1.src = URL.createObjectURL(file1.files[0]);
+      img2.src = URL.createObjectURL(file2.files[0]);
+    });
+
+    downloadBtn.addEventListener('click', () => {
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(resultBlob);
+      a.download = 'combined.jpg';
+      a.click();
+    });
+  </script>
+</body>
+</html>

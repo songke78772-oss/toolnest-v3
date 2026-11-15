@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>View Image Metadata - ToolNest</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50">
+  <nav class="bg-white border-b">
+    <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
+      <a href="/" class="text-xl font-bold text-gray-800">ToolNest</a>
+      <a href="/" class="text-sm text-gray-600 hover:text-gray-800">← Back to Tools</a>
+    </div>
+  </nav>
+  <div class="max-w-4xl mx-auto p-6">
+    <div class="mb-6">
+      <h1 class="text-3xl font-bold text-gray-800">View Image Metadata</h1>
+      <p class="text-gray-600 mt-2">View basic image information. All processing happens in your browser.</p>
+    </div>
+    <div class="bg-white rounded-xl shadow-sm border p-6">
+      <div id="uploadArea" class="border-2 border-dashed border-gray-300 rounded-lg p-10 text-center cursor-pointer hover:border-blue-500 transition">
+        <div class="text-5xl mb-3">ℹ️</div>
+        <p class="text-lg font-medium text-gray-700">Click or drag image here</p>
+        <input type="file" id="fileInput" accept="image/*" class="hidden">
+      </div>
+      <div id="info" class="hidden mt-6 bg-gray-50 rounded-lg p-4 text-sm space-y-1">
+        <p><strong>File Name:</strong> <span id="fileName"></span></p>
+        <p><strong>File Size:</strong> <span id="fileSize"></span></p>
+        <p><strong>Type:</strong> <span id="fileType"></span></p>
+        <p><strong>Width:</strong> <span id="imgWidth"></span> px</p>
+        <p><strong>Height:</strong> <span id="imgHeight"></span> px</p>
+      </div>
+      <img id="preview" class="max-w-full rounded border mt-4 hidden">
+      <button id="resetBtn" class="hidden mt-4 text-gray-600 px-4 py-2">Reset</button>
+    </div>
+  </div>
+  <script>
+    const uploadArea = document.getElementById('uploadArea');
+    const fileInput = document.getElementById('fileInput');
+    const info = document.getElementById('info');
+    const preview = document.getElementById('preview');
+    const resetBtn = document.getElementById('resetBtn');
+
+    uploadArea.addEventListener('click', () => fileInput.click());
+    uploadArea.addEventListener('drop', e => { e.preventDefault(); if (e.dataTransfer.files[0]) show(e.dataTransfer.files[0]); });
+    uploadArea.addEventListener('dragover', e => e.preventDefault());
+    fileInput.addEventListener('change', e => { if (e.target.files[0]) show(e.target.files[0]); });
+
+    function show(file) {
+      document.getElementById('fileName').textContent = file.name;
+      document.getElementById('fileSize').textContent = (file.size / 1024).toFixed(1) + ' KB';
+      document.getElementById('fileType').textContent = file.type || 'unknown';
+      const img = new Image();
+      img.onload = () => {
+        document.getElementById('imgWidth').textContent = img.width;
+        document.getElementById('imgHeight').textContent = img.height;
+        preview.src = img.src;
+        preview.classList.remove('hidden');
+        info.classList.remove('hidden');
+        resetBtn.classList.remove('hidden');
+      };
+      img.src = URL.createObjectURL(file);
+    }
+
+    resetBtn.addEventListener('click', () => {
+      info.classList.add('hidden');
+      preview.classList.add('hidden');
+      resetBtn.classList.add('hidden');
+      fileInput.value = '';
+    });
+  </script>
+</body>
+</html>
