@@ -163,6 +163,11 @@ app.get('/cron-explainer', (req, res) => res.render('cron-explainer'));
 app.get('/css-minifier', (req, res) => res.render('css-minifier'));
 app.get('/find-replace', (req, res) => res.render('find-replace'));
 app.get('/og-preview', (req, res) => res.render('og-preview'));
+app.get('/tools/pdf-toolkit', requireLogin, (req, res) => {
+  res.render('pdf-toolkit');
+});
+
+
 
 // ========== PDF Tools ==========
 const pdfUpload = multer({ dest: '/tmp/pdf-uploads/' });
