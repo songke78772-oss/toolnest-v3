@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Meta Tags Generator - ToolNest</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50">
+  <nav class="bg-white border-b">
+    <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
+      <a href="/" class="text-xl font-bold text-gray-800">ToolNest</a>
+      <a href="/" class="text-sm text-gray-600 hover:text-gray-800">← Back to Tools</a>
+    </div>
+  </nav>
+  <div class="max-w-4xl mx-auto p-6">
+    <h1 class="text-3xl font-bold text-gray-800 mb-2">Meta Tags Generator</h1>
+    <p class="text-gray-600 mb-6">Generate SEO meta tags.</p>
+    <div class="bg-white rounded-xl shadow-sm border p-6 space-y-4">
+      <input id="title" class="w-full border rounded-lg px-4 py-2" placeholder="Page Title">
+      <textarea id="desc" rows="3" class="w-full border rounded-lg p-4" placeholder="Description"></textarea>
+      <input id="url" class="w-full border rounded-lg px-4 py-2" placeholder="https://example.com">
+      <input id="image" class="w-full border rounded-lg px-4 py-2" placeholder="Image URL (optional)">
+      <button id="generate" class="bg-blue-600 text-white px-6 py-2 rounded-lg">Generate</button>
+      <textarea id="output" rows="12" class="w-full border rounded-lg p-4 font-mono text-sm bg-gray-50" readonly></textarea>
+      <button id="copy" class="bg-gray-600 text-white px-4 py-2 rounded-lg">Copy</button>
+    </div>
+  </div>
+  <script>
+    document.getElementById('generate').onclick = () => {
+      const title = document.getElementById('title').value;
+      const desc = document.getElementById('desc').value;
+      const url = document.getElementById('url').value;
+      const image = document.getElementById('image').value;
+      let tags = `<title>${title}</title>\n`;
+      tags += `<meta name="description" content="${desc}">\n`;
+      tags += `<meta property="og:title" content="${title}">\n`;
+      tags += `<meta property="og:description" content="${desc}">\n`;
+      if (url) tags += `<meta property="og:url" content="${url}">\n`;
+      if (image) tags += `<meta property="og:image" content="${image}">\n`;
+      tags += `<meta name="twitter:card" content="summary_large_image">`;
+      document.getElementById('output').value = tags;
+    };
+    document.getElementById('copy').onclick = () => {
+      navigator.clipboard.writeText(document.getElementById('output').value);
+      alert('Copied!');
+    };
+  </script>
+</body>
+</html>

@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Open Graph Preview - ToolNest</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50">
+  <nav class="bg-white border-b">
+    <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
+      <a href="/" class="text-xl font-bold text-gray-800">ToolNest</a>
+      <a href="/" class="text-sm text-gray-600 hover:text-gray-800">← Back to Tools</a>
+    </div>
+  </nav>
+  <div class="max-w-4xl mx-auto p-6">
+    <h1 class="text-3xl font-bold text-gray-800 mb-2">Open Graph Preview</h1>
+    <p class="text-gray-600 mb-6">Preview how your link looks when shared.</p>
+    <div class="bg-white rounded-xl shadow-sm border p-6 space-y-4">
+      <input id="title" class="w-full border rounded-lg px-4 py-2" placeholder="Title">
+      <textarea id="desc" rows="2" class="w-full border rounded-lg p-4" placeholder="Description"></textarea>
+      <input id="url" class="w-full border rounded-lg px-4 py-2" placeholder="https://example.com">
+      <input id="image" class="w-full border rounded-lg px-4 py-2" placeholder="Image URL">
+      <div class="border rounded-lg overflow-hidden max-w-md">
+        <img id="previewImg" class="w-full h-40 object-cover bg-gray-200" alt="">
+        <div class="p-3">
+          <div id="previewTitle" class="font-semibold truncate">Title</div>
+          <div id="previewDesc" class="text-sm text-gray-600 line-clamp-2">Description</div>
+          <div id="previewUrl" class="text-xs text-gray-400 mt-1">example.com</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>
+    function update() {
+      document.getElementById('previewTitle').textContent = document.getElementById('title').value || 'Title';
+      document.getElementById('previewDesc').textContent = document.getElementById('desc').value || 'Description';
+      document.getElementById('previewUrl').textContent = document.getElementById('url').value || 'example.com';
+      const img = document.getElementById('image').value;
+      document.getElementById('previewImg').src = img || '';
+    }
+    document.querySelectorAll('input, textarea').forEach(el => el.oninput = update);
+    update();
+  </script>
+</body>
+</html>

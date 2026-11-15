@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Emoji Picker - ToolNest</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50">
+  <nav class="bg-white border-b">
+    <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
+      <a href="/" class="text-xl font-bold text-gray-800">ToolNest</a>
+      <a href="/" class="text-sm text-gray-600 hover:text-gray-800">← Back to Tools</a>
+    </div>
+  </nav>
+  <div class="max-w-4xl mx-auto p-6">
+    <h1 class="text-3xl font-bold text-gray-800 mb-2">Emoji Picker</h1>
+    <p class="text-gray-600 mb-6">Click an emoji to copy it.</p>
+    <div class="bg-white rounded-xl shadow-sm border p-6">
+      <input id="search" class="w-full border rounded-lg px-4 py-2 mb-4" placeholder="Search emoji...">
+      <div id="emojis" class="grid grid-cols-8 gap-2 text-2xl"></div>
+      <div id="copied" class="mt-4 text-sm text-green-600 hidden">Copied!</div>
+    </div>
+  </div>
+  <script>
+    const emojis = ['😀','😃','😄','😁','😆','😅','😂','🤣','😊','😇','🙂','🙃','😉','😌','😍','🥰','😘','😗','😙','😚','😋','😛','😝','😜','🤪','🤨','🧐','🤓','😎','🤩','🥳','😏','😒','😞','😔','😟','😕','🙁','☹️','😣','😖','😫','😩','🥺','😢','😭','😤','😠','😡','🤬','🤯','😳','🥵','🥶','😱','😨','😰','😥','😓','🤗','🤔','🤭','🤫','🤥','😶','😐','😑','😬','🙄','😯','😦','😧','😮','😲','🥱','😴','🤤','😪','😵','🤐','🥴','🤢','🤮','🤧','😷','🤒','🤕','🤑','🤠','😈','👿','👹','👺','🤡','💩','👻','💀','☠️','👽','👾','🤖','🎃','😺','😸','😹','😻','😼','😽','🙀','😿','😾'];
+    const container = document.getElementById('emojis');
+    function render(list) {
+      container.innerHTML = list.map(e => `<span class="cursor-pointer hover:bg-gray-100 rounded p-1 text-center" onclick="copy('${e}')">${e}</span>`).join('');
+    }
+    function copy(e) {
+      navigator.clipboard.writeText(e);
+      const msg = document.getElementById('copied');
+      msg.classList.remove('hidden');
+      setTimeout(() => msg.classList.add('hidden'), 1000);
+    }
+    document.getElementById('search').oninput = e => {
+      const q = e.target.value.toLowerCase();
+      render(q ? emojis.filter(x => x.includes(q)) : emojis);
+    };
+    render(emojis);
+  </script>
+</body>
+</html>

@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>QR Code Generator - ToolNest</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+</head>
+<body class="bg-gray-50">
+  <nav class="bg-white border-b">
+    <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
+      <a href="/" class="text-xl font-bold text-gray-800">ToolNest</a>
+      <a href="/" class="text-sm text-gray-600 hover:text-gray-800">← Back to Tools</a>
+    </div>
+  </nav>
+  <div class="max-w-4xl mx-auto p-6">
+    <h1 class="text-3xl font-bold text-gray-800 mb-2">QR Code Generator</h1>
+    <p class="text-gray-600 mb-6">Generate QR codes from text or URLs.</p>
+    <div class="bg-white rounded-xl shadow-sm border p-6 space-y-4">
+      <textarea id="text" rows="4" class="w-full border rounded-lg p-4" placeholder="Enter text or URL..."></textarea>
+      <button id="generate" class="bg-blue-600 text-white px-6 py-2 rounded-lg">Generate</button>
+      <div class="text-center">
+        <canvas id="qr" class="inline-block border rounded"></canvas>
+      </div>
+      <button id="download" class="bg-gray-600 text-white px-4 py-2 rounded-lg">Download PNG</button>
+    </div>
+  </div>
+  <script>
+    document.getElementById('generate').onclick = () => {
+      const text = document.getElementById('text').value;
+      if (!text) return;
+      QRCode.toCanvas(document.getElementById('qr'), text, { width: 256 }, err => { if (err) console.error(err); });
+    };
+    document.getElementById('download').onclick = () => {
+      const canvas = document.getElementById('qr');
+      const a = document.createElement('a');
+      a.href = canvas.toDataURL('image/png');
+      a.download = 'qrcode.png';
+      a.click();
+    };
+  </script>
+</body>
+</html>

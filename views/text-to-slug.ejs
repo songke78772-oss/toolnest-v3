@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Text to Slug - ToolNest</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50">
+  <nav class="bg-white border-b">
+    <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
+      <a href="/" class="text-xl font-bold text-gray-800">ToolNest</a>
+      <a href="/" class="text-sm text-gray-600 hover:text-gray-800">← Back to Tools</a>
+    </div>
+  </nav>
+  <div class="max-w-4xl mx-auto p-6">
+    <h1 class="text-3xl font-bold text-gray-800 mb-2">Text to Slug</h1>
+    <p class="text-gray-600 mb-6">Convert text to URL-friendly slug.</p>
+    <div class="bg-white rounded-xl shadow-sm border p-6 space-y-4">
+      <input id="input" class="w-full border rounded-lg px-4 py-2" placeholder="Enter title or text...">
+      <button id="generate" class="bg-blue-600 text-white px-6 py-2 rounded-lg">Generate Slug</button>
+      <div class="flex gap-2">
+        <input id="output" class="flex-1 border rounded-lg px-4 py-2 font-mono" readonly>
+        <button id="copy" class="bg-gray-600 text-white px-4 py-2 rounded-lg">Copy</button>
+      </div>
+    </div>
+  </div>
+  <script>
+    document.getElementById('generate').onclick = () => {
+      const text = document.getElementById('input').value;
+      const slug = text.toLowerCase()
+        .replace(/[^\w\s-]/g, '')
+        .replace(/\s+/g, '-')
+        .replace(/-+/g, '-')
+        .trim();
+      document.getElementById('output').value = slug;
+    };
+    document.getElementById('copy').onclick = () => {
+      navigator.clipboard.writeText(document.getElementById('output').value);
+      alert('Copied!');
+    };
+  </script>
+</body>
+</html>

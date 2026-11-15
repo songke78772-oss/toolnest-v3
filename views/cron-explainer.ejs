@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cron Explainer - ToolNest</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50">
+  <nav class="bg-white border-b">
+    <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
+      <a href="/" class="text-xl font-bold text-gray-800">ToolNest</a>
+      <a href="/" class="text-sm text-gray-600 hover:text-gray-800">← Back to Tools</a>
+    </div>
+  </nav>
+  <div class="max-w-4xl mx-auto p-6">
+    <h1 class="text-3xl font-bold text-gray-800 mb-2">Cron Explainer</h1>
+    <p class="text-gray-600 mb-6">Explain cron expressions in plain English.</p>
+    <div class="bg-white rounded-xl shadow-sm border p-6 space-y-4">
+      <input id="cron" class="w-full border rounded-lg px-4 py-2 font-mono" placeholder="* * * * *">
+      <button id="explain" class="bg-blue-600 text-white px-6 py-2 rounded-lg">Explain</button>
+      <div id="result" class="bg-gray-50 p-4 rounded-lg text-gray-800"></div>
+    </div>
+  </div>
+  <script>
+    const fields = ['minute', 'hour', 'day of month', 'month', 'day of week'];
+    document.getElementById('explain').onclick = () => {
+      const parts = document.getElementById('cron').value.trim().split(/\s+/);
+      if (parts.length !== 5) {
+        document.getElementById('result').textContent = 'Please enter a valid 5-field cron expression';
+        return;
+      }
+      let explanation = 'Runs ';
+      parts.forEach((p, i) => {
+        if (p === '*') explanation += `every ${fields[i]}, `;
+        else explanation += `at ${fields[i]} ${p}, `;
+      });
+      document.getElementById('result').textContent = explanation.slice(0, -2);
+    };
+  </script>
+</body>
+</html>
