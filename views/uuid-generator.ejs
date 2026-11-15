@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>UUID Generator - ToolNest</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50">
+  <nav class="bg-white border-b">
+    <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
+      <a href="/" class="text-xl font-bold text-gray-800">ToolNest</a>
+      <a href="/" class="text-sm text-gray-600 hover:text-gray-800">← Back to Tools</a>
+    </div>
+  </nav>
+  <div class="max-w-4xl mx-auto p-6">
+    <h1 class="text-3xl font-bold text-gray-800 mb-2">UUID Generator</h1>
+    <p class="text-gray-600 mb-6">Generate UUID v4.</p>
+    <div class="bg-white rounded-xl shadow-sm border p-6 space-y-4">
+      <div class="flex gap-2">
+        <input id="uuid" class="flex-1 border rounded-lg px-4 py-2 font-mono" readonly>
+        <button id="copy" class="bg-gray-600 text-white px-4 py-2 rounded-lg">Copy</button>
+      </div>
+      <button id="generate" class="bg-blue-600 text-white px-6 py-2 rounded-lg">Generate New</button>
+      <div>
+        <label class="text-sm">Count: <input type="number" id="count" value="5" min="1" max="20" class="border rounded px-2 py-1 w-16"></label>
+        <button id="multi" class="ml-2 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm">Generate Multiple</button>
+      </div>
+      <textarea id="multiResult" rows="6" class="w-full border rounded-lg p-3 font-mono text-sm" readonly></textarea>
+    </div>
+  </div>
+  <script>
+    function uuidv4() {
+      return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+        const r = Math.random() * 16 | 0;
+        return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+      });
+    }
+    document.getElementById('generate').onclick = () => document.getElementById('uuid').value = uuidv4();
+    document.getElementById('copy').onclick = () => {
+      navigator.clipboard.writeText(document.getElementById('uuid').value);
+      alert('Copied!');
+    };
+    document.getElementById('multi').onclick = () => {
+      const n = parseInt(document.getElementById('count').value) || 5;
+      const arr = [];
+      for (let i = 0; i < n; i++) arr.push(uuidv4());
+      document.getElementById('multiResult').value = arr.join('\n');
+    };
+    document.getElementById('generate').click();
+  </script>
+</body>
+</html>

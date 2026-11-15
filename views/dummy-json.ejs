@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dummy JSON - ToolNest</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50">
+  <nav class="bg-white border-b">
+    <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
+      <a href="/" class="text-xl font-bold text-gray-800">ToolNest</a>
+      <a href="/" class="text-sm text-gray-600 hover:text-gray-800">← Back to Tools</a>
+    </div>
+  </nav>
+  <div class="max-w-4xl mx-auto p-6">
+    <h1 class="text-3xl font-bold text-gray-800 mb-2">Dummy JSON Generator</h1>
+    <p class="text-gray-600 mb-6">Generate sample JSON data for testing.</p>
+    <div class="bg-white rounded-xl shadow-sm border p-6 space-y-4">
+      <div class="flex gap-4 items-center">
+        <label>Items: <input type="number" id="count" value="5" min="1" max="50" class="border rounded px-2 py-1 w-16"></label>
+        <button id="generate" class="bg-blue-600 text-white px-4 py-2 rounded-lg">Generate</button>
+        <button id="copy" class="bg-gray-600 text-white px-4 py-2 rounded-lg">Copy</button>
+      </div>
+      <textarea id="output" rows="15" class="w-full border rounded-lg p-4 font-mono text-sm bg-gray-50" readonly></textarea>
+    </div>
+  </div>
+  <script>
+    const names = ['Alice','Bob','Charlie','Diana','Eve','Frank','Grace','Henry'];
+    const cities = ['New York','London','Tokyo','Paris','Berlin','Sydney'];
+    document.getElementById('generate').onclick = () => {
+      const n = parseInt(document.getElementById('count').value) || 5;
+      const data = Array.from({length: n}, (_, i) => ({
+        id: i + 1,
+        name: names[Math.floor(Math.random()*names.length)],
+        email: `user${i+1}@example.com`,
+        age: 20 + Math.floor(Math.random()*40),
+        city: cities[Math.floor(Math.random()*cities.length)],
+        active: Math.random() > 0.3
+      }));
+      document.getElementById('output').value = JSON.stringify(data, null, 2);
+    };
+    document.getElementById('copy').onclick = () => {
+      navigator.clipboard.writeText(document.getElementById('output').value);
+      alert('Copied!');
+    };
+  </script>
+</body>
+</html>

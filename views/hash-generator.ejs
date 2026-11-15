@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hash Generator - ToolNest</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50">
+  <nav class="bg-white border-b">
+    <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
+      <a href="/" class="text-xl font-bold text-gray-800">ToolNest</a>
+      <a href="/" class="text-sm text-gray-600 hover:text-gray-800">← Back to Tools</a>
+    </div>
+  </nav>
+  <div class="max-w-4xl mx-auto p-6">
+    <h1 class="text-3xl font-bold text-gray-800 mb-2">Hash Generator</h1>
+    <p class="text-gray-600 mb-6">Generate SHA-256 hash of text.</p>
+    <div class="bg-white rounded-xl shadow-sm border p-6 space-y-4">
+      <textarea id="input" rows="6" class="w-full border rounded-lg p-4" placeholder="Enter text..."></textarea>
+      <button id="hash" class="bg-blue-600 text-white px-6 py-2 rounded-lg">Generate SHA-256</button>
+      <div class="flex gap-2">
+        <input id="result" class="flex-1 border rounded-lg px-4 py-2 font-mono text-sm" readonly>
+        <button id="copy" class="bg-gray-600 text-white px-4 py-2 rounded-lg">Copy</button>
+      </div>
+    </div>
+  </div>
+  <script>
+    async function sha256(str) {
+      const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+      return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+    }
+    document.getElementById('hash').onclick = async () => {
+      const text = document.getElementById('input').value;
+      document.getElementById('result').value = await sha256(text);
+    };
+    document.getElementById('copy').onclick = () => {
+      navigator.clipboard.writeText(document.getElementById('result').value);
+      alert('Copied!');
+    };
+  </script>
+</body>
+</html>

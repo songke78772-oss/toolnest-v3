@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Regex Tester - ToolNest</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50">
+  <nav class="bg-white border-b">
+    <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
+      <a href="/" class="text-xl font-bold text-gray-800">ToolNest</a>
+      <a href="/" class="text-sm text-gray-600 hover:text-gray-800">← Back to Tools</a>
+    </div>
+  </nav>
+  <div class="max-w-4xl mx-auto p-6">
+    <h1 class="text-3xl font-bold text-gray-800 mb-2">Regex Tester</h1>
+    <p class="text-gray-600 mb-6">Test regular expressions in real time.</p>
+    <div class="bg-white rounded-xl shadow-sm border p-6 space-y-4">
+      <input id="pattern" class="w-full border rounded-lg px-4 py-2 font-mono" placeholder="Enter regex pattern...">
+      <textarea id="text" rows="8" class="w-full border rounded-lg p-4" placeholder="Test string..."></textarea>
+      <div id="result" class="bg-gray-50 p-4 rounded-lg min-h-[60px] font-mono text-sm"></div>
+    </div>
+  </div>
+  <script>
+    function test() {
+      const pattern = document.getElementById('pattern').value;
+      const text = document.getElementById('text').value;
+      const result = document.getElementById('result');
+      if (!pattern) return result.textContent = '';
+      try {
+        const re = new RegExp(pattern, 'g');
+        const matches = [...text.matchAll(re)];
+        if (matches.length === 0) result.innerHTML = '<span class="text-gray-500">No matches</span>';
+        else result.innerHTML = matches.map((m, i) => `<div class="mb-1"><span class="text-blue-600">${i+1}.</span> ${m[0]}</div>`).join('');
+      } catch (e) {
+        result.innerHTML = `<span class="text-red-600">Invalid regex: ${e.message}</span>`;
+      }
+    }
+    document.getElementById('pattern').oninput = test;
+    document.getElementById('text').oninput = test;
+  </script>
+</body>
+</html>

@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Timestamp Converter - ToolNest</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50">
+  <nav class="bg-white border-b">
+    <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
+      <a href="/" class="text-xl font-bold text-gray-800">ToolNest</a>
+      <a href="/" class="text-sm text-gray-600 hover:text-gray-800">← Back to Tools</a>
+    </div>
+  </nav>
+  <div class="max-w-4xl mx-auto p-6">
+    <h1 class="text-3xl font-bold text-gray-800 mb-2">Timestamp Converter</h1>
+    <p class="text-gray-600 mb-6">Convert between timestamp and date.</p>
+    <div class="bg-white rounded-xl shadow-sm border p-6 space-y-6">
+      <div>
+        <label class="block text-sm mb-1">Unix Timestamp (seconds)</label>
+        <div class="flex gap-2">
+          <input id="ts" type="number" class="flex-1 border rounded-lg px-4 py-2">
+          <button id="tsToDate" class="bg-blue-600 text-white px-4 py-2 rounded-lg">→ Date</button>
+        </div>
+        <div id="dateResult" class="mt-2 text-sm text-gray-700"></div>
+      </div>
+      <div>
+        <label class="block text-sm mb-1">Date</label>
+        <div class="flex gap-2">
+          <input id="date" type="datetime-local" class="flex-1 border rounded-lg px-4 py-2">
+          <button id="dateToTs" class="bg-blue-600 text-white px-4 py-2 rounded-lg">→ Timestamp</button>
+        </div>
+        <div id="tsResult" class="mt-2 text-sm text-gray-700"></div>
+      </div>
+      <button id="now" class="text-sm text-blue-600">Use Current Time</button>
+    </div>
+  </div>
+  <script>
+    document.getElementById('tsToDate').onclick = () => {
+      const ts = parseInt(document.getElementById('ts').value);
+      if (!ts) return;
+      document.getElementById('dateResult').textContent = new Date(ts * 1000).toLocaleString();
+    };
+    document.getElementById('dateToTs').onclick = () => {
+      const d = document.getElementById('date').value;
+      if (!d) return;
+      document.getElementById('tsResult').textContent = Math.floor(new Date(d).getTime() / 1000);
+    };
+    document.getElementById('now').onclick = () => {
+      const now = new Date();
+      document.getElementById('ts').value = Math.floor(now.getTime() / 1000);
+      document.getElementById('date').value = now.toISOString().slice(0, 16);
+    };
+  </script>
+</body>
+</html>

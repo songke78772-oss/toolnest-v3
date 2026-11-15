@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JWT Decoder - ToolNest</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50">
+  <nav class="bg-white border-b">
+    <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
+      <a href="/" class="text-xl font-bold text-gray-800">ToolNest</a>
+      <a href="/" class="text-sm text-gray-600 hover:text-gray-800">← Back to Tools</a>
+    </div>
+  </nav>
+  <div class="max-w-4xl mx-auto p-6">
+    <h1 class="text-3xl font-bold text-gray-800 mb-2">JWT Decoder</h1>
+    <p class="text-gray-600 mb-6">Decode JWT token (header + payload).</p>
+    <div class="bg-white rounded-xl shadow-sm border p-6 space-y-4">
+      <textarea id="token" rows="4" class="w-full border rounded-lg p-3 font-mono text-sm" placeholder="Paste JWT token..."></textarea>
+      <button id="decode" class="bg-blue-600 text-white px-6 py-2 rounded-lg">Decode</button>
+      <div>
+        <div class="text-sm font-medium mb-1">Header</div>
+        <pre id="header" class="bg-gray-50 p-3 rounded text-sm overflow-auto"></pre>
+      </div>
+      <div>
+        <div class="text-sm font-medium mb-1">Payload</div>
+        <pre id="payload" class="bg-gray-50 p-3 rounded text-sm overflow-auto"></pre>
+      </div>
+    </div>
+  </div>
+  <script>
+    document.getElementById('decode').onclick = () => {
+      const token = document.getElementById('token').value.trim();
+      try {
+        const parts = token.split('.');
+        if (parts.length !== 3) throw new Error('Invalid JWT');
+        const header = JSON.parse(atob(parts[0].replace(/-/g,'+').replace(/_/g,'/')));
+        const payload = JSON.parse(atob(parts[1].replace(/-/g,'+').replace(/_/g,'/')));
+        document.getElementById('header').textContent = JSON.stringify(header, null, 2);
+        document.getElementById('payload').textContent = JSON.stringify(payload, null, 2);
+      } catch (e) {
+        document.getElementById('header').textContent = 'Error: ' + e.message;
+        document.getElementById('payload').textContent = '';
+      }
+    };
+  </script>
+</body>
+</html>

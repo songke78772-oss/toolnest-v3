@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Base Converter - ToolNest</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50">
+  <nav class="bg-white border-b">
+    <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
+      <a href="/" class="text-xl font-bold text-gray-800">ToolNest</a>
+      <a href="/" class="text-sm text-gray-600 hover:text-gray-800">← Back to Tools</a>
+    </div>
+  </nav>
+  <div class="max-w-4xl mx-auto p-6">
+    <h1 class="text-3xl font-bold text-gray-800 mb-2">Number Base Converter</h1>
+    <p class="text-gray-600 mb-6">Convert between binary, decimal, hex and octal.</p>
+    <div class="bg-white rounded-xl shadow-sm border p-6 space-y-4">
+      <div class="grid grid-cols-2 gap-4">
+        <div><label class="text-sm">Binary</label><input id="bin" class="w-full border rounded px-3 py-2 font-mono"></div>
+        <div><label class="text-sm">Decimal</label><input id="dec" class="w-full border rounded px-3 py-2 font-mono"></div>
+        <div><label class="text-sm">Hex</label><input id="hex" class="w-full border rounded px-3 py-2 font-mono"></div>
+        <div><label class="text-sm">Octal</label><input id="oct" class="w-full border rounded px-3 py-2 font-mono"></div>
+      </div>
+    </div>
+  </div>
+  <script>
+    function updateFrom(base) {
+      let val;
+      if (base === 'dec') val = parseInt(document.getElementById('dec').value, 10);
+      if (base === 'bin') val = parseInt(document.getElementById('bin').value, 2);
+      if (base === 'hex') val = parseInt(document.getElementById('hex').value, 16);
+      if (base === 'oct') val = parseInt(document.getElementById('oct').value, 8);
+      if (isNaN(val)) return;
+      document.getElementById('dec').value = val.toString(10);
+      document.getElementById('bin').value = val.toString(2);
+      document.getElementById('hex').value = val.toString(16).toUpperCase();
+      document.getElementById('oct').value = val.toString(8);
+    }
+    document.getElementById('dec').oninput = () => updateFrom('dec');
+    document.getElementById('bin').oninput = () => updateFrom('bin');
+    document.getElementById('hex').oninput = () => updateFrom('hex');
+    document.getElementById('oct').oninput = () => updateFrom('oct');
+  </script>
+</body>
+</html>
