@@ -1,49 +1,93 @@
 <!DOCTYPE html>
-<html lang="zh">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>ToolNest</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ToolNest - Online Tools</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-50">
-  <nav class="bg-white border-b px-6 py-4 flex justify-between items-center">
-    <a href="/" class="text-2xl font-bold text-blue-600">ToolNest</a>
-    <div class="flex items-center gap-4">
-      <% if (loggedIn) { %>
-        <a href="/dashboard" class="text-sm text-gray-600">Dashboard</a>
-        <a href="/logout" class="text-sm text-gray-600">Logout</a>
-      <% } else { %>
-        <a href="/login" class="text-sm text-gray-600">Login</a>
-        <a href="/register" class="bg-blue-600 text-white px-4 py-2 rounded-full text-sm">Register</a>
-      <% } %>
+  <nav class="bg-white border-b">
+    <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
+      <a href="/" class="text-xl font-bold text-gray-800">ToolNest</a>
+      <div class="flex items-center gap-4 text-sm">
+        <a href="/login" class="text-gray-600 hover:text-gray-800">Login</a>
+        <a href="/register" class="bg-blue-600 text-white px-4 py-1.5 rounded-lg hover:bg-blue-700">Sign Up</a>
+      </div>
     </div>
   </nav>
 
-  <div class="max-w-4xl mx-auto px-4 py-12 text-center">
-    <h1 class="text-4xl font-bold mb-4">ToolNest</h1>
-    <p class="text-gray-500 mb-6">Useful online tools. Always available.</p>
-    <form action="/" method="get" class="max-w-xl mx-auto flex gap-2">
-      <input type="text" name="q" value="<%= q %>" placeholder="Search tools..." class="flex-1 border rounded-full px-5 py-3 focus:outline-none focus:border-blue-400">
-      <button type="submit" class="bg-blue-600 text-white px-6 py-3 rounded-full">Search</button>
-    </form>
+  <div class="max-w-6xl mx-auto p-6">
+    <!-- Search -->
+    <div class="mb-6">
+      <input type="text" id="searchInput" placeholder="Search tools..." 
+             class="w-full border border-gray-300 rounded-xl px-4 py-3 text-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+    </div>
+
+    <!-- Category Tabs -->
+    <div class="flex flex-wrap gap-2 mb-8" id="categoryTabs">
+      <button data-category="all" class="category-btn px-4 py-2 rounded-full text-sm font-medium bg-blue-600 text-white">All</button>
+      <button data-category="Image" class="category-btn px-4 py-2 rounded-full text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200">Image</button>
+      <button data-category="Office" class="category-btn px-4 py-2 rounded-full text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200">Office</button>
+      <button data-category="Dev" class="category-btn px-4 py-2 rounded-full text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200">Dev</button>
+      <button data-category="Life" class="category-btn px-4 py-2 rounded-full text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200">Life</button>
+    </div>
+
+    <!-- Tools Grid -->
+    <div id="toolsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+      <% if (tools && tools.length > 0) { %>
+        <% tools.forEach(tool => { %>
+          <a href="<%= tool.url %>" 
+             class="tool-card bg-white rounded-xl border p-5 hover:shadow-md transition block"
+             data-category="<%= tool.category || 'Office' %>"
+             data-name="<%= tool.name.toLowerCase() %>"
+             data-desc="<%= (tool.description || '').toLowerCase() %>">
+            <div class="flex items-start gap-3">
+              <div class="text-3xl"><%= tool.icon || '🔧' %></div>
+              <div>
+                <h3 class="font-semibold text-gray-800"><%= tool.name %></h3>
+                <p class="text-sm text-gray-500 mt-1"><%= tool.description || '' %></p>
+                <span class="inline-block mt-2 text-xs px-2 py-0.5 bg-gray-100 text-gray-600 rounded-full"><%= tool.category || 'Office' %></span>
+              </div>
+            </div>
+          </a>
+        <% }); %>
+      <% } else { %>
+        <p class="col-span-full text-center text-gray-500 py-10">No tools yet.</p>
+      <% } %>
+    </div>
   </div>
 
-  <div class="max-w-7xl mx-auto px-4 py-6">
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-      <% tools.forEach(tool => { %>
-        <div class="bg-white rounded-xl p-5 border">
-          <div class="flex justify-between items-start mb-2">
-            <h3 class="font-semibold"><%= tool.name %></h3>
-            <span class="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full"><%= tool.category || 'Tool' %></span>
-          </div>
-          <p class="text-sm text-gray-500 mb-4"><%= tool.description || '' %></p>
-          <a href="<%= tool.url || '#' %>" class="text-blue-600 text-sm">Open →</a>
-        </div>
-      <% }) %>
-    </div>
-    <% if (tools.length === 0) { %>
-      <p class="text-center text-gray-400 py-12">No tools yet.</p>
-    <% } %>
-  </div>
+  <script>
+    // Category filter
+    document.querySelectorAll('.category-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.category-btn').forEach(b => {
+          b.classList.remove('bg-blue-600', 'text-white');
+          b.classList.add('bg-gray-100', 'text-gray-700');
+        });
+        btn.classList.add('bg-blue-600', 'text-white');
+        btn.classList.remove('bg-gray-100', 'text-gray-700');
+
+        const category = btn.dataset.category;
+        document.querySelectorAll('.tool-card').forEach(card => {
+          if (category === 'all' || card.dataset.category === category) {
+            card.classList.remove('hidden');
+          } else {
+            card.classList.add('hidden');
+          }
+        });
+      });
+    });
+
+    // Search filter
+    document.getElementById('searchInput').addEventListener('input', (e) => {
+      const q = e.target.value.toLowerCase().trim();
+      document.querySelectorAll('.tool-card').forEach(card => {
+        const match = card.dataset.name.includes(q) || card.dataset.desc.includes(q);
+        card.classList.toggle('hidden', !match);
+      });
+    });
+  </script>
 </body>
 </html>
