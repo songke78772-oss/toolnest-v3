@@ -139,6 +139,18 @@ app.get('/chart', (req, res) => {
 app.get('/splitter', (req, res) => {
   res.render('splitter');
 });
+// Office tools routes
+app.get('/word-counter', (req, res) => res.render('word-counter'));
+app.get('/case-converter', (req, res) => res.render('case-converter'));
+app.get('/text-diff', (req, res) => res.render('text-diff'));
+app.get('/json-formatter', (req, res) => res.render('json-formatter'));
+app.get('/base64', (req, res) => res.render('base64'));
+app.get('/password-generator', (req, res) => res.render('password-generator'));
+app.get('/lorem-ipsum', (req, res) => res.render('lorem-ipsum'));
+app.get('/markdown-preview', (req, res) => res.render('markdown-preview'));
+app.get('/csv-to-json', (req, res) => res.render('csv-to-json'));
+app.get('/url-encode', (req, res) => res.render('url-encode'));
+
 
 app.get('/register', (req, res) => res.render('register', { error: null }));
 app.post('/register', (req, res) => {
