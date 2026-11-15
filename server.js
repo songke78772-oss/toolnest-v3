@@ -95,9 +95,19 @@ app.post('/login', (req, res) => {
 });
 
 //tools
+// Pure frontend image tools
 app.get('/compress', (req, res) => {
   res.render('compress');
 });
+app.get('/resize', (req, res) => res.render('resize'));
+app.get('/crop', (req, res) => res.render('crop'));
+app.get('/png-to-jpg', (req, res) => res.render('png-to-jpg'));
+app.get('/jpg-to-png', (req, res) => res.render('jpg-to-png'));
+app.get('/black-white', (req, res) => res.render('black-white'));
+app.get('/flip', (req, res) => res.render('flip'));
+app.get('/round', (req, res) => res.render('round'));
+app.get('/add-border', (req, res) => res.render('add-border'));
+app.get('/pixelate', (req, res) => res.render('pixelate'));
 
 app.get('/register', (req, res) => res.render('register', { error: null }));
 app.post('/register', (req, res) => {
