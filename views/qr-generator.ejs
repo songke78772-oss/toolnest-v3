@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>QR Code Generator - ToolNest</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
 </head>
 <body class="bg-gray-50">
   <nav class="bg-white border-b">
@@ -17,26 +18,53 @@
     <h1 class="text-3xl font-bold text-gray-800 mb-2">QR Code Generator</h1>
     <p class="text-gray-600 mb-6">Generate QR codes from text or URLs.</p>
     <div class="bg-white rounded-xl shadow-sm border p-6 space-y-4">
-      <textarea id="text" rows="4" class="w-full border rounded-lg p-4" placeholder="Enter text or URL..."></textarea>
+      <textarea id="text" rows="4" class="w-full border rounded-lg p-4" placeholder="Enter text or URL...">https://example.com</textarea>
       <button id="generate" class="bg-blue-600 text-white px-6 py-2 rounded-lg">Generate</button>
-      <div class="text-center">
-        <img id="qr" class="inline-block border rounded max-w-xs" alt="QR Code">
-      </div>
-      <a id="download" class="inline-block bg-gray-600 text-white px-4 py-2 rounded-lg" download="qrcode.png">Download PNG</a>
+      <div id="qrcode" class="flex justify-center p-4"></div>
+      <button id="download" class="bg-gray-600 text-white px-4 py-2 rounded-lg">Download PNG</button>
+      <div id="status" class="text-sm text-gray-500"></div>
     </div>
   </div>
   <script>
-    document.getElementById('generate').onclick = () => {
+    document.getElementById('generate').onclick = function() {
       const text = document.getElementById('text').value.trim();
+      const status = document.getElementById('status');
+      const container = document.getElementById('qrcode');
+
       if (!text) {
-        alert('Please enter text or URL');
+        status.textContent = 'Please enter some text';
         return;
       }
-      // Use Google Charts API (reliable, no extra library)
-      const url = 'https://chart.googleapis.com/chart?chs=256x256&cht=qr&chl=' + encodeURIComponent(text);
-      const img = document.getElementById('qr');
-      img.src = url;
-      document.getElementById('download').href = url;
+
+      status.textContent = 'Generating...';
+      container.innerHTML = '';
+
+      try {
+        new QRCode(container, {
+          text: text,
+          width: 256,
+          height: 256,
+          colorDark: "#000000",
+          colorLight: "#ffffff",
+          correctLevel: QRCode.CorrectLevel.H
+        });
+        status.textContent = 'Done';
+      } catch (e) {
+        status.textContent = 'Error: ' + e.message;
+        console.error(e);
+      }
+    };
+
+    document.getElementById('download').onclick = function() {
+      const canvas = document.querySelector('#qrcode canvas');
+      if (!canvas) {
+        alert('Generate a QR code first');
+        return;
+      }
+      const a = document.createElement('a');
+      a.href = canvas.toDataURL('image/png');
+      a.download = 'qrcode.png';
+      a.click();
     };
   </script>
 </body>
