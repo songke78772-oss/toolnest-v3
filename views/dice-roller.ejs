@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dice Roller - ToolNest</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50">
+  <nav class="bg-white border-b">
+    <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
+      <a href="/" class="text-xl font-bold text-gray-800">ToolNest</a>
+      <a href="/" class="text-sm text-gray-600 hover:text-gray-800">← Back to Tools</a>
+    </div>
+  </nav>
+  <div class="max-w-4xl mx-auto p-6">
+    <h1 class="text-3xl font-bold text-gray-800 mb-2">Dice Roller</h1>
+    <p class="text-gray-600 mb-6">Roll dice.</p>
+    <div class="bg-white rounded-xl shadow-sm border p-6 space-y-4">
+      <div class="flex gap-4">
+        <label>Sides: <select id="sides" class="border rounded px-3 py-1"><option>6</option><option>4</option><option>8</option><option>10</option><option>12</option><option>20</option></select></label>
+        <label>Count: <input type="number" id="count" value="1" min="1" max="10" class="border rounded px-3 py-1 w-16"></label>
+      </div>
+      <button id="roll" class="bg-blue-600 text-white px-6 py-2 rounded-lg">Roll</button>
+      <div id="result" class="text-4xl font-bold text-center py-4">🎲</div>
+      <div id="total" class="text-center text-gray-600"></div>
+    </div>
+  </div>
+  <script>
+    document.getElementById('roll').onclick = () => {
+      const sides = parseInt(document.getElementById('sides').value);
+      const count = parseInt(document.getElementById('count').value) || 1;
+      const rolls = [];
+      for (let i = 0; i < count; i++) rolls.push(Math.floor(Math.random() * sides) + 1);
+      document.getElementById('result').textContent = rolls.join(' + ');
+      document.getElementById('total').textContent = 'Total: ' + rolls.reduce((a,b) => a+b, 0);
+    };
+  </script>
+</body>
+</html>

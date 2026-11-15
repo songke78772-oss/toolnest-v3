@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Countdown Timer - ToolNest</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50">
+  <nav class="bg-white border-b">
+    <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
+      <a href="/" class="text-xl font-bold text-gray-800">ToolNest</a>
+      <a href="/" class="text-sm text-gray-600 hover:text-gray-800">← Back to Tools</a>
+    </div>
+  </nav>
+  <div class="max-w-4xl mx-auto p-6">
+    <h1 class="text-3xl font-bold text-gray-800 mb-2">Countdown Timer</h1>
+    <p class="text-gray-600 mb-6">Set a countdown to a future date.</p>
+    <div class="bg-white rounded-xl shadow-sm border p-6 space-y-4">
+      <input type="datetime-local" id="target" class="border rounded-lg px-4 py-2">
+      <button id="start" class="bg-blue-600 text-white px-6 py-2 rounded-lg">Start</button>
+      <div id="display" class="text-4xl font-mono font-bold text-center py-8">00:00:00</div>
+    </div>
+  </div>
+  <script>
+    let timer;
+    document.getElementById('start').onclick = () => {
+      clearInterval(timer);
+      const target = new Date(document.getElementById('target').value);
+      if (isNaN(target)) return;
+      timer = setInterval(() => {
+        const diff = target - new Date();
+        if (diff <= 0) {
+          clearInterval(timer);
+          document.getElementById('display').textContent = 'Time\'s up!';
+          return;
+        }
+        const d = Math.floor(diff / 86400000);
+        const h = Math.floor((diff % 86400000) / 3600000);
+        const m = Math.floor((diff % 3600000) / 60000);
+        const s = Math.floor((diff % 60000) / 1000);
+        document.getElementById('display').textContent = 
+          (d > 0 ? d + 'd ' : '') + 
+          String(h).padStart(2,'0') + ':' + 
+          String(m).padStart(2,'0') + ':' + 
+          String(s).padStart(2,'0');
+      }, 1000);
+    };
+  </script>
+</body>
+</html>

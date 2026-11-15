@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Age Calculator - ToolNest</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50">
+  <nav class="bg-white border-b">
+    <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
+      <a href="/" class="text-xl font-bold text-gray-800">ToolNest</a>
+      <a href="/" class="text-sm text-gray-600 hover:text-gray-800">← Back to Tools</a>
+    </div>
+  </nav>
+  <div class="max-w-4xl mx-auto p-6">
+    <h1 class="text-3xl font-bold text-gray-800 mb-2">Age Calculator</h1>
+    <p class="text-gray-600 mb-6">Calculate your exact age.</p>
+    <div class="bg-white rounded-xl shadow-sm border p-6 space-y-4">
+      <div>
+        <label class="block text-sm mb-1">Birth Date</label>
+        <input type="date" id="birth" class="border rounded-lg px-4 py-2">
+      </div>
+      <button id="calc" class="bg-blue-600 text-white px-6 py-2 rounded-lg">Calculate</button>
+      <div id="result" class="text-lg font-medium text-gray-800"></div>
+    </div>
+  </div>
+  <script>
+    document.getElementById('calc').onclick = () => {
+      const birth = new Date(document.getElementById('birth').value);
+      if (!birth || isNaN(birth)) return;
+      const now = new Date();
+      let years = now.getFullYear() - birth.getFullYear();
+      let months = now.getMonth() - birth.getMonth();
+      let days = now.getDate() - birth.getDate();
+      if (days < 0) { months--; days += new Date(now.getFullYear(), now.getMonth(), 0).getDate(); }
+      if (months < 0) { years--; months += 12; }
+      document.getElementById('result').textContent = `${years} years, ${months} months, ${days} days`;
+    };
+  </script>
+</body>
+</html>

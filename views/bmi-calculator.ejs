@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BMI Calculator - ToolNest</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50">
+  <nav class="bg-white border-b">
+    <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
+      <a href="/" class="text-xl font-bold text-gray-800">ToolNest</a>
+      <a href="/" class="text-sm text-gray-600 hover:text-gray-800">← Back to Tools</a>
+    </div>
+  </nav>
+  <div class="max-w-4xl mx-auto p-6">
+    <h1 class="text-3xl font-bold text-gray-800 mb-2">BMI Calculator</h1>
+    <p class="text-gray-600 mb-6">Calculate your Body Mass Index.</p>
+    <div class="bg-white rounded-xl shadow-sm border p-6 space-y-4">
+      <div class="grid grid-cols-2 gap-4">
+        <div><label class="text-sm">Height (cm)</label><input type="number" id="height" class="w-full border rounded-lg px-4 py-2"></div>
+        <div><label class="text-sm">Weight (kg)</label><input type="number" id="weight" class="w-full border rounded-lg px-4 py-2"></div>
+      </div>
+      <button id="calc" class="bg-blue-600 text-white px-6 py-2 rounded-lg">Calculate</button>
+      <div id="result" class="text-lg"></div>
+    </div>
+  </div>
+  <script>
+    document.getElementById('calc').onclick = () => {
+      const h = parseFloat(document.getElementById('height').value) / 100;
+      const w = parseFloat(document.getElementById('weight').value);
+      if (!h || !w) return;
+      const bmi = (w / (h * h)).toFixed(1);
+      let status = 'Normal';
+      if (bmi < 18.5) status = 'Underweight';
+      else if (bmi < 25) status = 'Normal';
+      else if (bmi < 30) status = 'Overweight';
+      else status = 'Obese';
+      document.getElementById('result').innerHTML = `BMI: <strong>${bmi}</strong> (${status})`;
+    };
+  </script>
+</body>
+</html>

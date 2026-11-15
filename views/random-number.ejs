@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Random Number - ToolNest</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50">
+  <nav class="bg-white border-b">
+    <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
+      <a href="/" class="text-xl font-bold text-gray-800">ToolNest</a>
+      <a href="/" class="text-sm text-gray-600 hover:text-gray-800">← Back to Tools</a>
+    </div>
+  </nav>
+  <div class="max-w-4xl mx-auto p-6">
+    <h1 class="text-3xl font-bold text-gray-800 mb-2">Random Number Generator</h1>
+    <p class="text-gray-600 mb-6">Generate random numbers within a range.</p>
+    <div class="bg-white rounded-xl shadow-sm border p-6 space-y-4">
+      <div class="grid grid-cols-2 gap-4">
+        <div><label class="text-sm">Min</label><input type="number" id="min" value="1" class="w-full border rounded-lg px-4 py-2"></div>
+        <div><label class="text-sm">Max</label><input type="number" id="max" value="100" class="w-full border rounded-lg px-4 py-2"></div>
+      </div>
+      <button id="generate" class="bg-blue-600 text-white px-6 py-2 rounded-lg">Generate</button>
+      <div id="result" class="text-5xl font-bold text-center py-6">?</div>
+    </div>
+  </div>
+  <script>
+    document.getElementById('generate').onclick = () => {
+      const min = parseInt(document.getElementById('min').value) || 0;
+      const max = parseInt(document.getElementById('max').value) || 100;
+      document.getElementById('result').textContent = Math.floor(Math.random() * (max - min + 1)) + min;
+    };
+  </script>
+</body>
+</html>

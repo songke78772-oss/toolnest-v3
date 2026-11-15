@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Unit Converter - ToolNest</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50">
+  <nav class="bg-white border-b">
+    <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
+      <a href="/" class="text-xl font-bold text-gray-800">ToolNest</a>
+      <a href="/" class="text-sm text-gray-600 hover:text-gray-800">← Back to Tools</a>
+    </div>
+  </nav>
+  <div class="max-w-4xl mx-auto p-6">
+    <h1 class="text-3xl font-bold text-gray-800 mb-2">Unit Converter</h1>
+    <p class="text-gray-600 mb-6">Convert length, weight and temperature.</p>
+    <div class="bg-white rounded-xl shadow-sm border p-6 space-y-4">
+      <select id="type" class="border rounded-lg px-4 py-2">
+        <option value="length">Length</option>
+        <option value="weight">Weight</option>
+        <option value="temp">Temperature</option>
+      </select>
+      <div class="flex gap-4 items-center">
+        <input type="number" id="value" class="border rounded-lg px-4 py-2 w-32" placeholder="Value">
+        <select id="from" class="border rounded-lg px-3 py-2"></select>
+        <span>→</span>
+        <select id="to" class="border rounded-lg px-3 py-2"></select>
+      </div>
+      <div id="result" class="text-2xl font-bold"></div>
+    </div>
+  </div>
+  <script>
+    const units = {
+      length: { m:1, km:1000, cm:0.01, mm:0.001, inch:0.0254, ft:0.3048, mile:1609.34 },
+      weight: { kg:1, g:0.001, lb:0.453592, oz:0.0283495 },
+      temp: { C:'C', F:'F', K:'K' }
+    };
+    function updateSelects() {
+      const type = document.getElementById('type').value;
+      const opts = Object.keys(units[type]).map(u => `<option>${u}</option>`).join('');
+      document.getElementById('from').innerHTML = opts;
+      document.getElementById('to').innerHTML = opts;
+    }
+    function convert() {
+      const type = document.getElementById('type').value;
+      const val = parseFloat(document.getElementById('value').value);
+      const from = document.getElementById('from').value;
+      const to = document.getElementById('to').value;
+      if (isNaN(val)) return;
+      let result;
+      if (type === 'temp') {
+        let c = val;
+        if (from === 'F') c = (val - 32) * 5/9;
+        if (from === 'K') c = val - 273.15;
+        if (to === 'C') result = c;
+        if (to === 'F') result = c * 9/5 + 32;
+        if (to === 'K') result = c + 273.15;
+      } else {
+        result = val * units[type][from] / units[type][to];
+      }
+      document.getElementById('result').textContent = result.toFixed(4) + ' ' + to;
+    }
+    document.getElementById('type').onchange = updateSelects;
+    document.getElementById('value').oninput = convert;
+    document.getElementById('from').onchange = convert;
+    document.getElementById('to').onchange = convert;
+    updateSelects();
+  </script>
+</body>
+</html>

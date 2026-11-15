@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Coin Flip - ToolNest</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50">
+  <nav class="bg-white border-b">
+    <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
+      <a href="/" class="text-xl font-bold text-gray-800">ToolNest</a>
+      <a href="/" class="text-sm text-gray-600 hover:text-gray-800">← Back to Tools</a>
+    </div>
+  </nav>
+  <div class="max-w-4xl mx-auto p-6">
+    <h1 class="text-3xl font-bold text-gray-800 mb-2">Coin Flip</h1>
+    <p class="text-gray-600 mb-6">Flip a coin.</p>
+    <div class="bg-white rounded-xl shadow-sm border p-6 text-center space-y-6">
+      <div id="result" class="text-6xl">🪙</div>
+      <button id="flip" class="bg-blue-600 text-white px-8 py-3 rounded-lg text-lg">Flip Coin</button>
+    </div>
+  </div>
+  <script>
+    document.getElementById('flip').onclick = () => {
+      const result = Math.random() > 0.5 ? 'Heads' : 'Tails';
+      document.getElementById('result').textContent = result === 'Heads' ? '🪙 Heads' : '🪙 Tails';
+    };
+  </script>
+</body>
+</html>

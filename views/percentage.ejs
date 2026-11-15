@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Percentage Calculator - ToolNest</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50">
+  <nav class="bg-white border-b">
+    <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
+      <a href="/" class="text-xl font-bold text-gray-800">ToolNest</a>
+      <a href="/" class="text-sm text-gray-600 hover:text-gray-800">← Back to Tools</a>
+    </div>
+  </nav>
+  <div class="max-w-4xl mx-auto p-6">
+    <h1 class="text-3xl font-bold text-gray-800 mb-2">Percentage Calculator</h1>
+    <p class="text-gray-600 mb-6">Calculate percentages easily.</p>
+    <div class="bg-white rounded-xl shadow-sm border p-6 space-y-4">
+      <div class="flex items-center gap-2">
+        <input type="number" id="a" class="border rounded px-3 py-2 w-24"> % of
+        <input type="number" id="b" class="border rounded px-3 py-2 w-24"> =
+        <span id="r1" class="font-bold text-lg"></span>
+      </div>
+      <div class="flex items-center gap-2">
+        <input type="number" id="c" class="border rounded px-3 py-2 w-24"> is what % of
+        <input type="number" id="d" class="border rounded px-3 py-2 w-24"> =
+        <span id="r2" class="font-bold text-lg"></span>
+      </div>
+    </div>
+  </div>
+  <script>
+    function calc() {
+      const a = parseFloat(document.getElementById('a').value);
+      const b = parseFloat(document.getElementById('b').value);
+      if (!isNaN(a) && !isNaN(b)) document.getElementById('r1').textContent = (a/100*b).toFixed(2);
+      const c = parseFloat(document.getElementById('c').value);
+      const d = parseFloat(document.getElementById('d').value);
+      if (!isNaN(c) && !isNaN(d) && d !== 0) document.getElementById('r2').textContent = (c/d*100).toFixed(2) + '%';
+    }
+    document.querySelectorAll('input').forEach(i => i.oninput = calc);
+  </script>
+</body>
+</html>
