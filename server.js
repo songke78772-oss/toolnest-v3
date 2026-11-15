@@ -171,7 +171,16 @@ app.get('/dice-roller', (req, res) => res.render('dice-roller'));
 app.get('/unit-converter', (req, res) => res.render('unit-converter'));
 app.get('/percentage', (req, res) => res.render('percentage'));
 app.get('/days-between', (req, res) => res.render('days-between'));
-
+// Extra high-usage tools
+app.get('/qr-generator', (req, res) => res.render('qr-generator'));
+app.get('/remove-duplicates', (req, res) => res.render('remove-duplicates'));
+app.get('/text-to-slug', (req, res) => res.render('text-to-slug'));
+app.get('/meta-tags', (req, res) => res.render('meta-tags'));
+app.get('/emoji-picker', (req, res) => res.render('emoji-picker'));
+app.get('/cron-explainer', (req, res) => res.render('cron-explainer'));
+app.get('/css-minifier', (req, res) => res.render('css-minifier'));
+app.get('/find-replace', (req, res) => res.render('find-replace'));
+app.get('/og-preview', (req, res) => res.render('og-preview'));
 
 
 
