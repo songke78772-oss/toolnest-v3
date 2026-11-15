@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Word Counter - ToolNest</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50">
+  <nav class="bg-white border-b">
+    <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
+      <a href="/" class="text-xl font-bold text-gray-800">ToolNest</a>
+      <a href="/" class="text-sm text-gray-600 hover:text-gray-800">← Back to Tools</a>
+    </div>
+  </nav>
+  <div class="max-w-4xl mx-auto p-6">
+    <h1 class="text-3xl font-bold text-gray-800 mb-2">Word Counter</h1>
+    <p class="text-gray-600 mb-6">Count words, characters, sentences and paragraphs.</p>
+    <div class="bg-white rounded-xl shadow-sm border p-6">
+      <textarea id="text" rows="12" class="w-full border rounded-lg p-4 font-mono text-sm" placeholder="Paste or type your text here..."></textarea>
+      <div class="mt-4 grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+        <div class="bg-gray-50 rounded-lg p-4"><div class="text-2xl font-bold" id="words">0</div><div class="text-sm text-gray-500">Words</div></div>
+        <div class="bg-gray-50 rounded-lg p-4"><div class="text-2xl font-bold" id="chars">0</div><div class="text-sm text-gray-500">Characters</div></div>
+        <div class="bg-gray-50 rounded-lg p-4"><div class="text-2xl font-bold" id="sentences">0</div><div class="text-sm text-gray-500">Sentences</div></div>
+        <div class="bg-gray-50 rounded-lg p-4"><div class="text-2xl font-bold" id="paras">0</div><div class="text-sm text-gray-500">Paragraphs</div></div>
+      </div>
+    </div>
+  </div>
+  <script>
+    const text = document.getElementById('text');
+    text.addEventListener('input', () => {
+      const v = text.value;
+      document.getElementById('words').textContent = v.trim() ? v.trim().split(/\s+/).length : 0;
+      document.getElementById('chars').textContent = v.length;
+      document.getElementById('sentences').textContent = v.split(/[.!?]+/).filter(s => s.trim()).length;
+      document.getElementById('paras').textContent = v.split(/\n\s*\n/).filter(p => p.trim()).length;
+    });
+  </script>
+</body>
+</html>

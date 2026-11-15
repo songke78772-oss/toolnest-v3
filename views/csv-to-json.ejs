@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CSV to JSON - ToolNest</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50">
+  <nav class="bg-white border-b">
+    <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
+      <a href="/" class="text-xl font-bold text-gray-800">ToolNest</a>
+      <a href="/" class="text-sm text-gray-600 hover:text-gray-800">← Back to Tools</a>
+    </div>
+  </nav>
+  <div class="max-w-4xl mx-auto p-6">
+    <h1 class="text-3xl font-bold text-gray-800 mb-2">CSV to JSON</h1>
+    <p class="text-gray-600 mb-6">Convert CSV text to JSON.</p>
+    <div class="bg-white rounded-xl shadow-sm border p-6 space-y-4">
+      <textarea id="input" rows="8" class="w-full border rounded-lg p-4 font-mono text-sm" placeholder="name,age&#10;Alice,30&#10;Bob,25"></textarea>
+      <button id="convert" class="bg-blue-600 text-white px-6 py-2 rounded-lg">Convert</button>
+      <textarea id="output" rows="10" class="w-full border rounded-lg p-4 font-mono text-sm bg-gray-50" readonly></textarea>
+    </div>
+  </div>
+  <script>
+    document.getElementById('convert').onclick = () => {
+      const lines = document.getElementById('input').value.trim().split('\n');
+      if (lines.length < 2) return;
+      const headers = lines[0].split(',').map(h => h.trim());
+      const result = lines.slice(1).map(line => {
+        const values = line.split(',').map(v => v.trim());
+        const obj = {};
+        headers.forEach((h, i) => obj[h] = values[i] || '');
+        return obj;
+      });
+      document.getElementById('output').value = JSON.stringify(result, null, 2);
+    };
+  </script>
+</body>
+</html>

@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Markdown Preview - ToolNest</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+</head>
+<body class="bg-gray-50">
+  <nav class="bg-white border-b">
+    <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
+      <a href="/" class="text-xl font-bold text-gray-800">ToolNest</a>
+      <a href="/" class="text-sm text-gray-600 hover:text-gray-800">← Back to Tools</a>
+    </div>
+  </nav>
+  <div class="max-w-6xl mx-auto p-6">
+    <h1 class="text-3xl font-bold text-gray-800 mb-2">Markdown Preview</h1>
+    <p class="text-gray-600 mb-6">Write Markdown and see the preview instantly.</p>
+    <div class="grid md:grid-cols-2 gap-4">
+      <textarea id="input" rows="20" class="border rounded-lg p-4 font-mono text-sm" placeholder="# Hello&#10;**bold** text"></textarea>
+      <div id="preview" class="border rounded-lg p-4 bg-white prose max-w-none"></div>
+    </div>
+  </div>
+  <script>
+    const input = document.getElementById('input');
+    const preview = document.getElementById('preview');
+    function update() {
+      preview.innerHTML = marked.parse(input.value);
+    }
+    input.addEventListener('input', update);
+    update();
+  </script>
+</body>
+</html>

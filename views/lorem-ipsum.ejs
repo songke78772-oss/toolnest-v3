@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lorem Ipsum - ToolNest</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50">
+  <nav class="bg-white border-b">
+    <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
+      <a href="/" class="text-xl font-bold text-gray-800">ToolNest</a>
+      <a href="/" class="text-sm text-gray-600 hover:text-gray-800">← Back to Tools</a>
+    </div>
+  </nav>
+  <div class="max-w-4xl mx-auto p-6">
+    <h1 class="text-3xl font-bold text-gray-800 mb-2">Lorem Ipsum Generator</h1>
+    <p class="text-gray-600 mb-6">Generate placeholder text.</p>
+    <div class="bg-white rounded-xl shadow-sm border p-6 space-y-4">
+      <div class="flex gap-4">
+        <label>Paragraphs: <input type="number" id="paras" value="3" min="1" max="20" class="border rounded px-2 py-1 w-20"></label>
+        <button id="generate" class="bg-blue-600 text-white px-4 py-2 rounded-lg">Generate</button>
+        <button id="copy" class="bg-gray-600 text-white px-4 py-2 rounded-lg">Copy</button>
+      </div>
+      <textarea id="output" rows="12" class="w-full border rounded-lg p-4 bg-gray-50" readonly></textarea>
+    </div>
+  </div>
+  <script>
+    const words = 'lorem ipsum dolor sit amet consectetur adipiscing elit sed do eiusmod tempor incididunt ut labore et dolore magna aliqua'.split(' ');
+    document.getElementById('generate').onclick = () => {
+      const n = parseInt(document.getElementById('paras').value) || 3;
+      let text = '';
+      for (let i = 0; i < n; i++) {
+        let p = '';
+        const len = 20 + Math.floor(Math.random() * 30);
+        for (let j = 0; j < len; j++) p += words[Math.floor(Math.random() * words.length)] + ' ';
+        text += p.trim().charAt(0).toUpperCase() + p.trim().slice(1) + '.\n\n';
+      }
+      document.getElementById('output').value = text.trim();
+    };
+    document.getElementById('copy').onclick = () => {
+      navigator.clipboard.writeText(document.getElementById('output').value);
+      alert('Copied!');
+    };
+  </script>
+</body>
+</html>

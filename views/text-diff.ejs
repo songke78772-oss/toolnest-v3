@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Text Diff - ToolNest</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50">
+  <nav class="bg-white border-b">
+    <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
+      <a href="/" class="text-xl font-bold text-gray-800">ToolNest</a>
+      <a href="/" class="text-sm text-gray-600 hover:text-gray-800">← Back to Tools</a>
+    </div>
+  </nav>
+  <div class="max-w-4xl mx-auto p-6">
+    <h1 class="text-3xl font-bold text-gray-800 mb-2">Text Diff</h1>
+    <p class="text-gray-600 mb-6">Compare two texts and see the differences.</p>
+    <div class="bg-white rounded-xl shadow-sm border p-6 space-y-4">
+      <div class="grid md:grid-cols-2 gap-4">
+        <textarea id="text1" rows="10" class="border rounded-lg p-3" placeholder="Original text..."></textarea>
+        <textarea id="text2" rows="10" class="border rounded-lg p-3" placeholder="Changed text..."></textarea>
+      </div>
+      <button id="compare" class="bg-blue-600 text-white px-6 py-2 rounded-lg">Compare</button>
+      <div id="result" class="font-mono text-sm whitespace-pre-wrap bg-gray-50 p-4 rounded-lg min-h-[100px]"></div>
+    </div>
+  </div>
+  <script>
+    document.getElementById('compare').onclick = () => {
+      const a = document.getElementById('text1').value.split('\n');
+      const b = document.getElementById('text2').value.split('\n');
+      let html = '';
+      const max = Math.max(a.length, b.length);
+      for (let i = 0; i < max; i++) {
+        const lineA = a[i] || '';
+        const lineB = b[i] || '';
+        if (lineA === lineB) html += lineA + '\n';
+        else {
+          if (lineA) html += `<span class="bg-red-100 text-red-800">- ${lineA}</span>\n`;
+          if (lineB) html += `<span class="bg-green-100 text-green-800">+ ${lineB}</span>\n`;
+        }
+      }
+      document.getElementById('result').innerHTML = html || 'No differences';
+    };
+  </script>
+</body>
+</html>
