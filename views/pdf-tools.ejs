@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PDF Tools - ToolNest</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50">
+  <nav class="bg-white border-b">
+    <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
+      <a href="/" class="text-xl font-bold text-gray-800">ToolNest</a>
+      <a href="/" class="text-sm text-gray-600 hover:text-gray-800">← Back to Tools</a>
+    </div>
+  </nav>
+
+  <div class="max-w-4xl mx-auto p-6">
+    <h1 class="text-3xl font-bold text-gray-800 mb-2">PDF Tools</h1>
+    <p class="text-gray-600 mb-6">Compress, merge, or split PDF files.</p>
+
+    <!-- Tabs -->
+    <div class="flex gap-2 mb-6">
+      <button onclick="showTab('compress')" id="tab-compress" class="tab-btn px-4 py-2 rounded-lg bg-blue-600 text-white">Compress</button>
+      <button onclick="showTab('merge')" id="tab-merge" class="tab-btn px-4 py-2 rounded-lg bg-gray-200">Merge</button>
+      <button onclick="showTab('split')" id="tab-split" class="tab-btn px-4 py-2 rounded-lg bg-gray-200">Split</button>
+    </div>
+
+    <!-- Compress -->
+    <div id="panel-compress" class="panel bg-white rounded-xl shadow-sm border p-6 space-y-4">
+      <h2 class="text-xl font-semibold">Compress PDF</h2>
+      <input type="file" id="compressFile" accept=".pdf" class="block w-full text-sm">
+      <select id="compressLevel" class="border rounded-lg px-3 py-2">
+        <option value="screen">Maximum Compression</option>
+        <option value="ebook">Balanced</option>
+        <option value="printer">High Quality</option>
+      </select>
+      <button onclick="doCompress()" class="bg-blue-600 text-white px-6 py-2 rounded-lg">Compress</button>
+      <div id="compressStatus" class="text-sm text-gray-500"></div>
+    </div>
+
+    <!-- Merge -->
+    <div id="panel-merge" class="panel hidden bg-white rounded-xl shadow-sm border p-6 space-y-4">
+      <h2 class="text-xl font-semibold">Merge PDFs</h2>
+      <input type="file" id="mergeFiles" accept=".pdf" multiple class="block w-full text-sm">
+      <p class="text-sm text-gray-500">Select multiple PDF files to merge.</p>
+      <button onclick="doMerge()" class="bg-blue-600 text-white px-6 py-2 rounded-lg">Merge</button>
+      <div id="mergeStatus" class="text-sm text-gray-500"></div>
+    </div>
+
+    <!-- Split -->
+    <div id="panel-split" class="panel hidden bg-white rounded-xl shadow-sm border p-6 space-y-4">
+      <h2 class="text-xl font-semibold">Split PDF</h2>
+      <input type="file" id="splitFile" accept=".pdf" class="block w-full text-sm">
+      <div class="flex gap-4 items-center">
+        <label>From page: <input type="number" id="fromPage" min="1" value="1" class="border rounded px-2 py-1 w-20"></label>
+        <label>To page: <input type="number" id="toPage" min="1" value="1" class="border rounded px-2 py-1 w-20"></label>
+      </div>
+      <button onclick="doSplit()" class="bg-blue-600 text-white px-6 py-2 rounded-lg">Split</button>
+      <div id="splitStatus" class="text-sm text-gray-500"></div>
+    </div>
+  </div>
+
+  <script>
+    function showTab(tab) {
+      document.querySelectorAll('.panel').forEach(p => p.classList.add('hidden'));
+      document.querySelectorAll('.tab-btn').forEach(b => {
+        b.classList.remove('bg-blue-600', 'text-white');
+        b.classList.add('bg-gray-200');
+      });
+      document.getElementById('panel-' + tab).classList.remove('hidden');
+      document.getElementById('tab-' + tab).classList.add('bg-blue-600', 'text-white');
+      document.getElementById('tab-' + tab).classList.remove('bg-gray-200');
+    }
+
+    async function doCompress() {
+      const file = document.getElementById('compressFile').files[0];
+      const level = document.getElementById('compressLevel').value;
+      const status = document.getElementById('compressStatus');
+      if (!file) { status.textContent = 'Please select a PDF'; return; }
+
+      status.textContent = 'Uploading and compressing...';
+      const form = new FormData();
+      form.append('file', file);
+      form.append('level', level);
+
+      try {
+        const res = await fetch('/api/pdf/compress', { method: 'POST', body: form });
+        if (!res.ok) throw new Error(await res.text());
+        const blob = await res.blob();
+        downloadBlob(blob, 'compressed.pdf');
+        status.textContent = 'Done! Download started.';
+      } catch (e) {
+        status.textContent = 'Error: ' + e.message;
+      }
+    }
+
+    async function doMerge() {
+      const files = document.getElementById('mergeFiles').files;
+      const status = document.getElementById('mergeStatus');
+      if (files.length < 2) { status.textContent = 'Select at least 2 PDFs'; return; }
+
+      status.textContent = 'Merging...';
+      const form = new FormData();
+      for (let f of files) form.append('files', f);
+
+      try {
+        const res = await fetch('/api/pdf/merge', { method: 'POST', body: form });
+        if (!res.ok) throw new Error(await res.text());
+        const blob = await res.blob();
+        downloadBlob(blob, 'merged.pdf');
+        status.textContent = 'Done! Download started.';
+      } catch (e) {
+        status.textContent = 'Error: ' + e.message;
+      }
+    }
+
+    async function doSplit() {
+      const file = document.getElementById('splitFile').files[0];
+      const from = document.getElementById('fromPage').value;
+      const to = document.getElementById('toPage').value;
+      const status = document.getElementById('splitStatus');
+      if (!file) { status.textContent = 'Please select a PDF'; return; }
+
+      status.textContent = 'Splitting...';
+      const form = new FormData();
+      form.append('file', file);
+      form.append('from', from);
+      form.append('to', to);
+
+      try {
+        const res = await fetch('/api/pdf/split', { method: 'POST', body: form });
+        if (!res.ok) throw new Error(await res.text());
+        const blob = await res.blob();
+        downloadBlob(blob, 'split.pdf');
+        status.textContent = 'Done! Download started.';
+      } catch (e) {
+        status.textContent = 'Error: ' + e.message;
+      }
+    }
+
+    function downloadBlob(blob, filename) {
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = filename;
+      a.click();
+    }
+  </script>
+</body>
+</html>
