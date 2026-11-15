@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Crop Image - ToolNest</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50">
+  <nav class="bg-white border-b">
+    <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
+      <a href="/" class="text-xl font-bold text-gray-800">ToolNest</a>
+      <a href="/" class="text-sm text-gray-600 hover:text-gray-800">← Back to Tools</a>
+    </div>
+  </nav>
+  <div class="max-w-4xl mx-auto p-6">
+    <div class="mb-6">
+      <h1 class="text-3xl font-bold text-gray-800">Crop Image</h1>
+      <p class="text-gray-600 mt-2">Crop image by dragging a selection. All processing happens in your browser.</p>
+    </div>
+    <div class="bg-white rounded-xl shadow-sm border p-6">
+      <div id="uploadArea" class="border-2 border-dashed border-gray-300 rounded-lg p-10 text-center cursor-pointer hover:border-blue-500 transition">
+        <div class="text-5xl mb-3">✂️</div>
+        <p class="text-lg font-medium text-gray-700">Click or drag image here</p>
+        <input type="file" id="fileInput" accept="image/*" class="hidden">
+      </div>
+      <div id="controls" class="hidden mt-6">
+        <canvas id="canvas" class="max-w-full border cursor-crosshair"></canvas>
+        <div class="flex gap-3 mt-4">
+          <button id="cropBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-lg font-medium">Crop Selected Area</button>
+          <button id="downloadBtn" class="hidden bg-green-600 hover:bg-green-700 text-white px-6 py-2.5 rounded-lg font-medium">Download</button>
+          <button id="resetBtn" class="text-gray-600 px-4 py-2.5">Reset</button>
+        </div>
+        <img id="result" class="mt-4 max-w-full rounded border hidden">
+      </div>
+    </div>
+  </div>
+  <script>
+    let canvas, ctx, img, isDrawing = false, startX, startY, endX, endY, originalFile, croppedBlob;
+    const uploadArea = document.getElementById('uploadArea');
+    const fileInput = document.getElementById('fileInput');
+    const controls = document.getElementById('controls');
+    canvas = document.getElementById('canvas');
+    ctx = canvas.getContext('2d');
+    const cropBtn = document.getElementById('cropBtn');
+    const downloadBtn = document.getElementById('downloadBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const result = document.getElementById('result');
+
+    uploadArea.addEventListener('click', () => fileInput.click());
+    fileInput.addEventListener('change', e => { if (e.target.files[0]) loadImage(e.target.files[0]); });
+    uploadArea.addEventListener('drop', e => { e.preventDefault(); if (e.dataTransfer.files[0]) loadImage(e.dataTransfer.files[0]); });
+    uploadArea.addEventListener('dragover', e => e.preventDefault());
+
+    function loadImage(file) {
+      originalFile = file;
+      const url = URL.createObjectURL(file);
+      img = new Image();
+      img.onload = () => {
+        const maxW = 800;
+        const scale = Math.min(1, maxW / img.width);
+        canvas.width = img.width * scale;
+        canvas.height = img.height * scale;
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        controls.classList.remove('hidden');
+      };
+      img.src = url;
+    }
+
+    canvas.addEventListener('mousedown', e => { isDrawing = true; startX = e.offsetX; startY = e.offsetY; });
+    canvas.addEventListener('mousemove', e => {
+      if (!isDrawing) return;
+      endX = e.offsetX; endY = e.offsetY;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      ctx.strokeStyle = 'red'; ctx.lineWidth = 2;
+      ctx.strokeRect(startX, startY, endX - startX, endY - startY);
+    });
+    canvas.addEventListener('mouseup', () => isDrawing = false);
+
+    cropBtn.addEventListener('click', () => {
+      if (!img) return;
+      const scale = img.width / canvas.width;
+      const x = Math.min(startX, endX) * scale;
+      const y = Math.min(startY, endY) * scale;
+      const w = Math.abs(endX - startX) * scale;
+      const h = Math.abs(endY - startY) * scale;
+      if (w < 10 || h < 10) return alert('Selection too small');
+      const temp = document.createElement('canvas');
+      temp.width = w; temp.height = h;
+      const tctx = temp.getContext('2d');
+      tctx.drawImage(img, x, y, w, h, 0, 0, w, h);
+      temp.toBlob(blob => {
+        croppedBlob = blob;
+        result.src = URL.createObjectURL(blob);
+        result.classList.remove('hidden');
+        downloadBtn.classList.remove('hidden');
+      }, 'image/jpeg', 0.92);
+    });
+
+    downloadBtn.addEventListener('click', () => {
+      if (!croppedBlob) return;
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(croppedBlob);
+      a.download = 'cropped_' + (originalFile.name.replace(/\.[^/.]+$/, '') || 'image') + '.jpg';
+      a.click();
+    });
+
+    resetBtn.addEventListener('click', () => { controls.classList.add('hidden'); fileInput.value = ''; result.classList.add('hidden'); });
+  </script>
+</body>
+</html>
