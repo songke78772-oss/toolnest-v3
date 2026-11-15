@@ -108,6 +108,37 @@ app.get('/flip', (req, res) => res.render('flip'));
 app.get('/round', (req, res) => res.render('round'));
 app.get('/add-border', (req, res) => res.render('add-border'));
 app.get('/pixelate', (req, res) => res.render('pixelate'));
+app.get('/add-text', (req, res) => {
+  res.render('add-text');
+});
+
+app.get('/blur-bg', (req, res) => {
+  res.render('blur-bg');
+});
+
+app.get('/remove-bg', (req, res) => {
+  res.render('remove-bg');
+});
+
+app.get('/metadata', (req, res) => {
+  res.render('metadata');
+});
+
+app.get('/combine', (req, res) => {
+  res.render('combine');
+});
+
+app.get('/collage', (req, res) => {
+  res.render('collage');
+});
+
+app.get('/chart', (req, res) => {
+  res.render('chart');
+});
+
+app.get('/splitter', (req, res) => {
+  res.render('splitter');
+});
 
 app.get('/register', (req, res) => res.render('register', { error: null }));
 app.post('/register', (req, res) => {
