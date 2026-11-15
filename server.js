@@ -150,7 +150,16 @@ app.get('/lorem-ipsum', (req, res) => res.render('lorem-ipsum'));
 app.get('/markdown-preview', (req, res) => res.render('markdown-preview'));
 app.get('/csv-to-json', (req, res) => res.render('csv-to-json'));
 app.get('/url-encode', (req, res) => res.render('url-encode'));
-
+// Dev tools routes
+app.get('/regex-tester', (req, res) => res.render('regex-tester'));
+app.get('/uuid-generator', (req, res) => res.render('uuid-generator'));
+app.get('/hash-generator', (req, res) => res.render('hash-generator'));
+app.get('/timestamp-converter', (req, res) => res.render('timestamp-converter'));
+app.get('/color-converter', (req, res) => res.render('color-converter'));
+app.get('/jwt-decoder', (req, res) => res.render('jwt-decoder'));
+app.get('/base-converter', (req, res) => res.render('base-converter'));
+app.get('/html-encoder', (req, res) => res.render('html-encoder'));
+app.get('/dummy-json', (req, res) => res.render('dummy-json'));
 
 app.get('/register', (req, res) => res.render('register', { error: null }));
 app.post('/register', (req, res) => {
