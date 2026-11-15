@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Make Round Image - ToolNest</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50">
+  <nav class="bg-white border-b">
+    <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
+      <a href="/" class="text-xl font-bold text-gray-800">ToolNest</a>
+      <a href="/" class="text-sm text-gray-600 hover:text-gray-800">← Back to Tools</a>
+    </div>
+  </nav>
+  <div class="max-w-4xl mx-auto p-6">
+    <div class="mb-6">
+      <h1 class="text-3xl font-bold text-gray-800">Make Round Image</h1>
+      <p class="text-gray-600 mt-2">Crop image into a circle. All processing happens in your browser.</p>
+    </div>
+    <div class="bg-white rounded-xl shadow-sm border p-6">
+      <div id="uploadArea" class="border-2 border-dashed border-gray-300 rounded-lg p-10 text-center cursor-pointer hover:border-blue-500 transition">
+        <div class="text-5xl mb-3">⭕</div>
+        <p class="text-lg font-medium text-gray-700">Click or drag image here</p>
+        <input type="file" id="fileInput" accept="image/*" class="hidden">
+      </div>
+      <div id="controls" class="hidden mt-6 text-center">
+        <img id="result" class="max-w-xs mx-auto rounded-full border">
+        <div class="mt-4">
+          <button id="downloadBtn" class="bg-green-600 hover:bg-green-700 text-white px-6 py-2.5 rounded-lg font-medium">Download</button>
+          <button id="resetBtn" class="ml-3 text-gray-600 px-4 py-2.5">Reset</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>
+    const uploadArea = document.getElementById('uploadArea');
+    const fileInput = document.getElementById('fileInput');
+    const controls = document.getElementById('controls');
+    const result = document.getElementById('result');
+    const downloadBtn = document.getElementById('downloadBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    let roundBlob, originalName = 'image';
+
+    uploadArea.addEventListener('click', () => fileInput.click());
+    uploadArea.addEventListener('drop', e => { e.preventDefault(); if (e.dataTransfer.files[0]) process(e.dataTransfer.files[0]); });
+    uploadArea.addEventListener('dragover', e => e.preventDefault());
+    fileInput.addEventListener('change', e => { if (e.target.files[0]) process(e.target.files[0]); });
+
+    function process(file) {
+      originalName = file.name.replace(/\.[^/.]+$/, '');
+      const img = new Image();
+      img.onload = () => {
+        const size = Math.min(img.width, img.height);
+        const canvas = document.createElement('canvas');
+        canvas.width = size; canvas.height = size;
+        const ctx = canvas.getContext('2d');
+        ctx.beginPath();
+        ctx.arc(size/2, size/2, size/2, 0, Math.PI * 2);
+        ctx.closePath();
+        ctx.clip();
+        const offsetX = (img.width - size) / 2;
+        const offsetY = (img.height - size) / 2;
+        ctx.drawImage(img, -offsetX, -offsetY);
+        canvas.toBlob(blob => {
+          roundBlob = blob;
+          result.src = URL.createObjectURL(blob);
+          controls.classList.remove('hidden');
+        }, 'image/png');
+      };
+      img.src = URL.createObjectURL(file);
+    }
+
+    downloadBtn.addEventListener('click', () => {
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(roundBlob);
+      a.download = 'round_' + originalName + '.png';
+      a.click();
+    });
+
+    resetBtn.addEventListener('click', () => { controls.classList.add('hidden'); fileInput.value = ''; });
+  </script>
+</body>
+</html>
