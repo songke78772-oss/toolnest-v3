@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pixelate Image - ToolNest</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50">
+  <nav class="bg-white border-b">
+    <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
+      <a href="/" class="text-xl font-bold text-gray-800">ToolNest</a>
+      <a href="/" class="text-sm text-gray-600 hover:text-gray-800">← Back to Tools</a>
+    </div>
+  </nav>
+  <div class="max-w-4xl mx-auto p-6">
+    <div class="mb-6">
+      <h1 class="text-3xl font-bold text-gray-800">Pixelate Image</h1>
+      <p class="text-gray-600 mt-2">Apply pixelation effect. All processing happens in your browser.</p>
+    </div>
+    <div class="bg-white rounded-xl shadow-sm border p-6">
+      <div id="uploadArea" class="border-2 border-dashed border-gray-300 rounded-lg p-10 text-center cursor-pointer hover:border-blue-500 transition">
+        <div class="text-5xl mb-3">🟦</div>
+        <p class="text-lg font-medium text-gray-700">Click or drag image here</p>
+        <input type="file" id="fileInput" accept="image/*" class="hidden">
+      </div>
+      <div id="controls" class="hidden mt-6 space-y-4">
+        <div>
+          <label class="text-sm">Pixel Size: <span id="sizeVal">10</span></label>
+          <input type="range" id="pixelSize" min="2" max="50" value="10" class="w-full">
+        </div>
+        <button id="applyBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-lg">Apply</button>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+          <div>
+            <p class="text-sm mb-2">Original</p>
+            <img id="original" class="max-w-full rounded border">
+          </div>
+          <div>
+            <p class="text-sm mb-2">Pixelated</p>
+            <img id="result" class="max-w-full rounded border">
+          </div>
+        </div>
+        <button id="downloadBtn" class="hidden bg-green-600 hover:bg-green-700 text-white px-6 py-2.5 rounded-lg">Download</button>
+        <button id="resetBtn" class="ml-3 text-gray-600 px-4 py-2.5">Reset</button>
+      </div>
+    </div>
+  </div>
+  <script>
+    const uploadArea = document.getElementById('uploadArea');
+    const fileInput = document.getElementById('fileInput');
+    const controls = document.getElementById('controls');
+    const pixelSize = document.getElementById('pixelSize');
+    const sizeVal = document.getElementById('sizeVal');
+    const applyBtn = document.getElementById('applyBtn');
+    const original = document.getElementById('original');
+    const result = document.getElementById('result');
+    const downloadBtn = document.getElementById('downloadBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    let originalFile, resultBlob, originalName = 'image';
+
+    pixelSize.addEventListener('input', () => sizeVal.textContent = pixelSize.value);
+
+    uploadArea.addEventListener('click', () => fileInput.click());
+    uploadArea.addEventListener('drop', e => { e.preventDefault(); if (e.dataTransfer.files[0]) load(e.dataTransfer.files[0]); });
+    uploadArea.addEventListener('dragover', e => e.preventDefault());
+    fileInput.addEventListener('change', e => { if (e.target.files[0]) load(e.target.files[0]); });
+
+    function load(file) {
+      originalFile = file;
+      originalName = file.name.replace(/\.[^/.]+$/, '');
+      original.src = URL.createObjectURL(file);
+      controls.classList.remove('hidden');
+    }
+
+    applyBtn.addEventListener('click', () => {
+      if (!originalFile) return;
+      const img = new Image();
+      img.onload = () => {
+        const size = parseInt(pixelSize.value);
+        const canvas = document.createElement('canvas');
+        canvas.width = img.width; canvas.height = img.height;
+        const ctx = canvas.getContext('2d');
+        // pixelate by drawing small then scaling up
+        const small = document.createElement('canvas');
+        small.width = Math.max(1, img.width / size);
+        small.height = Math.max(1, img.height / size);
+        const sctx = small.getContext('2d');
+        sctx.drawImage(img, 0, 0, small.width, small.height);
+        ctx.imageSmoothingEnabled = false;
+        ctx.drawImage(small, 0, 0, canvas.width, canvas.height);
+        canvas.toBlob(blob => {
+          resultBlob = blob;
+          result.src = URL.createObjectURL(blob);
+          downloadBtn.classList.remove('hidden');
+        }, 'image/jpeg', 0.92);
+      };
+      img.src = URL.createObjectURL(originalFile);
+    });
+
+    downloadBtn.addEventListener('click', () => {
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(resultBlob);
+      a.download = 'pixelated_' + originalName + '.jpg';
+      a.click();
+    });
+
+    resetBtn.addEventListener('click', () => { controls.classList.add('hidden'); fileInput.value = ''; });
+  </script>
+</body>
+</html>
