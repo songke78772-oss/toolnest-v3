@@ -160,6 +160,21 @@ app.get('/jwt-decoder', (req, res) => res.render('jwt-decoder'));
 app.get('/base-converter', (req, res) => res.render('base-converter'));
 app.get('/html-encoder', (req, res) => res.render('html-encoder'));
 app.get('/dummy-json', (req, res) => res.render('dummy-json'));
+// Life tools routes
+app.get('/age-calculator', (req, res) => res.render('age-calculator'));
+app.get('/bmi-calculator', (req, res) => res.render('bmi-calculator'));
+app.get('/tip-calculator', (req, res) => res.render('tip-calculator'));
+app.get('/countdown', (req, res) => res.render('countdown'));
+app.get('/random-number', (req, res) => res.render('random-number'));
+app.get('/coin-flip', (req, res) => res.render('coin-flip'));
+app.get('/dice-roller', (req, res) => res.render('dice-roller'));
+app.get('/unit-converter', (req, res) => res.render('unit-converter'));
+app.get('/percentage', (req, res) => res.render('percentage'));
+app.get('/days-between', (req, res) => res.render('days-between'));
+
+
+
+
 
 app.get('/register', (req, res) => res.render('register', { error: null }));
 app.post('/register', (req, res) => {
