@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Add Border - ToolNest</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50">
+  <nav class="bg-white border-b">
+    <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
+      <a href="/" class="text-xl font-bold text-gray-800">ToolNest</a>
+      <a href="/" class="text-sm text-gray-600 hover:text-gray-800">← Back to Tools</a>
+    </div>
+  </nav>
+  <div class="max-w-4xl mx-auto p-6">
+    <div class="mb-6">
+      <h1 class="text-3xl font-bold text-gray-800">Add Border to Image</h1>
+      <p class="text-gray-600 mt-2">Add a colored border around your image. All processing happens in your browser.</p>
+    </div>
+    <div class="bg-white rounded-xl shadow-sm border p-6">
+      <div id="uploadArea" class="border-2 border-dashed border-gray-300 rounded-lg p-10 text-center cursor-pointer hover:border-blue-500 transition">
+        <div class="text-5xl mb-3">🖼️</div>
+        <p class="text-lg font-medium text-gray-700">Click or drag image here</p>
+        <input type="file" id="fileInput" accept="image/*" class="hidden">
+      </div>
+      <div id="controls" class="hidden mt-6 space-y-4">
+        <div class="flex gap-4 items-center">
+          <label class="text-sm">Border Width: <span id="widthVal">20</span>px</label>
+          <input type="range" id="borderWidth" min="5" max="100" value="20" class="flex-1">
+        </div>
+        <div class="flex gap-4 items-center">
+          <label class="text-sm">Border Color:</label>
+          <input type="color" id="borderColor" value="#000000">
+        </div>
+        <button id="applyBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-lg">Apply Border</button>
+        <img id="result" class="max-w-full rounded border mt-4 hidden">
+        <div class="mt-2">
+          <button id="downloadBtn" class="hidden bg-green-600 hover:bg-green-700 text-white px-6 py-2.5 rounded-lg">Download</button>
+          <button id="resetBtn" class="ml-3 text-gray-600 px-4 py-2.5">Reset</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>
+    const uploadArea = document.getElementById('uploadArea');
+    const fileInput = document.getElementById('fileInput');
+    const controls = document.getElementById('controls');
+    const borderWidth = document.getElementById('borderWidth');
+    const widthVal = document.getElementById('widthVal');
+    const borderColor = document.getElementById('borderColor');
+    const applyBtn = document.getElementById('applyBtn');
+    const result = document.getElementById('result');
+    const downloadBtn = document.getElementById('downloadBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    let originalFile, resultBlob, originalName = 'image';
+
+    borderWidth.addEventListener('input', () => widthVal.textContent = borderWidth.value);
+
+    uploadArea.addEventListener('click', () => fileInput.click());
+    uploadArea.addEventListener('drop', e => { e.preventDefault(); if (e.dataTransfer.files[0]) load(e.dataTransfer.files[0]); });
+    uploadArea.addEventListener('dragover', e => e.preventDefault());
+    fileInput.addEventListener('change', e => { if (e.target.files[0]) load(e.target.files[0]); });
+
+    function load(file) {
+      originalFile = file;
+      originalName = file.name.replace(/\.[^/.]+$/, '');
+      controls.classList.remove('hidden');
+      result.classList.add('hidden');
+      downloadBtn.classList.add('hidden');
+    }
+
+    applyBtn.addEventListener('click', () => {
+      if (!originalFile) return;
+      const img = new Image();
+      img.onload = () => {
+        const bw = parseInt(borderWidth.value);
+        const canvas = document.createElement('canvas');
+        canvas.width = img.width + bw * 2;
+        canvas.height = img.height + bw * 2;
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = borderColor.value;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(img, bw, bw);
+        canvas.toBlob(blob => {
+          resultBlob = blob;
+          result.src = URL.createObjectURL(blob);
+          result.classList.remove('hidden');
+          downloadBtn.classList.remove('hidden');
+        }, 'image/jpeg', 0.92);
+      };
+      img.src = URL.createObjectURL(originalFile);
+    });
+
+    downloadBtn.addEventListener('click', () => {
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(resultBlob);
+      a.download = 'border_' + originalName + '.jpg';
+      a.click();
+    });
+
+    resetBtn.addEventListener('click', () => { controls.classList.add('hidden'); fileInput.value = ''; });
+  </script>
+</body>
+</html>
