@@ -3,29 +3,20 @@ const express = require('express');
 const session = require('express-session');
 const bcrypt = require('bcryptjs');
 const path = require('path');
-const fs = require('fs');
-const multer = require('multer');
-const Stripe = require('stripe');
 const Database = require('better-sqlite3');
 const { Resend } = require('resend');
 
 const app = express();
-const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
 const resend = new Resend(process.env.RESEND_API_KEY);
 
-// 临时存储验证码
 const verificationCodes = new Map();
 
-// Database
 const db = new Database(path.join(__dirname, 'data', 'app.db'));
 db.exec(`
   CREATE TABLE IF NOT EXISTS users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     email TEXT UNIQUE NOT NULL,
     password_hash TEXT NOT NULL,
-    stripe_customer_id TEXT,
-    subscription_status TEXT DEFAULT 'inactive',
-    subscription_id TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
   );
 
@@ -33,17 +24,13 @@ db.exec(`
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL,
     description TEXT,
-    filename TEXT,
-    version TEXT DEFAULT '1.0',
     category TEXT DEFAULT 'Other',
     type TEXT DEFAULT 'online',
     url TEXT,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
   );
 `);
 
-// Session
 app.use(session({
   secret: process.env.SESSION_SECRET || 'fallback-secret-change-me',
   resave: false,
@@ -57,23 +44,10 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
-// Multer
-const upload = multer({ dest: path.join(__dirname, 'uploads') });
-
-// Middleware
 function requireLogin(req, res, next) {
   if (!req.session.userId) return res.redirect('/login');
   next();
 }
-
-function requireSubscription(req, res, next) {
-  if (req.session.subscriptionStatus !== 'active') {
-    return res.redirect('/subscribe');
-  }
-  next();
-}
-
-// ========== Routes ==========
 
 // Home
 app.get('/', (req, res) => {
@@ -81,12 +55,11 @@ app.get('/', (req, res) => {
   res.render('index', { user: req.session.userId, tools });
 });
 
-// Register page
+// Register
 app.get('/register', (req, res) => {
   res.render('register', { error: null });
 });
 
-// Send verification code
 app.post('/api/send-code', async (req, res) => {
   const { email } = req.body;
   if (!email) return res.json({ success: false, error: 'Email required' });
@@ -99,7 +72,7 @@ app.post('/api/send-code', async (req, res) => {
       from: 'ToolNest <noreply@protoolnest.com>',
       to: email,
       subject: 'Your ToolNest Verification Code',
-      html: `<p>Your verification code is:</p><p style="font-size:28px;font-weight:bold;letter-spacing:4px;">${code}</p><p>Valid for 10 minutes.</p>`
+      html: `<p>Your verification code is:</p><p style="font-size:28px;font-weight:bold;">${code}</p><p>Valid for 10 minutes.</p>`
     });
     res.json({ success: true });
   } catch (err) {
@@ -108,7 +81,6 @@ app.post('/api/send-code', async (req, res) => {
   }
 });
 
-// Register
 app.post('/register', (req, res) => {
   const { email, password, code } = req.body;
   const stored = verificationCodes.get(email);
@@ -127,12 +99,11 @@ app.post('/register', (req, res) => {
   }
 });
 
-// Login page
+// Login
 app.get('/login', (req, res) => {
   res.render('login', { error: null });
 });
 
-// Login
 app.post('/login', (req, res) => {
   const { email, password } = req.body;
   const user = db.prepare('SELECT * FROM users WHERE email = ?').get(email);
@@ -143,11 +114,9 @@ app.post('/login', (req, res) => {
 
   req.session.userId = user.id;
   req.session.email = user.email;
-  req.session.subscriptionStatus = user.subscription_status;
   res.redirect('/');
 });
 
-// Logout
 app.get('/logout', (req, res) => {
   req.session.destroy();
   res.redirect('/');
@@ -158,14 +127,14 @@ app.get('/dashboard', requireLogin, (req, res) => {
   res.render('dashboard', { email: req.session.email });
 });
 
-// ========== Admin ==========
+// Admin
 app.get('/admin', (req, res) => {
   if (req.session.isAdmin) return res.redirect('/admin/dashboard');
   res.render('admin-login', { error: null });
 });
 
 app.post('/admin/login', (req, res) => {
-  if (req.body.password === 'admin123') {  // 改成你自己的密码
+  if (req.body.password === 'admin123') {
     req.session.isAdmin = true;
     return res.redirect('/admin/dashboard');
   }
@@ -182,10 +151,8 @@ app.post('/admin/add-tool', (req, res) => {
   if (!req.session.isAdmin) return res.redirect('/admin');
   const { name, description, category, url } = req.body;
   if (!name) return res.redirect('/admin/dashboard');
-  db.prepare(`
-    INSERT INTO tools (name, description, category, url, type)
-    VALUES (?, ?, ?, ?, 'online')
-  `).run(name, description || '', category || 'Other', url || '');
+  db.prepare('INSERT INTO tools (name, description, category, url, type) VALUES (?, ?, ?, ?, "online")')
+    .run(name, description || '', category || 'Other', url || '');
   res.redirect('/admin/dashboard');
 });
 
@@ -195,7 +162,6 @@ app.post('/admin/delete/:id', (req, res) => {
   res.redirect('/admin/dashboard');
 });
 
-// Start
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`ToolNest running on port ${PORT}`);
