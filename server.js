@@ -132,9 +132,14 @@ app.get('/dashboard', requireLogin, (req, res) => {
 });
 
 // Admin
-app.get('/admin', (req, res) => {
-  if (req.session.isAdmin) return res.redirect('/admin/dashboard');
-  res.render('admin-login', { error: null });
+app.get('/dashboard', requireLogin, (req, res) => {
+  const user = db.prepare('SELECT email FROM users WHERE id = ?').get(req.session.userId);
+  const favorites = db.prepare(`
+    SELECT t.* FROM tools t
+    JOIN favorites f ON f.tool_id = t.id
+    WHERE f.user_id = ?
+  `).all(req.session.userId);
+  res.render('dashboard', { user, favorites });
 });
 
 app.post('/admin/login', (req, res) => {
