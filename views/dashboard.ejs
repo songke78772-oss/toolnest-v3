@@ -22,7 +22,16 @@
       <div class="border-t pt-4 space-y-3 text-sm">
         <div class="flex justify-between"><span class="text-gray-500">Name</span><span class="font-medium break-all"><%= user.email %></span></div>
         <div class="flex justify-between"><span class="text-gray-500">Email</span><span class="font-medium break-all"><%= user.email %></span></div>
-        <div class="flex justify-between"><span class="text-gray-500">Current Plan</span><span class="font-medium">Free</span></div>
+        <div class="flex justify-between items-start">
+          <span class="text-gray-500">Current Plan</span>
+          <span class="font-medium text-right">
+            <% if (user.subscription_status === 'active' && user.current_period_end) { %>
+              Expires<br><%= new Date(user.current_period_end).toLocaleDateString() %>
+            <% } else { %>
+              Unpaid
+            <% } %>
+          </span>
+        </div>
       </div>
 
       <div class="mt-6 flex gap-2">
@@ -46,24 +55,21 @@
       <!-- Billing Tab -->
       <div id="billing" class="tab-content">
         <h2 class="text-xl font-semibold mb-4">Billing Information</h2>
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8 max-w-lg">
-          <!-- Free Plan -->
-          <div class="border rounded-xl p-4 bg-blue-500 text-white">
-            <div class="font-bold">Free Plan</div>
-            <div class="text-sm opacity-90 mb-3">Free tools for everyone</div>
-            <div class="text-2xl font-bold mb-4">FREE</div>
-            <button class="w-full bg-white/20 rounded-lg py-2 text-sm">Current Plan</button>
-          </div>
+        <div class="max-w-sm">
           <!-- All Unlimited -->
-          <div class="border rounded-xl p-4">
-            <div class="font-bold">All Unlimited</div>
+          <div class="border rounded-xl p-5">
+            <div class="font-bold text-lg">All Unlimited</div>
             <div class="text-sm text-gray-500 mb-3">Unlimited access to all tools</div>
-            <div class="text-xl font-bold mb-4">$3.99<span class="text-sm font-normal text-gray-500">/month</span></div>
-            <a href="/subscribe" class="block w-full bg-blue-500 text-white text-center rounded-lg py-2 text-sm">Upgrade Plan</a>
+            <div class="text-2xl font-bold mb-4">$3.99<span class="text-sm font-normal text-gray-500">/month</span></div>
+            <% if (user.subscription_status === 'active') { %>
+              <button class="w-full bg-gray-200 text-gray-600 rounded-lg py-2 text-sm cursor-default">Current Plan</button>
+            <% } else { %>
+              <a href="/subscribe" class="block w-full bg-blue-500 text-white text-center rounded-lg py-2 text-sm">Upgrade Plan</a>
+            <% } %>
           </div>
         </div>
 
-        <div class="border-t pt-6">
+        <div class="border-t pt-6 mt-8">
           <div class="text-center text-gray-400 text-sm mb-4">BILLING HISTORY</div>
           <div class="border rounded-xl overflow-hidden">
             <div class="grid grid-cols-4 bg-gray-100 text-sm font-medium px-4 py-3">
