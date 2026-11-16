@@ -17,7 +17,6 @@
         </div>
         <div class="font-semibold text-lg text-center break-all"><%= user.email %></div>
         <div class="text-gray-500 text-sm text-center break-all mb-4"><%= user.email %></div>
-        <button class="w-full border border-blue-500 text-blue-500 rounded-lg py-2 text-sm mb-6">Upload Photo</button>
       </div>
 
       <div class="border-t pt-4 space-y-3 text-sm">
@@ -47,7 +46,7 @@
       <!-- Billing Tab -->
       <div id="billing" class="tab-content">
         <h2 class="text-xl font-semibold mb-4">Billing Information</h2>
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8 max-w-lg">
           <!-- Free Plan -->
           <div class="border rounded-xl p-4 bg-blue-500 text-white">
             <div class="font-bold">Free Plan</div>
@@ -55,23 +54,11 @@
             <div class="text-2xl font-bold mb-4">FREE</div>
             <button class="w-full bg-white/20 rounded-lg py-2 text-sm">Current Plan</button>
           </div>
-          <!-- Paid Plans -->
-          <div class="border rounded-xl p-4">
-            <div class="font-bold">Pro Plan</div>
-            <div class="text-sm text-gray-500 mb-3">Unlimited access to all tools</div>
-            <div class="text-xl font-bold mb-4">$1.99<span class="text-sm font-normal text-gray-500">/month</span></div>
-            <a href="/subscribe" class="block w-full bg-blue-500 text-white text-center rounded-lg py-2 text-sm">Upgrade Plan</a>
-          </div>
-          <div class="border rounded-xl p-4">
-            <div class="font-bold">PDF Unlimited</div>
-            <div class="text-sm text-gray-500 mb-3">Unlimited PDF tools</div>
-            <div class="text-xl font-bold mb-4">$4.99<span class="text-sm font-normal text-gray-500">/month</span></div>
-            <a href="/subscribe" class="block w-full bg-blue-500 text-white text-center rounded-lg py-2 text-sm">Upgrade Plan</a>
-          </div>
+          <!-- All Unlimited -->
           <div class="border rounded-xl p-4">
             <div class="font-bold">All Unlimited</div>
-            <div class="text-sm text-gray-500 mb-3">Everything included</div>
-            <div class="text-xl font-bold mb-4">$9.99<span class="text-sm font-normal text-gray-500">/month</span></div>
+            <div class="text-sm text-gray-500 mb-3">Unlimited access to all tools</div>
+            <div class="text-xl font-bold mb-4">$3.99<span class="text-sm font-normal text-gray-500">/month</span></div>
             <a href="/subscribe" class="block w-full bg-blue-500 text-white text-center rounded-lg py-2 text-sm">Upgrade Plan</a>
           </div>
         </div>
