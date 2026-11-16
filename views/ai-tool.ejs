@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= tool.name %> - ToolNest</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 min-h-screen">
+  <div class="max-w-3xl mx-auto p-4 md:p-8">
+    <a href="/" class="text-blue-600 text-sm">← Back to tools</a>
+    <h1 class="text-2xl font-bold mt-4 mb-2"><%= tool.name %></h1>
+    <p class="text-gray-600 mb-6"><%= tool.description %></p>
+
+    <form id="aiForm" class="space-y-4">
+      <textarea name="input" rows="8" required
+        placeholder="<%= tool.input_placeholder || 'Enter your text...' %>"
+        class="w-full border rounded-xl p-4 focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+
+      <% if (tool.name === 'Tone of Voice') { %>
+      <select name="tone" class="w-full border rounded-xl p-3">
+        <option value="professional">Professional</option>
+        <option value="casual">Casual</option>
+        <option value="friendly">Friendly</option>
+        <option value="formal">Formal</option>
+        <option value="humorous">Humorous</option>
+      </select>
+      <% } %>
+
+      <button type="submit" class="w-full bg-blue-600 text-white rounded-xl py-3 font-medium hover:bg-blue-700">
+        Generate
+      </button>
+    </form>
+
+    <div id="result" class="mt-6 hidden">
+      <div class="flex justify-between items-center mb-2">
+        <h2 class="font-semibold">Result</h2>
+        <button onclick="copyResult()" class="text-sm text-blue-600">Copy</button>
+      </div>
+      <div id="resultText" class="bg-white border rounded-xl p-4 whitespace-pre-wrap min-h-[100px]"></div>
+    </div>
+  </div>
+
+  <script>
+    document.getElementById('aiForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = e.target.querySelector('button');
+      btn.disabled = true;
+      btn.textContent = 'Generating...';
+
+      const formData = new FormData(e.target);
+      const res = await fetch('/api/ai-tool/<%= tool.id %>', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(Object.fromEntries(formData))
+      });
+      const data = await res.json();
+
+      btn.disabled = false;
+      btn.textContent = 'Generate';
+
+      if (data.success) {
+        document.getElementById('resultText').textContent = data.result;
+        document.getElementById('result').classList.remove('hidden');
+      } else {
+        alert(data.error || 'Failed');
+      }
+    });
+
+    function copyResult() {
+      navigator.clipboard.writeText(document.getElementById('resultText').textContent);
+    }
+  </script>
+</body>
+</html>
