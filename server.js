@@ -148,7 +148,8 @@ app.post('/admin/login', (req, res) => {
 app.get('/admin/dashboard', (req, res) => {
   if (!req.session.isAdmin) return res.redirect('/admin');
   const tools = db.prepare('SELECT * FROM tools ORDER BY id DESC').all();
-  res.render('admin', { tools });
+  const users = db.prepare('SELECT id, email, created_at FROM users ORDER BY id DESC').all();
+  res.render('admin', { tools, users });
 });
 
 app.post('/admin/add-tool', (req, res) => {
