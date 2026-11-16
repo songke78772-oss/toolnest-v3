@@ -8,7 +8,6 @@ const { Resend } = require('resend');
 
 const app = express();
 const resend = new Resend(process.env.RESEND_API_KEY);
-
 const verificationCodes = new Map();
 
 const db = new Database(path.join(__dirname, 'data', 'app.db'));
@@ -27,6 +26,13 @@ db.exec(`
     category TEXT DEFAULT 'Other',
     type TEXT DEFAULT 'online',
     url TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
+
+  CREATE TABLE IF NOT EXISTS favorites (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER,
+    tool_id INTEGER,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
   );
 `);
@@ -52,25 +58,17 @@ function requireLogin(req, res, next) {
 // Home
 app.get('/', (req, res) => {
   const tools = db.prepare('SELECT * FROM tools ORDER BY id DESC').all();
-  res.render('index', { 
-  loggedIn: !!req.session.userId, 
-  user: req.session.userId, 
-  tools 
-});
+  res.render('index', { loggedIn: !!req.session.userId, user: req.session.userId, tools });
 });
 
 // Register
-app.get('/register', (req, res) => {
-  res.render('register', { error: null });
-});
+app.get('/register', (req, res) => res.render('register', { error: null }));
 
 app.post('/api/send-code', async (req, res) => {
   const { email } = req.body;
   if (!email) return res.json({ success: false, error: 'Email required' });
-
   const code = Math.floor(100000 + Math.random() * 900000).toString();
   verificationCodes.set(email, { code, expires: Date.now() + 10 * 60 * 1000 });
-
   try {
     await resend.emails.send({
       from: 'ToolNest <noreply@protoolnest.com>',
@@ -88,11 +86,9 @@ app.post('/api/send-code', async (req, res) => {
 app.post('/register', (req, res) => {
   const { email, password, code } = req.body;
   const stored = verificationCodes.get(email);
-
   if (!stored || stored.code !== code || stored.expires < Date.now()) {
     return res.render('register', { error: 'Invalid or expired verification code' });
   }
-
   try {
     const hash = bcrypt.hashSync(password, 10);
     db.prepare('INSERT INTO users (email, password_hash) VALUES (?, ?)').run(email, hash);
@@ -103,19 +99,15 @@ app.post('/register', (req, res) => {
   }
 });
 
-// Login
-app.get('/login', (req, res) => {
-  res.render('login', { error: null });
-});
+// Login / Logout
+app.get('/login', (req, res) => res.render('login', { error: null }));
 
 app.post('/login', (req, res) => {
   const { email, password } = req.body;
   const user = db.prepare('SELECT * FROM users WHERE email = ?').get(email);
-
   if (!user || !bcrypt.compareSync(password, user.password_hash)) {
     return res.render('login', { error: 'Invalid email or password' });
   }
-
   req.session.userId = user.id;
   req.session.email = user.email;
   res.redirect('/');
@@ -137,12 +129,17 @@ app.get('/dashboard', requireLogin, (req, res) => {
   res.render('dashboard', { user, favorites });
 });
 
+// Tool page (this was missing)
+app.get('/tool/:id', requireLogin, (req, res) => {
+  const tool = db.prepare('SELECT * FROM tools WHERE id = ?').get(req.params.id);
+  if (!tool) return res.status(404).send('Tool not found');
+  res.render('tool', { tool });
+});
+
 // Admin
-app.get('/admin/dashboard', (req, res) => {
-  if (!req.session.isAdmin) return res.redirect('/admin');
-  const tools = db.prepare('SELECT * FROM tools ORDER BY id DESC').all();
-  const users = db.prepare('SELECT id, email, created_at FROM users ORDER BY id DESC').all();
-  res.render('admin', { tools, users });
+app.get('/admin', (req, res) => {
+  if (req.session.isAdmin) return res.redirect('/admin/dashboard');
+  res.render('admin-login', { error: null });
 });
 
 app.post('/admin/login', (req, res) => {
@@ -169,35 +166,17 @@ app.post('/admin/add-tool', (req, res) => {
   res.redirect('/admin/dashboard');
 });
 
-app.post('/admin/delete/:id', (req, res) => {
-  if (!req.session.isAdmin) return res.redirect('/admin');
-  db.prepare('DELETE FROM tools WHERE id = ?').run(req.params.id);
-  res.redirect('/admin/dashboard');
-});
-
-// 删除工具
 app.post('/admin/delete-tool/:id', (req, res) => {
   if (!req.session.isAdmin) return res.redirect('/admin');
   db.prepare('DELETE FROM tools WHERE id = ?').run(req.params.id);
   res.redirect('/admin/dashboard');
 });
 
-// 删除用户
 app.post('/admin/delete-user/:id', (req, res) => {
   if (!req.session.isAdmin) return res.redirect('/admin');
   db.prepare('DELETE FROM users WHERE id = ?').run(req.params.id);
   res.redirect('/admin/dashboard');
 });
 
-// 修改 dashboard 路由，同时返回 users
-app.get('/admin/dashboard', (req, res) => {
-  if (!req.session.isAdmin) return res.redirect('/admin');
-  const tools = db.prepare('SELECT * FROM tools ORDER BY id DESC').all();
-  const users = db.prepare('SELECT id, email, created_at FROM users ORDER BY id DESC').all();
-  res.render('admin', { tools, users });
-});
-
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`ToolNest running on port ${PORT}`);
-});
+app.listen(PORT, () => console.log(`ToolNest running on port ${PORT}`));
