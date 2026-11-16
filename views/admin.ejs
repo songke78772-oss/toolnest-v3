@@ -1,66 +1,81 @@
 <!DOCTYPE html>
-<html lang="zh">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <title>Admin - ToolNest</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-100">
-  <div class="max-w-5xl mx-auto py-8 px-4">
+  <div class="max-w-5xl mx-auto p-6">
     <div class="flex justify-between items-center mb-6">
-      <h1 class="text-2xl font-bold">Admin</h1>
-      <a href="/logout" class="text-sm text-gray-500">Logout</a>
+      <h1 class="text-2xl font-bold">Admin Dashboard</h1>
+      <a href="/logout" class="text-sm text-gray-600">Logout</a>
     </div>
 
-    <div class="bg-white rounded-lg p-6 mb-8">
-      <h2 class="font-bold mb-4">Add Tool</h2>
-      <form action="/admin/add-tool" method="post" class="space-y-3">
-        <input name="name" placeholder="Name" class="w-full border rounded px-3 py-2" required>
-        <input name="description" placeholder="Description" class="w-full border rounded px-3 py-2">
-        <input name="category" placeholder="Category" class="w-full border rounded px-3 py-2" value="办公">
-        <input name="url" placeholder="URL" class="w-full border rounded px-3 py-2">
-        <button class="bg-blue-600 text-white px-4 py-2 rounded">Add</button>
+    <!-- Add Tool -->
+    <div class="bg-white p-6 rounded-lg shadow mb-8">
+      <h2 class="text-lg font-semibold mb-4">Add Tool</h2>
+      <form method="POST" action="/admin/add-tool" class="space-y-3">
+        <input name="name" placeholder="Tool Name" class="w-full border p-2 rounded" required>
+        <input name="description" placeholder="Description" class="w-full border p-2 rounded">
+        <input name="category" placeholder="Category" class="w-full border p-2 rounded">
+        <input name="url" placeholder="Tool URL" class="w-full border p-2 rounded">
+        <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded">Add Tool</button>
       </form>
     </div>
 
-    <h2 class="font-bold mb-3">Tools (<%= tools.length %>)</h2>
-    <div class="bg-white rounded-lg overflow-hidden mb-8">
+    <!-- Tools List -->
+    <div class="bg-white p-6 rounded-lg shadow mb-8">
+      <h2 class="text-lg font-semibold mb-4">Tools</h2>
       <table class="w-full text-sm">
-        <thead class="bg-gray-50">
-          <tr>
-            <th class="text-left p-3">Name</th>
-            <th class="text-left p-3">Category</th>
-            <th class="text-left p-3">URL</th>
+        <thead>
+          <tr class="text-left border-b">
+            <th class="py-2">ID</th>
+            <th>Name</th>
+            <th>Category</th>
+            <th>Action</th>
           </tr>
         </thead>
         <tbody>
-          <% tools.forEach(t => { %>
-            <tr class="border-t">
-              <td class="p-3"><%= t.name %></td>
-              <td class="p-3"><%= t.category %></td>
-              <td class="p-3"><%= t.url %></td>
+          <% tools.forEach(tool => { %>
+            <tr class="border-b">
+              <td class="py-2"><%= tool.id %></td>
+              <td><%= tool.name %></td>
+              <td><%= tool.category || '-' %></td>
+              <td>
+                <form method="POST" action="/admin/delete-tool/<%= tool.id %>" onsubmit="return confirm('Delete this tool?')">
+                  <button class="text-red-600 text-xs">Delete</button>
+                </form>
+              </td>
             </tr>
           <% }) %>
         </tbody>
       </table>
     </div>
 
-    <h2 class="font-bold mb-3">Users (<%= users.length %>)</h2>
-    <div class="bg-white rounded-lg overflow-hidden">
+    <!-- Users List -->
+    <div class="bg-white p-6 rounded-lg shadow">
+      <h2 class="text-lg font-semibold mb-4">Users</h2>
       <table class="w-full text-sm">
-        <thead class="bg-gray-50">
-          <tr>
-            <th class="text-left p-3">Email</th>
-            <th class="text-left p-3">Status</th>
-            <th class="text-left p-3">Created</th>
+        <thead>
+          <tr class="text-left border-b">
+            <th class="py-2">ID</th>
+            <th>Email</th>
+            <th>Created</th>
+            <th>Action</th>
           </tr>
         </thead>
         <tbody>
-          <% users.forEach(u => { %>
-            <tr class="border-t">
-              <td class="p-3"><%= u.email %></td>
-              <td class="p-3"><%= u.subscription_status %></td>
-              <td class="p-3"><%= u.created_at %></td>
+          <% users.forEach(user => { %>
+            <tr class="border-b">
+              <td class="py-2"><%= user.id %></td>
+              <td><%= user.email %></td>
+              <td><%= user.created_at %></td>
+              <td>
+                <form method="POST" action="/admin/delete-user/<%= user.id %>" onsubmit="return confirm('Delete this user?')">
+                  <button class="text-red-600 text-xs">Delete</button>
+                </form>
+              </td>
             </tr>
           <% }) %>
         </tbody>
