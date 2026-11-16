@@ -128,18 +128,21 @@ app.get('/logout', (req, res) => {
 
 // Dashboard
 app.get('/dashboard', requireLogin, (req, res) => {
-  res.render('dashboard', { email: req.session.email });
-});
-
-// Admin
-app.get('/dashboard', requireLogin, (req, res) => {
-  const user = db.prepare('SELECT email FROM users WHERE id = ?').get(req.session.userId);
+  const user = db.prepare('SELECT email FROM users WHERE id = ?').get(req.session.userId) || { email: 'User' };
   const favorites = db.prepare(`
     SELECT t.* FROM tools t
     JOIN favorites f ON f.tool_id = t.id
     WHERE f.user_id = ?
-  `).all(req.session.userId);
+  `).all(req.session.userId) || [];
   res.render('dashboard', { user, favorites });
+});
+
+// Admin
+app.get('/admin/dashboard', (req, res) => {
+  if (!req.session.isAdmin) return res.redirect('/admin');
+  const tools = db.prepare('SELECT * FROM tools ORDER BY id DESC').all();
+  const users = db.prepare('SELECT id, email, created_at FROM users ORDER BY id DESC').all();
+  res.render('admin', { tools, users });
 });
 
 app.post('/admin/login', (req, res) => {
