@@ -18,6 +18,18 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 const verificationCodes = new Map();
 
 const db = new Database(path.join(__dirname, 'data', 'app.db'));
+
+// 确保 AI 工具需要的字段存在
+try {
+  db.exec(`ALTER TABLE tools ADD COLUMN tool_type TEXT DEFAULT 'link'`);
+} catch (e) {}
+try {
+  db.exec(`ALTER TABLE tools ADD COLUMN prompt_template TEXT`);
+} catch (e) {}
+try {
+  db.exec(`ALTER TABLE tools ADD COLUMN input_placeholder TEXT`);
+} catch (e) {}
+
 db.exec(`
   CREATE TABLE IF NOT EXISTS users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -34,6 +46,9 @@ db.exec(`
     category TEXT DEFAULT 'Other',
     type TEXT DEFAULT 'online',
     url TEXT,
+    tool_type TEXT DEFAULT 'link',
+    prompt_template TEXT,
+    input_placeholder TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
   );
 
@@ -77,7 +92,7 @@ app.get('/', (req, res) => {
   res.render('index', { loggedIn: !!req.session.userId, user: req.session.userId, tools, q: req.query.q || '' });
 });
 
-// Register with email verification
+// Register
 app.get('/register', (req, res) => res.render('register', { error: null }));
 
 app.post('/api/send-code', async (req, res) => {
@@ -145,14 +160,61 @@ app.get('/dashboard', requireLogin, (req, res) => {
   res.render('dashboard', { user, favorites });
 });
 
-// Dynamic tool page
+// ===== 统一工具入口（AI + Word Counter + 其他） =====
 app.get('/tool/:id', requireLogin, (req, res) => {
   const tool = db.prepare('SELECT * FROM tools WHERE id = ?').get(req.params.id);
   if (!tool) return res.status(404).send('Tool not found');
-  res.render('tool', { tool });
+
+  if (tool.name === 'Word Counter' || tool.tool_type === 'local') {
+    return res.render('word-counter', { tool });
+  }
+  if (tool.tool_type === 'ai') {
+    return res.render('ai-tool', { tool });
+  }
+  // 有自定义 url 的走原来的页面
+  if (tool.url) {
+    return res.redirect(tool.url);
+  }
+  res.status(404).send('Tool page not configured');
 });
 
-// ===== Built-in tool pages =====
+// AI 工具 API（Gemini）
+app.post('/api/ai-tool/:id', requireLogin, async (req, res) => {
+  const tool = db.prepare('SELECT * FROM tools WHERE id = ?').get(req.params.id);
+  if (!tool || tool.tool_type !== 'ai') {
+    return res.json({ success: false, error: 'Invalid tool' });
+  }
+
+  let prompt = tool.prompt_template || '';
+  prompt = prompt.replace(/\{\{input\}\}/g, req.body.input || '');
+  if (req.body.tone) prompt = prompt.replace(/\{\{tone\}\}/g, req.body.tone);
+
+  try {
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }]
+        })
+      }
+    );
+
+    const data = await response.json();
+    if (data.error) {
+      console.error('Gemini error:', data.error);
+      return res.json({ success: false, error: data.error.message || 'AI error' });
+    }
+    const result = data.candidates?.[0]?.content?.parts?.[0]?.text || 'No result';
+    res.json({ success: true, result });
+  } catch (err) {
+    console.error(err);
+    res.json({ success: false, error: 'AI service error' });
+  }
+});
+
+// ===== 原有内置工具页面（保持不变） =====
 app.get('/compress', (req, res) => res.render('compress'));
 app.get('/resize', (req, res) => res.render('resize'));
 app.get('/crop', (req, res) => res.render('crop'));
@@ -214,53 +276,6 @@ app.get('/css-minifier', (req, res) => res.render('css-minifier'));
 app.get('/find-replace', (req, res) => res.render('find-replace'));
 app.get('/og-preview', (req, res) => res.render('og-preview'));
 app.get('/tools/pdf-toolkit', (req, res) => res.render('pdf-toolkit'));
-
-// 通用工具页
-app.get('/tool/:id', requireLogin, (req, res) => {
-  const tool = db.prepare('SELECT * FROM tools WHERE id = ?').get(req.params.id);
-  if (!tool) return res.status(404).send('Tool not found');
-
-  if (tool.tool_type === 'local' && tool.name === 'Word Counter') {
-    return res.render('word-counter', { tool });
-  }
-  if (tool.tool_type === 'ai') {
-    return res.render('ai-tool', { tool });
-  }
-  // 其他类型（比如你之前的 PDF）走原来的逻辑
-  res.render('tool-detail', { tool }); // 或你原来的页面
-});
-
-// AI 工具 API（Gemini）
-app.post('/api/ai-tool/:id', requireLogin, async (req, res) => {
-  const tool = db.prepare('SELECT * FROM tools WHERE id = ?').get(req.params.id);
-  if (!tool || tool.tool_type !== 'ai') return res.json({ success: false, error: 'Invalid tool' });
-
-  let prompt = tool.prompt_template || '';
-  prompt = prompt.replace('{{input}}', req.body.input || '');
-  if (req.body.tone) prompt = prompt.replace('{{tone}}', req.body.tone);
-
-  try {
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{
-            parts: [{ text: prompt }]
-          }]
-        })
-      }
-    );
-
-    const data = await response.json();
-    const result = data.candidates?.[0]?.content?.parts?.[0]?.text || 'No result';
-    res.json({ success: true, result });
-  } catch (err) {
-    console.error(err);
-    res.json({ success: false, error: 'AI service error' });
-  }
-});
 
 // PDF API
 const pdfUpload = multer({ dest: '/tmp/pdf-uploads/' });
