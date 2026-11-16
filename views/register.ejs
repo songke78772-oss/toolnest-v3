@@ -2,20 +2,85 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Register - ToolNest</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-50 flex items-center justify-center min-h-screen">
-  <div class="bg-white p-8 rounded-lg shadow w-full max-w-md">
-    <h1 class="text-2xl font-bold text-center mb-6">Register</h1>
-    <% if (error) { %><p class="text-red-600 text-center mb-4"><%= error %></p><% } %>
+<body class="bg-gray-50 min-h-screen flex items-center justify-center">
+  <div class="bg-white p-8 rounded-2xl shadow-sm w-full max-w-md">
+    <h1 class="text-2xl font-bold text-center mb-6">Create Account</h1>
+
     <form action="/register" method="POST" class="space-y-4">
-      <input type="email" name="email" required placeholder="Email" class="w-full border rounded px-4 py-3">
-      <input type="password" name="password" required placeholder="Password" class="w-full border rounded px-4 py-3">
-      <input type="password" name="confirmPassword" required placeholder="Confirm Password" class="w-full border rounded px-4 py-3">
-      <button type="submit" class="w-full bg-blue-600 text-white py-3 rounded">Register</button>
+      <% if (error) { %>
+        <p class="text-red-500 text-sm text-center"><%= error %></p>
+      <% } %>
+
+      <input type="email" name="email" placeholder="Email" required
+             class="w-full border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500">
+
+      <div class="flex gap-2">
+        <input type="text" name="code" placeholder="Verification Code" required
+               class="flex-1 border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500">
+        <button type="button" id="sendCodeBtn"
+                class="bg-gray-700 text-white px-4 rounded-lg text-sm whitespace-nowrap">
+          Send Code
+        </button>
+      </div>
+
+      <input type="password" name="password" placeholder="Password" required
+             class="w-full border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500">
+
+      <button type="submit"
+              class="w-full bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700">
+        Register
+      </button>
     </form>
-    <p class="text-center mt-4 text-sm">Already have an account? <a href="/login" class="text-blue-600">Login</a></p>
+
+    <p class="text-center text-sm text-gray-500 mt-4">
+      Already have an account? <a href="/login" class="text-blue-600">Login</a>
+    </p>
   </div>
+
+  <script>
+    document.getElementById('sendCodeBtn').addEventListener('click', async () => {
+      const email = document.querySelector('input[name="email"]').value.trim();
+      if (!email) return alert('Please enter your email first');
+
+      const btn = document.getElementById('sendCodeBtn');
+      btn.disabled = true;
+      btn.textContent = 'Sending...';
+
+      try {
+        const res = await fetch('/api/send-code', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email })
+        });
+        const data = await res.json();
+
+        if (data.success) {
+          alert('Verification code sent!');
+          let sec = 60;
+          const timer = setInterval(() => {
+            btn.textContent = sec + 's';
+            sec--;
+            if (sec < 0) {
+              clearInterval(timer);
+              btn.disabled = false;
+              btn.textContent = 'Send Code';
+            }
+          }, 1000);
+        } else {
+          alert(data.error || 'Failed to send code');
+          btn.disabled = false;
+          btn.textContent = 'Send Code';
+        }
+      } catch {
+        alert('Network error');
+        btn.disabled = false;
+        btn.textContent = 'Send Code';
+      }
+    });
+  </script>
 </body>
 </html>
