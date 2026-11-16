@@ -40,7 +40,7 @@
     </div>
   </nav>
 
-    <!-- Vertical Scrolling Banner -->
+  <!-- Vertical Scrolling Banner -->
   <div class="bg-blue-600 text-white text-sm overflow-hidden h-9 relative">
     <div id="ticker" class="absolute inset-0 flex items-center justify-center transition-all duration-500">
       <span>📄 Legal document service coming soon</span>
@@ -91,7 +91,7 @@
       </div>
 
       <!-- Category Cards -->
-      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-3xl mx-auto mb-8">
+      <div class="grid grid-cols-2 md:grid-cols-5 gap-4 max-w-4xl mx-auto mb-8">
         <button data-category="Image" class="category-card bg-purple-500 text-white p-5 rounded-2xl text-left hover:opacity-90 transition">
           <div class="text-2xl mb-1">🖼️</div>
           <div class="font-semibold">Image</div>
@@ -112,6 +112,11 @@
           <div class="font-semibold">Life</div>
           <div class="text-sm opacity-90" id="count-Life">--</div>
         </button>
+        <button data-category="AI Write" class="category-card bg-indigo-600 text-white p-5 rounded-2xl text-left hover:opacity-90 transition">
+          <div class="text-2xl mb-1">✍️</div>
+          <div class="font-semibold">AI Write</div>
+          <div class="text-sm opacity-90" id="count-AI Write">--</div>
+        </button>
       </div>
 
       <!-- Search -->
@@ -130,13 +135,14 @@
       <button data-category="Office" class="category-btn px-4 py-1.5 rounded-full text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200">Office</button>
       <button data-category="Dev" class="category-btn px-4 py-1.5 rounded-full text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200">Dev</button>
       <button data-category="Life" class="category-btn px-4 py-1.5 rounded-full text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200">Life</button>
+      <button data-category="AI Write" class="category-btn px-4 py-1.5 rounded-full text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200">AI Write</button>
     </div>
 
     <!-- Tools Grid -->
     <div id="toolsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
       <% if (tools && tools.length > 0) { %>
         <% tools.forEach(tool => { %>
-          <a href="<%= loggedIn ? tool.url : '/login' %>" 
+          <a href="<%= loggedIn ? '/tool/' + tool.id : '/login' %>" 
              class="tool-card bg-white rounded-xl border p-5 hover:shadow-md transition block"
              data-category="<%= tool.category || 'Office' %>"
              data-name="<%= tool.name.toLowerCase() %>"
@@ -173,7 +179,8 @@
       Image: 500 + Math.floor(Math.random() * 800),
       Office: 500 + Math.floor(Math.random() * 1200),
       Dev: 500 + Math.floor(Math.random() * 600),
-      Life: 500 + Math.floor(Math.random() * 900)
+      Life: 500 + Math.floor(Math.random() * 900),
+      'AI Write': 300 + Math.floor(Math.random() * 500)
     };
 
     Object.keys(baseCounts).forEach(cat => {
