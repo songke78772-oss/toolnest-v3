@@ -28,11 +28,11 @@
 
   <!-- Hero -->
   <div class="bg-white border-b">
-    <div class="max-w-4xl mx-auto px-4 pt-16 pb-12 text-center">
+    <div class="max-w-4xl mx-auto px-4 pt-12 pb-10 text-center">
       <h1 class="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
         Free Tools to Make <span class="text-blue-600">Your Work</span> Simple
       </h1>
-      <p class="text-lg text-gray-600 mb-8">
+      <p class="text-lg text-gray-600 mb-6">
         PDF, Image, Office, Dev and Life tools — all in one place.
       </p>
 
@@ -40,6 +40,30 @@
       <div class="inline-flex items-center gap-2 bg-green-50 text-green-700 px-4 py-2 rounded-full text-sm font-medium mb-8">
         <span>✨</span>
         <span><strong>$3.99/month</strong> · Unlimited access to all tools</span>
+      </div>
+
+      <!-- Category Cards (moved above search) -->
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-3xl mx-auto mb-8">
+        <button data-category="Image" class="category-card bg-purple-500 text-white p-5 rounded-2xl text-left hover:opacity-90 transition">
+          <div class="text-2xl mb-1">🖼️</div>
+          <div class="font-semibold">Image</div>
+          <div class="text-sm opacity-90" id="count-Image">--</div>
+        </button>
+        <button data-category="Office" class="category-card bg-orange-500 text-white p-5 rounded-2xl text-left hover:opacity-90 transition">
+          <div class="text-2xl mb-1">📄</div>
+          <div class="font-semibold">Office</div>
+          <div class="text-sm opacity-90" id="count-Office">--</div>
+        </button>
+        <button data-category="Dev" class="category-card bg-blue-600 text-white p-5 rounded-2xl text-left hover:opacity-90 transition">
+          <div class="text-2xl mb-1">💻</div>
+          <div class="font-semibold">Dev</div>
+          <div class="text-sm opacity-90" id="count-Dev">--</div>
+        </button>
+        <button data-category="Life" class="category-card bg-teal-600 text-white p-5 rounded-2xl text-left hover:opacity-90 transition">
+          <div class="text-2xl mb-1">🎯</div>
+          <div class="font-semibold">Life</div>
+          <div class="text-sm opacity-90" id="count-Life">--</div>
+        </button>
       </div>
 
       <!-- Search -->
@@ -51,31 +75,7 @@
   </div>
 
   <div class="max-w-6xl mx-auto p-6">
-    <!-- Category Cards -->
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
-      <button data-category="Image" class="category-card bg-purple-500 text-white p-5 rounded-2xl text-left hover:opacity-90 transition">
-        <div class="text-2xl mb-2">🖼️</div>
-        <div class="font-semibold">Image</div>
-        <div class="text-sm opacity-90">Tools</div>
-      </button>
-      <button data-category="Office" class="category-card bg-orange-500 text-white p-5 rounded-2xl text-left hover:opacity-90 transition">
-        <div class="text-2xl mb-2">📄</div>
-        <div class="font-semibold">Office</div>
-        <div class="text-sm opacity-90">Tools</div>
-      </button>
-      <button data-category="Dev" class="category-card bg-blue-600 text-white p-5 rounded-2xl text-left hover:opacity-90 transition">
-        <div class="text-2xl mb-2">💻</div>
-        <div class="font-semibold">Dev</div>
-        <div class="text-sm opacity-90">Tools</div>
-      </button>
-      <button data-category="Life" class="category-card bg-teal-600 text-white p-5 rounded-2xl text-left hover:opacity-90 transition">
-        <div class="text-2xl mb-2">🎯</div>
-        <div class="font-semibold">Life</div>
-        <div class="text-sm opacity-90">Tools</div>
-      </button>
-    </div>
-
-    <!-- Category Filter Buttons (hidden by default, for fine filtering) -->
+    <!-- Category Filter Buttons -->
     <div class="flex flex-wrap gap-2 mb-6" id="categoryTabs">
       <button data-category="all" class="category-btn px-4 py-1.5 rounded-full text-sm font-medium bg-blue-600 text-white">All</button>
       <button data-category="Image" class="category-btn px-4 py-1.5 rounded-full text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200">Image</button>
@@ -121,12 +121,25 @@
   </div>
 
   <script>
+    // 使用次数基数（500+ 随机数），实际使用后可在后端累加
+    const baseCounts = {
+      Image: 500 + Math.floor(Math.random() * 800),
+      Office: 500 + Math.floor(Math.random() * 1200),
+      Dev: 500 + Math.floor(Math.random() * 600),
+      Life: 500 + Math.floor(Math.random() * 900)
+    };
+
+    // 显示使用次数
+    Object.keys(baseCounts).forEach(cat => {
+      const el = document.getElementById('count-' + cat);
+      if (el) el.textContent = baseCounts[cat].toLocaleString() + ' uses';
+    });
+
     // Category cards + filter buttons
     document.querySelectorAll('.category-card, .category-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         const category = btn.dataset.category;
 
-        // Update small filter buttons style
         document.querySelectorAll('.category-btn').forEach(b => {
           b.classList.remove('bg-blue-600', 'text-white');
           b.classList.add('bg-gray-100', 'text-gray-700');
@@ -137,7 +150,6 @@
           matchingBtn.classList.remove('bg-gray-100', 'text-gray-700');
         }
 
-        // Filter tools
         document.querySelectorAll('.tool-card').forEach(card => {
           if (category === 'all' || card.dataset.category === category) {
             card.classList.remove('hidden');
