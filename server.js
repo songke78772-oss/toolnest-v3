@@ -98,153 +98,6 @@ app.post('/login', (req, res) => {
   res.redirect('/dashboard');
 });
 
-// Image tools
-app.get('/compress', (req, res) => res.render('compress'));
-app.get('/resize', (req, res) => res.render('resize'));
-app.get('/crop', (req, res) => res.render('crop'));
-app.get('/png-to-jpg', (req, res) => res.render('png-to-jpg'));
-app.get('/jpg-to-png', (req, res) => res.render('jpg-to-png'));
-app.get('/black-white', (req, res) => res.render('black-white'));
-app.get('/flip', (req, res) => res.render('flip'));
-app.get('/round', (req, res) => res.render('round'));
-app.get('/add-border', (req, res) => res.render('add-border'));
-app.get('/pixelate', (req, res) => res.render('pixelate'));
-app.get('/add-text', (req, res) => res.render('add-text'));
-app.get('/blur-bg', (req, res) => res.render('blur-bg'));
-app.get('/remove-bg', (req, res) => res.render('remove-bg'));
-app.get('/metadata', (req, res) => res.render('metadata'));
-app.get('/combine', (req, res) => res.render('combine'));
-app.get('/collage', (req, res) => res.render('collage'));
-app.get('/chart', (req, res) => res.render('chart'));
-app.get('/splitter', (req, res) => res.render('splitter'));
-
-// Office tools
-app.get('/word-counter', (req, res) => res.render('word-counter'));
-app.get('/case-converter', (req, res) => res.render('case-converter'));
-app.get('/text-diff', (req, res) => res.render('text-diff'));
-app.get('/json-formatter', (req, res) => res.render('json-formatter'));
-app.get('/base64', (req, res) => res.render('base64'));
-app.get('/password-generator', (req, res) => res.render('password-generator'));
-app.get('/lorem-ipsum', (req, res) => res.render('lorem-ipsum'));
-app.get('/markdown-preview', (req, res) => res.render('markdown-preview'));
-app.get('/csv-to-json', (req, res) => res.render('csv-to-json'));
-app.get('/url-encode', (req, res) => res.render('url-encode'));
-
-// Dev tools
-app.get('/regex-tester', (req, res) => res.render('regex-tester'));
-app.get('/uuid-generator', (req, res) => res.render('uuid-generator'));
-app.get('/hash-generator', (req, res) => res.render('hash-generator'));
-app.get('/timestamp-converter', (req, res) => res.render('timestamp-converter'));
-app.get('/color-converter', (req, res) => res.render('color-converter'));
-app.get('/jwt-decoder', (req, res) => res.render('jwt-decoder'));
-app.get('/base-converter', (req, res) => res.render('base-converter'));
-app.get('/html-encoder', (req, res) => res.render('html-encoder'));
-app.get('/dummy-json', (req, res) => res.render('dummy-json'));
-
-// Life tools
-app.get('/age-calculator', (req, res) => res.render('age-calculator'));
-app.get('/bmi-calculator', (req, res) => res.render('bmi-calculator'));
-app.get('/tip-calculator', (req, res) => res.render('tip-calculator'));
-app.get('/countdown', (req, res) => res.render('countdown'));
-app.get('/random-number', (req, res) => res.render('random-number'));
-app.get('/coin-flip', (req, res) => res.render('coin-flip'));
-app.get('/dice-roller', (req, res) => res.render('dice-roller'));
-app.get('/unit-converter', (req, res) => res.render('unit-converter'));
-app.get('/percentage', (req, res) => res.render('percentage'));
-app.get('/days-between', (req, res) => res.render('days-between'));
-
-// Extra tools
-app.get('/qr-generator', (req, res) => res.render('qr-generator'));
-app.get('/remove-duplicates', (req, res) => res.render('remove-duplicates'));
-app.get('/text-to-slug', (req, res) => res.render('text-to-slug'));
-app.get('/meta-tags', (req, res) => res.render('meta-tags'));
-app.get('/emoji-picker', (req, res) => res.render('emoji-picker'));
-app.get('/cron-explainer', (req, res) => res.render('cron-explainer'));
-app.get('/css-minifier', (req, res) => res.render('css-minifier'));
-app.get('/find-replace', (req, res) => res.render('find-replace'));
-app.get('/og-preview', (req, res) => res.render('og-preview'));
-app.get('/tools/pdf-toolkit', requireLogin, (req, res) => {
-  res.render('pdf-toolkit');
-});
-
-
-
-// ========== PDF Tools ==========
-const pdfUpload = multer({ dest: '/tmp/pdf-uploads/' });
-if (!fs.existsSync('/tmp/pdf-uploads')) fs.mkdirSync('/tmp/pdf-uploads', { recursive: true });
-
-app.get('/pdf-tools', (req, res) => res.render('pdf-tools'));
-
-app.post('/api/pdf/compress', pdfUpload.single('file'), async (req, res) => {
-  if (!req.file) return res.status(400).send('No file');
-  const level = req.body.level || 'ebook';
-  const input = req.file.path;
-  const output = input + '-compressed.pdf';
-  const settings = { screen: '/screen', ebook: '/ebook', printer: '/printer' };
-
-  try {
-    await execAsync(`gs -sDEVICE=pdfwrite -dCompatibilityLevel=1.4 -dPDFSETTINGS=${settings[level] || '/ebook'} -dNOPAUSE -dQUIET -dBATCH -sOutputFile="${output}" "${input}"`);
-    res.download(output, 'compressed.pdf', () => {
-      try { fs.unlinkSync(input); } catch(e){}
-      try { fs.unlinkSync(output); } catch(e){}
-    });
-  } catch (err) {
-    try { fs.unlinkSync(input); } catch(e){}
-    res.status(500).send('Compression failed: ' + err.message);
-  }
-});
-
-app.post('/api/pdf/merge', pdfUpload.array('files', 20), async (req, res) => {
-  if (!req.files || req.files.length < 2) return res.status(400).send('Need at least 2 files');
-  try {
-    const merged = await PDFDocument.create();
-    for (const file of req.files) {
-      const bytes = fs.readFileSync(file.path);
-      const doc = await PDFDocument.load(bytes);
-      const pages = await merged.copyPages(doc, doc.getPageIndices());
-      pages.forEach(p => merged.addPage(p));
-      fs.unlinkSync(file.path);
-    }
-    const outBytes = await merged.save();
-    res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', 'attachment; filename=merged.pdf');
-    res.send(Buffer.from(outBytes));
-  } catch (err) {
-    req.files.forEach(f => { try { fs.unlinkSync(f.path); } catch(e){} });
-    res.status(500).send('Merge failed: ' + err.message);
-  }
-});
-
-app.post('/api/pdf/split', pdfUpload.single('file'), async (req, res) => {
-  if (!req.file) return res.status(400).send('No file');
-  const from = Math.max(1, parseInt(req.body.from) || 1);
-  const to = Math.max(from, parseInt(req.body.to) || from);
-  try {
-    const bytes = fs.readFileSync(req.file.path);
-    const src = await PDFDocument.load(bytes);
-    const total = src.getPageCount();
-    if (from > total) {
-      fs.unlinkSync(req.file.path);
-      return res.status(400).send(`PDF only has ${total} pages`);
-    }
-    const newDoc = await PDFDocument.create();
-    const end = Math.min(to, total);
-    const indices = [];
-    for (let i = from - 1; i < end; i++) indices.push(i);
-    const pages = await newDoc.copyPages(src, indices);
-    pages.forEach(p => newDoc.addPage(p));
-    const outBytes = await newDoc.save();
-    fs.unlinkSync(req.file.path);
-    res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', 'attachment; filename=split.pdf');
-    res.send(Buffer.from(outBytes));
-  } catch (err) {
-    try { fs.unlinkSync(req.file.path); } catch(e){}
-    res.status(500).send('Split failed: ' + err.message);
-  }
-});
-
-// Auth continued
 app.get('/register', (req, res) => res.render('register', { error: null }));
 app.post('/register', (req, res) => {
   const { email, password } = req.body;
@@ -271,6 +124,151 @@ app.get('/dashboard', requireLogin, (req, res) => {
     WHERE favorites.user_id = ?
   `).all(req.session.userId);
   res.render('dashboard', { user, favorites });
+});
+
+// ========== 所有工具都需要登录 ==========
+// Image tools
+app.get('/compress', requireLogin, (req, res) => res.render('compress'));
+app.get('/resize', requireLogin, (req, res) => res.render('resize'));
+app.get('/crop', requireLogin, (req, res) => res.render('crop'));
+app.get('/png-to-jpg', requireLogin, (req, res) => res.render('png-to-jpg'));
+app.get('/jpg-to-png', requireLogin, (req, res) => res.render('jpg-to-png'));
+app.get('/black-white', requireLogin, (req, res) => res.render('black-white'));
+app.get('/flip', requireLogin, (req, res) => res.render('flip'));
+app.get('/round', requireLogin, (req, res) => res.render('round'));
+app.get('/add-border', requireLogin, (req, res) => res.render('add-border'));
+app.get('/pixelate', requireLogin, (req, res) => res.render('pixelate'));
+app.get('/add-text', requireLogin, (req, res) => res.render('add-text'));
+app.get('/blur-bg', requireLogin, (req, res) => res.render('blur-bg'));
+app.get('/remove-bg', requireLogin, (req, res) => res.render('remove-bg'));
+app.get('/metadata', requireLogin, (req, res) => res.render('metadata'));
+app.get('/combine', requireLogin, (req, res) => res.render('combine'));
+app.get('/collage', requireLogin, (req, res) => res.render('collage'));
+app.get('/chart', requireLogin, (req, res) => res.render('chart'));
+app.get('/splitter', requireLogin, (req, res) => res.render('splitter'));
+
+// Office tools
+app.get('/word-counter', requireLogin, (req, res) => res.render('word-counter'));
+app.get('/case-converter', requireLogin, (req, res) => res.render('case-converter'));
+app.get('/text-diff', requireLogin, (req, res) => res.render('text-diff'));
+app.get('/json-formatter', requireLogin, (req, res) => res.render('json-formatter'));
+app.get('/base64', requireLogin, (req, res) => res.render('base64'));
+app.get('/password-generator', requireLogin, (req, res) => res.render('password-generator'));
+app.get('/lorem-ipsum', requireLogin, (req, res) => res.render('lorem-ipsum'));
+app.get('/markdown-preview', requireLogin, (req, res) => res.render('markdown-preview'));
+app.get('/csv-to-json', requireLogin, (req, res) => res.render('csv-to-json'));
+app.get('/url-encode', requireLogin, (req, res) => res.render('url-encode'));
+
+// Dev tools
+app.get('/regex-tester', requireLogin, (req, res) => res.render('regex-tester'));
+app.get('/uuid-generator', requireLogin, (req, res) => res.render('uuid-generator'));
+app.get('/hash-generator', requireLogin, (req, res) => res.render('hash-generator'));
+app.get('/timestamp-converter', requireLogin, (req, res) => res.render('timestamp-converter'));
+app.get('/color-converter', requireLogin, (req, res) => res.render('color-converter'));
+app.get('/jwt-decoder', requireLogin, (req, res) => res.render('jwt-decoder'));
+app.get('/base-converter', requireLogin, (req, res) => res.render('base-converter'));
+app.get('/html-encoder', requireLogin, (req, res) => res.render('html-encoder'));
+app.get('/dummy-json', requireLogin, (req, res) => res.render('dummy-json'));
+
+// Life tools
+app.get('/age-calculator', requireLogin, (req, res) => res.render('age-calculator'));
+app.get('/bmi-calculator', requireLogin, (req, res) => res.render('bmi-calculator'));
+app.get('/tip-calculator', requireLogin, (req, res) => res.render('tip-calculator'));
+app.get('/countdown', requireLogin, (req, res) => res.render('countdown'));
+app.get('/random-number', requireLogin, (req, res) => res.render('random-number'));
+app.get('/coin-flip', requireLogin, (req, res) => res.render('coin-flip'));
+app.get('/dice-roller', requireLogin, (req, res) => res.render('dice-roller'));
+app.get('/unit-converter', requireLogin, (req, res) => res.render('unit-converter'));
+app.get('/percentage', requireLogin, (req, res) => res.render('percentage'));
+app.get('/days-between', requireLogin, (req, res) => res.render('days-between'));
+
+// Extra tools
+app.get('/qr-generator', requireLogin, (req, res) => res.render('qr-generator'));
+app.get('/remove-duplicates', requireLogin, (req, res) => res.render('remove-duplicates'));
+app.get('/text-to-slug', requireLogin, (req, res) => res.render('text-to-slug'));
+app.get('/meta-tags', requireLogin, (req, res) => res.render('meta-tags'));
+app.get('/emoji-picker', requireLogin, (req, res) => res.render('emoji-picker'));
+app.get('/cron-explainer', requireLogin, (req, res) => res.render('cron-explainer'));
+app.get('/css-minifier', requireLogin, (req, res) => res.render('css-minifier'));
+app.get('/find-replace', requireLogin, (req, res) => res.render('find-replace'));
+app.get('/og-preview', requireLogin, (req, res) => res.render('og-preview'));
+app.get('/tools/pdf-toolkit', requireLogin, (req, res) => {
+  res.render('pdf-toolkit');
+});
+
+// ========== PDF Tools ==========
+const pdfUpload = multer({ dest: '/tmp/pdf-uploads/' });
+if (!fs.existsSync('/tmp/pdf-uploads')) fs.mkdirSync('/tmp/pdf-uploads', { recursive: true });
+
+app.get('/pdf-tools', requireLogin, (req, res) => res.render('pdf-tools'));
+
+app.post('/api/pdf/compress', requireLogin, pdfUpload.single('file'), async (req, res) => {
+  if (!req.file) return res.status(400).send('No file');
+  const level = req.body.level || 'ebook';
+  const input = req.file.path;
+  const output = input + '-compressed.pdf';
+  const settings = { screen: '/screen', ebook: '/ebook', printer: '/printer' };
+
+  try {
+    await execAsync(`gs -sDEVICE=pdfwrite -dCompatibilityLevel=1.4 -dPDFSETTINGS=${settings[level] || '/ebook'} -dNOPAUSE -dQUIET -dBATCH -sOutputFile="${output}" "${input}"`);
+    res.download(output, 'compressed.pdf', () => {
+      try { fs.unlinkSync(input); } catch(e){}
+      try { fs.unlinkSync(output); } catch(e){}
+    });
+  } catch (err) {
+    try { fs.unlinkSync(input); } catch(e){}
+    res.status(500).send('Compression failed: ' + err.message);
+  }
+});
+
+app.post('/api/pdf/merge', requireLogin, pdfUpload.array('files', 20), async (req, res) => {
+  if (!req.files || req.files.length < 2) return res.status(400).send('Need at least 2 files');
+  try {
+    const merged = await PDFDocument.create();
+    for (const file of req.files) {
+      const bytes = fs.readFileSync(file.path);
+      const doc = await PDFDocument.load(bytes);
+      const pages = await merged.copyPages(doc, doc.getPageIndices());
+      pages.forEach(p => merged.addPage(p));
+      fs.unlinkSync(file.path);
+    }
+    const outBytes = await merged.save();
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', 'attachment; filename=merged.pdf');
+    res.send(Buffer.from(outBytes));
+  } catch (err) {
+    req.files.forEach(f => { try { fs.unlinkSync(f.path); } catch(e){} });
+    res.status(500).send('Merge failed: ' + err.message);
+  }
+});
+
+app.post('/api/pdf/split', requireLogin, pdfUpload.single('file'), async (req, res) => {
+  if (!req.file) return res.status(400).send('No file');
+  const from = Math.max(1, parseInt(req.body.from) || 1);
+  const to = Math.max(from, parseInt(req.body.to) || from);
+  try {
+    const bytes = fs.readFileSync(req.file.path);
+    const src = await PDFDocument.load(bytes);
+    const total = src.getPageCount();
+    if (from > total) {
+      fs.unlinkSync(req.file.path);
+      return res.status(400).send(`PDF only has ${total} pages`);
+    }
+    const newDoc = await PDFDocument.create();
+    const end = Math.min(to, total);
+    const indices = [];
+    for (let i = from - 1; i < end; i++) indices.push(i);
+    const pages = await newDoc.copyPages(src, indices);
+    pages.forEach(p => newDoc.addPage(p));
+    const outBytes = await newDoc.save();
+    fs.unlinkSync(req.file.path);
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', 'attachment; filename=split.pdf');
+    res.send(Buffer.from(outBytes));
+  } catch (err) {
+    try { fs.unlinkSync(req.file.path); } catch(e){}
+    res.status(500).send('Split failed: ' + err.message);
+  }
 });
 
 // Subscribe
