@@ -5,6 +5,20 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ToolNest - Online Tools</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    .marquee {
+      overflow: hidden;
+      white-space: nowrap;
+    }
+    .marquee-content {
+      display: inline-block;
+      animation: marquee 28s linear infinite;
+    }
+    @keyframes marquee {
+      0% { transform: translateX(100%); }
+      100% { transform: translateX(-100%); }
+    }
+  </style>
 </head>
 <body class="bg-gray-50">
   <!-- Nav -->
@@ -26,6 +40,20 @@
     </div>
   </nav>
 
+  <!-- Scrolling Banner -->
+  <div class="bg-blue-600 text-white text-sm">
+    <div class="marquee py-2">
+      <div class="marquee-content">
+        <span class="mx-8">📄 法律文档服务筹备中，近期上线</span>
+        <span class="mx-8">🛠️ 各类工具持续更新中</span>
+        <span class="mx-8">🎁 现在注册，送 3 天免费使用</span>
+        <span class="mx-8">📄 法律文档服务筹备中，近期上线</span>
+        <span class="mx-8">🛠️ 各类工具持续更新中</span>
+        <span class="mx-8">🎁 现在注册，送 3 天免费使用</span>
+      </div>
+    </div>
+  </div>
+
   <!-- Hero -->
   <div class="bg-white border-b">
     <div class="max-w-4xl mx-auto px-4 pt-12 pb-10 text-center">
@@ -42,7 +70,7 @@
         <span><strong>$3.99/month</strong> · Unlimited access to all tools</span>
       </div>
 
-      <!-- Category Cards (moved above search) -->
+      <!-- Category Cards -->
       <div class="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-3xl mx-auto mb-8">
         <button data-category="Image" class="category-card bg-purple-500 text-white p-5 rounded-2xl text-left hover:opacity-90 transition">
           <div class="text-2xl mb-1">🖼️</div>
@@ -121,7 +149,6 @@
   </div>
 
   <script>
-    // 使用次数基数（500+ 随机数），实际使用后可在后端累加
     const baseCounts = {
       Image: 500 + Math.floor(Math.random() * 800),
       Office: 500 + Math.floor(Math.random() * 1200),
@@ -129,13 +156,11 @@
       Life: 500 + Math.floor(Math.random() * 900)
     };
 
-    // 显示使用次数
     Object.keys(baseCounts).forEach(cat => {
       const el = document.getElementById('count-' + cat);
       if (el) el.textContent = baseCounts[cat].toLocaleString() + ' uses';
     });
 
-    // Category cards + filter buttons
     document.querySelectorAll('.category-card, .category-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         const category = btn.dataset.category;
@@ -160,7 +185,6 @@
       });
     });
 
-    // Search
     document.getElementById('searchInput').addEventListener('input', (e) => {
       const q = e.target.value.toLowerCase().trim();
       document.querySelectorAll('.tool-card').forEach(card => {
