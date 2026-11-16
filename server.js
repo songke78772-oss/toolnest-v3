@@ -215,6 +215,51 @@ app.get('/find-replace', (req, res) => res.render('find-replace'));
 app.get('/og-preview', (req, res) => res.render('og-preview'));
 app.get('/tools/pdf-toolkit', (req, res) => res.render('pdf-toolkit'));
 
+// 通用工具页
+app.get('/tool/:id', requireLogin, (req, res) => {
+  const tool = db.prepare('SELECT * FROM tools WHERE id = ?').get(req.params.id);
+  if (!tool) return res.status(404).send('Tool not found');
+
+  if (tool.tool_type === 'local' && tool.name === 'Word Counter') {
+    return res.render('word-counter', { tool });
+  }
+  if (tool.tool_type === 'ai') {
+    return res.render('ai-tool', { tool });
+  }
+  // 其他类型（比如你之前的 PDF）走原来的逻辑
+  res.render('tool-detail', { tool }); // 或你原来的页面
+});
+
+// AI 工具 API（用 Groq，免费额度多）
+app.post('/api/ai-tool/:id', requireLogin, async (req, res) => {
+  const tool = db.prepare('SELECT * FROM tools WHERE id = ?').get(req.params.id);
+  if (!tool || tool.tool_type !== 'ai') return res.json({ success: false, error: 'Invalid tool' });
+
+  let prompt = tool.prompt_template || '';
+  prompt = prompt.replace('{{input}}', req.body.input || '');
+  if (req.body.tone) prompt = prompt.replace('{{tone}}', req.body.tone);
+
+  try {
+    const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${process.env.GROQ_API_KEY}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        model: 'llama-3.3-70b-versatile',
+        messages: [{ role: 'user', content: prompt }],
+        temperature: 0.7
+      })
+    });
+    const data = await response.json();
+    const result = data.choices?.[0]?.message?.content || 'No result';
+    res.json({ success: true, result });
+  } catch (err) {
+    res.json({ success: false, error: 'AI service error' });
+  }
+});
+
 // PDF API
 const pdfUpload = multer({ dest: '/tmp/pdf-uploads/' });
 if (!fs.existsSync('/tmp/pdf-uploads')) fs.mkdirSync('/tmp/pdf-uploads', { recursive: true });
