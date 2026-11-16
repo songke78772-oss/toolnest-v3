@@ -40,19 +40,39 @@
     </div>
   </nav>
 
-    <!-- Scrolling Banner -->
-  <div class="bg-blue-600 text-white text-sm">
-    <div class="marquee py-2">
-      <div class="marquee-content">
-        <span class="mx-8">📄 Legal document service coming soon</span>
-        <span class="mx-8">🛠️ New tools added regularly</span>
-        <span class="mx-8">🎁 Sign up now and get 3 days free</span>
-        <span class="mx-8">📄 Legal document service coming soon</span>
-        <span class="mx-8">🛠️ New tools added regularly</span>
-        <span class="mx-8">🎁 Sign up now and get 3 days free</span>
-      </div>
+    <!-- Vertical Scrolling Banner -->
+  <div class="bg-blue-600 text-white text-sm overflow-hidden h-9 relative">
+    <div id="ticker" class="absolute inset-0 flex items-center justify-center transition-all duration-500">
+      <span>📄 Legal document service coming soon</span>
     </div>
   </div>
+
+  <script>
+    const messages = [
+      '📄 Legal document service coming soon',
+      '🛠️ New tools added regularly',
+      '🎁 Sign up now and get 3 days free'
+    ];
+    let current = 0;
+    const ticker = document.getElementById('ticker');
+
+    function showNext() {
+      ticker.style.opacity = '0';
+      ticker.style.transform = 'translateY(-10px)';
+      setTimeout(() => {
+        current = (current + 1) % messages.length;
+        ticker.textContent = messages[current];
+        ticker.style.transform = 'translateY(10px)';
+        ticker.style.opacity = '0';
+        setTimeout(() => {
+          ticker.style.opacity = '1';
+          ticker.style.transform = 'translateY(0)';
+        }, 50);
+      }, 400);
+    }
+
+    setInterval(showNext, 3500);
+  </script>
 
   <!-- Hero -->
   <div class="bg-white border-b">
