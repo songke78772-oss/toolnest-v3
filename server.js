@@ -166,6 +166,28 @@ app.post('/admin/delete/:id', (req, res) => {
   res.redirect('/admin/dashboard');
 });
 
+// 删除工具
+app.post('/admin/delete-tool/:id', (req, res) => {
+  if (!req.session.isAdmin) return res.redirect('/admin');
+  db.prepare('DELETE FROM tools WHERE id = ?').run(req.params.id);
+  res.redirect('/admin/dashboard');
+});
+
+// 删除用户
+app.post('/admin/delete-user/:id', (req, res) => {
+  if (!req.session.isAdmin) return res.redirect('/admin');
+  db.prepare('DELETE FROM users WHERE id = ?').run(req.params.id);
+  res.redirect('/admin/dashboard');
+});
+
+// 修改 dashboard 路由，同时返回 users
+app.get('/admin/dashboard', (req, res) => {
+  if (!req.session.isAdmin) return res.redirect('/admin');
+  const tools = db.prepare('SELECT * FROM tools ORDER BY id DESC').all();
+  const users = db.prepare('SELECT id, email, created_at FROM users ORDER BY id DESC').all();
+  res.render('admin', { tools, users });
+});
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`ToolNest running on port ${PORT}`);
