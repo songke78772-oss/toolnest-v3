@@ -5,14 +5,16 @@ const bcrypt = require('bcryptjs');
 const path = require('path');
 const fs = require('fs');
 const multer = require('multer');
+const Stripe = require('stripe');
 const Database = require('better-sqlite3');
-const crypto = require('crypto');
-const { PDFDocument } = require('pdf-lib');
-const { exec } = require('child_process');
-const { promisify } = require('util');
-const execAsync = promisify(exec);
+const { Resend } = require('resend');
 
 const app = express();
+const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
+const resend = new Resend(process.env.RESEND_API_KEY);
+
+// 临时存储验证码
+const verificationCodes = new Map();
 
 // Database
 const db = new Database(path.join(__dirname, 'data', 'app.db'));
@@ -21,8 +23,9 @@ db.exec(`
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     email TEXT UNIQUE NOT NULL,
     password_hash TEXT NOT NULL,
+    stripe_customer_id TEXT,
     subscription_status TEXT DEFAULT 'inactive',
-    creem_customer_id TEXT,
+    subscription_id TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
   );
 
@@ -30,29 +33,19 @@ db.exec(`
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL,
     description TEXT,
-    category TEXT DEFAULT '办公',
+    filename TEXT,
+    version TEXT DEFAULT '1.0',
+    category TEXT DEFAULT 'Other',
+    type TEXT DEFAULT 'online',
     url TEXT,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-  );
-
-  CREATE TABLE IF NOT EXISTS favorites (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id INTEGER,
-    tool_id INTEGER,
-    UNIQUE(user_id, tool_id)
-  );
-
-  CREATE TABLE IF NOT EXISTS tool_requests (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    email TEXT,
-    content TEXT,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
   );
 `);
 
 // Session
 app.use(session({
-  secret: process.env.SESSION_SECRET || 'change-me',
+  secret: process.env.SESSION_SECRET || 'fallback-secret-change-me',
   resave: false,
   saveUninitialized: false,
   cookie: { secure: false, maxAge: 7 * 24 * 60 * 60 * 1000 }
@@ -61,6 +54,11 @@ app.use(session({
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
+app.set('view engine', 'ejs');
+app.set('views', path.join(__dirname, 'views'));
+
+// Multer
+const upload = multer({ dest: path.join(__dirname, 'uploads') });
 
 // Middleware
 function requireLogin(req, res, next) {
@@ -69,47 +67,87 @@ function requireLogin(req, res, next) {
 }
 
 function requireSubscription(req, res, next) {
-  if (!req.session.userId) return res.redirect('/login');
-  const user = db.prepare('SELECT subscription_status FROM users WHERE id = ?').get(req.session.userId);
-  if (!user || user.subscription_status !== 'active') return res.redirect('/subscribe');
+  if (req.session.subscriptionStatus !== 'active') {
+    return res.redirect('/subscribe');
+  }
   next();
 }
 
-// Views
-app.set('view engine', 'ejs');
-app.set('views', path.join(__dirname, 'views'));
+// ========== Routes ==========
 
 // Home
 app.get('/', (req, res) => {
-  const q = req.query.q || '';
   const tools = db.prepare('SELECT * FROM tools ORDER BY id DESC').all();
-  res.render('index', { tools, loggedIn: !!req.session.userId, q });
+  res.render('index', { user: req.session.userId, tools });
 });
 
-// Auth
-app.get('/login', (req, res) => res.render('login', { error: null }));
-app.post('/login', (req, res) => {
-  const { email, password } = req.body;
-  const user = db.prepare('SELECT * FROM users WHERE email = ?').get(email);
-  if (!user || !bcrypt.compareSync(password, user.password_hash)) {
-    return res.render('login', { error: '邮箱或密码错误' });
+// Register page
+app.get('/register', (req, res) => {
+  res.render('register', { error: null });
+});
+
+// Send verification code
+app.post('/api/send-code', async (req, res) => {
+  const { email } = req.body;
+  if (!email) return res.json({ success: false, error: 'Email required' });
+
+  const code = Math.floor(100000 + Math.random() * 900000).toString();
+  verificationCodes.set(email, { code, expires: Date.now() + 10 * 60 * 1000 });
+
+  try {
+    await resend.emails.send({
+      from: 'ToolNest <noreply@protoolnest.com>',
+      to: email,
+      subject: 'Your ToolNest Verification Code',
+      html: `<p>Your verification code is:</p><p style="font-size:28px;font-weight:bold;letter-spacing:4px;">${code}</p><p>Valid for 10 minutes.</p>`
+    });
+    res.json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.json({ success: false, error: 'Failed to send email' });
   }
-  req.session.userId = user.id;
-  res.redirect('/dashboard');
 });
 
-app.get('/register', (req, res) => res.render('register', { error: null }));
+// Register
 app.post('/register', (req, res) => {
-  const { email, password } = req.body;
+  const { email, password, code } = req.body;
+  const stored = verificationCodes.get(email);
+
+  if (!stored || stored.code !== code || stored.expires < Date.now()) {
+    return res.render('register', { error: 'Invalid or expired verification code' });
+  }
+
   try {
     const hash = bcrypt.hashSync(password, 10);
     db.prepare('INSERT INTO users (email, password_hash) VALUES (?, ?)').run(email, hash);
+    verificationCodes.delete(email);
     res.redirect('/login');
-  } catch {
-    res.render('register', { error: '邮箱已存在' });
+  } catch (err) {
+    res.render('register', { error: 'Email already exists' });
   }
 });
 
+// Login page
+app.get('/login', (req, res) => {
+  res.render('login', { error: null });
+});
+
+// Login
+app.post('/login', (req, res) => {
+  const { email, password } = req.body;
+  const user = db.prepare('SELECT * FROM users WHERE email = ?').get(email);
+
+  if (!user || !bcrypt.compareSync(password, user.password_hash)) {
+    return res.render('login', { error: 'Invalid email or password' });
+  }
+
+  req.session.userId = user.id;
+  req.session.email = user.email;
+  req.session.subscriptionStatus = user.subscription_status;
+  res.redirect('/');
+});
+
+// Logout
 app.get('/logout', (req, res) => {
   req.session.destroy();
   res.redirect('/');
@@ -117,256 +155,43 @@ app.get('/logout', (req, res) => {
 
 // Dashboard
 app.get('/dashboard', requireLogin, (req, res) => {
-  const user = db.prepare('SELECT * FROM users WHERE id = ?').get(req.session.userId);
-  const favorites = db.prepare(`
-    SELECT tools.* FROM favorites
-    JOIN tools ON favorites.tool_id = tools.id
-    WHERE favorites.user_id = ?
-  `).all(req.session.userId);
-  res.render('dashboard', { user, favorites });
+  res.render('dashboard', { email: req.session.email });
 });
 
-// ========== 所有工具都需要登录 ==========
-// Image tools
-app.get('/compress', requireLogin, (req, res) => res.render('compress'));
-app.get('/resize', requireLogin, (req, res) => res.render('resize'));
-app.get('/crop', requireLogin, (req, res) => res.render('crop'));
-app.get('/png-to-jpg', requireLogin, (req, res) => res.render('png-to-jpg'));
-app.get('/jpg-to-png', requireLogin, (req, res) => res.render('jpg-to-png'));
-app.get('/black-white', requireLogin, (req, res) => res.render('black-white'));
-app.get('/flip', requireLogin, (req, res) => res.render('flip'));
-app.get('/round', requireLogin, (req, res) => res.render('round'));
-app.get('/add-border', requireLogin, (req, res) => res.render('add-border'));
-app.get('/pixelate', requireLogin, (req, res) => res.render('pixelate'));
-app.get('/add-text', requireLogin, (req, res) => res.render('add-text'));
-app.get('/blur-bg', requireLogin, (req, res) => res.render('blur-bg'));
-app.get('/remove-bg', requireLogin, (req, res) => res.render('remove-bg'));
-app.get('/metadata', requireLogin, (req, res) => res.render('metadata'));
-app.get('/combine', requireLogin, (req, res) => res.render('combine'));
-app.get('/collage', requireLogin, (req, res) => res.render('collage'));
-app.get('/chart', requireLogin, (req, res) => res.render('chart'));
-app.get('/splitter', requireLogin, (req, res) => res.render('splitter'));
-
-// Office tools
-app.get('/word-counter', requireLogin, (req, res) => res.render('word-counter'));
-app.get('/case-converter', requireLogin, (req, res) => res.render('case-converter'));
-app.get('/text-diff', requireLogin, (req, res) => res.render('text-diff'));
-app.get('/json-formatter', requireLogin, (req, res) => res.render('json-formatter'));
-app.get('/base64', requireLogin, (req, res) => res.render('base64'));
-app.get('/password-generator', requireLogin, (req, res) => res.render('password-generator'));
-app.get('/lorem-ipsum', requireLogin, (req, res) => res.render('lorem-ipsum'));
-app.get('/markdown-preview', requireLogin, (req, res) => res.render('markdown-preview'));
-app.get('/csv-to-json', requireLogin, (req, res) => res.render('csv-to-json'));
-app.get('/url-encode', requireLogin, (req, res) => res.render('url-encode'));
-
-// Dev tools
-app.get('/regex-tester', requireLogin, (req, res) => res.render('regex-tester'));
-app.get('/uuid-generator', requireLogin, (req, res) => res.render('uuid-generator'));
-app.get('/hash-generator', requireLogin, (req, res) => res.render('hash-generator'));
-app.get('/timestamp-converter', requireLogin, (req, res) => res.render('timestamp-converter'));
-app.get('/color-converter', requireLogin, (req, res) => res.render('color-converter'));
-app.get('/jwt-decoder', requireLogin, (req, res) => res.render('jwt-decoder'));
-app.get('/base-converter', requireLogin, (req, res) => res.render('base-converter'));
-app.get('/html-encoder', requireLogin, (req, res) => res.render('html-encoder'));
-app.get('/dummy-json', requireLogin, (req, res) => res.render('dummy-json'));
-
-// Life tools
-app.get('/age-calculator', requireLogin, (req, res) => res.render('age-calculator'));
-app.get('/bmi-calculator', requireLogin, (req, res) => res.render('bmi-calculator'));
-app.get('/tip-calculator', requireLogin, (req, res) => res.render('tip-calculator'));
-app.get('/countdown', requireLogin, (req, res) => res.render('countdown'));
-app.get('/random-number', requireLogin, (req, res) => res.render('random-number'));
-app.get('/coin-flip', requireLogin, (req, res) => res.render('coin-flip'));
-app.get('/dice-roller', requireLogin, (req, res) => res.render('dice-roller'));
-app.get('/unit-converter', requireLogin, (req, res) => res.render('unit-converter'));
-app.get('/percentage', requireLogin, (req, res) => res.render('percentage'));
-app.get('/days-between', requireLogin, (req, res) => res.render('days-between'));
-
-// Extra tools
-app.get('/qr-generator', requireLogin, (req, res) => res.render('qr-generator'));
-app.get('/remove-duplicates', requireLogin, (req, res) => res.render('remove-duplicates'));
-app.get('/text-to-slug', requireLogin, (req, res) => res.render('text-to-slug'));
-app.get('/meta-tags', requireLogin, (req, res) => res.render('meta-tags'));
-app.get('/emoji-picker', requireLogin, (req, res) => res.render('emoji-picker'));
-app.get('/cron-explainer', requireLogin, (req, res) => res.render('cron-explainer'));
-app.get('/css-minifier', requireLogin, (req, res) => res.render('css-minifier'));
-app.get('/find-replace', requireLogin, (req, res) => res.render('find-replace'));
-app.get('/og-preview', requireLogin, (req, res) => res.render('og-preview'));
-app.get('/tools/pdf-toolkit', requireLogin, (req, res) => {
-  res.render('pdf-toolkit');
-});
-
-// ========== PDF Tools ==========
-const pdfUpload = multer({ dest: '/tmp/pdf-uploads/' });
-if (!fs.existsSync('/tmp/pdf-uploads')) fs.mkdirSync('/tmp/pdf-uploads', { recursive: true });
-
-app.get('/pdf-tools', requireLogin, (req, res) => res.render('pdf-tools'));
-
-app.post('/api/pdf/compress', requireLogin, pdfUpload.single('file'), async (req, res) => {
-  if (!req.file) return res.status(400).send('No file');
-  const level = req.body.level || 'ebook';
-  const input = req.file.path;
-  const output = input + '-compressed.pdf';
-  const settings = { screen: '/screen', ebook: '/ebook', printer: '/printer' };
-
-  try {
-    await execAsync(`gs -sDEVICE=pdfwrite -dCompatibilityLevel=1.4 -dPDFSETTINGS=${settings[level] || '/ebook'} -dNOPAUSE -dQUIET -dBATCH -sOutputFile="${output}" "${input}"`);
-    res.download(output, 'compressed.pdf', () => {
-      try { fs.unlinkSync(input); } catch(e){}
-      try { fs.unlinkSync(output); } catch(e){}
-    });
-  } catch (err) {
-    try { fs.unlinkSync(input); } catch(e){}
-    res.status(500).send('Compression failed: ' + err.message);
-  }
-});
-
-app.post('/api/pdf/merge', requireLogin, pdfUpload.array('files', 20), async (req, res) => {
-  if (!req.files || req.files.length < 2) return res.status(400).send('Need at least 2 files');
-  try {
-    const merged = await PDFDocument.create();
-    for (const file of req.files) {
-      const bytes = fs.readFileSync(file.path);
-      const doc = await PDFDocument.load(bytes);
-      const pages = await merged.copyPages(doc, doc.getPageIndices());
-      pages.forEach(p => merged.addPage(p));
-      fs.unlinkSync(file.path);
-    }
-    const outBytes = await merged.save();
-    res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', 'attachment; filename=merged.pdf');
-    res.send(Buffer.from(outBytes));
-  } catch (err) {
-    req.files.forEach(f => { try { fs.unlinkSync(f.path); } catch(e){} });
-    res.status(500).send('Merge failed: ' + err.message);
-  }
-});
-
-app.post('/api/pdf/split', requireLogin, pdfUpload.single('file'), async (req, res) => {
-  if (!req.file) return res.status(400).send('No file');
-  const from = Math.max(1, parseInt(req.body.from) || 1);
-  const to = Math.max(from, parseInt(req.body.to) || from);
-  try {
-    const bytes = fs.readFileSync(req.file.path);
-    const src = await PDFDocument.load(bytes);
-    const total = src.getPageCount();
-    if (from > total) {
-      fs.unlinkSync(req.file.path);
-      return res.status(400).send(`PDF only has ${total} pages`);
-    }
-    const newDoc = await PDFDocument.create();
-    const end = Math.min(to, total);
-    const indices = [];
-    for (let i = from - 1; i < end; i++) indices.push(i);
-    const pages = await newDoc.copyPages(src, indices);
-    pages.forEach(p => newDoc.addPage(p));
-    const outBytes = await newDoc.save();
-    fs.unlinkSync(req.file.path);
-    res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', 'attachment; filename=split.pdf');
-    res.send(Buffer.from(outBytes));
-  } catch (err) {
-    try { fs.unlinkSync(req.file.path); } catch(e){}
-    res.status(500).send('Split failed: ' + err.message);
-  }
-});
-
-// Subscribe
-app.get('/subscribe', requireLogin, (req, res) => {
-  res.render('subscribe');
-});
-
-app.post('/subscribe', requireLogin, async (req, res) => {
-  const user = db.prepare('SELECT * FROM users WHERE id = ?').get(req.session.userId);
-  try {
-    const response = await fetch('https://api.creem.io/v1/checkouts', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': process.env.CREEM_API_KEY
-      },
-      body: JSON.stringify({
-        product_id: process.env.CREEM_PRODUCT_ID,
-        success_url: 'https://protoolnest.com/success',
-        customer_email: user.email
-      })
-    });
-    const data = await response.json();
-    if (data.checkout_url) {
-      return res.redirect(data.checkout_url);
-    }
-    res.send('创建支付失败');
-  } catch (err) {
-    console.error(err);
-    res.send('支付出错');
-  }
-});
-
-// Success
-app.get('/success', requireLogin, (req, res) => {
-  res.render('success');
-});
-
-// Webhook
-app.post('/webhook/creem', express.raw({ type: 'application/json' }), (req, res) => {
-  const signature = req.headers['creem-signature'];
-  const secret = process.env.CREEM_WEBHOOK_SECRET;
-  const payload = req.body.toString();
-  const expected = crypto.createHmac('sha256', secret).update(payload).digest('hex');
-  if (signature !== expected) return res.status(401).send('Invalid signature');
-
-  const event = JSON.parse(payload);
-  if (event.type === 'checkout.completed' || event.type === 'subscription.paid') {
-    const email = event.data?.customer?.email;
-    if (email) {
-      db.prepare("UPDATE users SET subscription_status = 'active' WHERE email = ?").run(email);
-    }
-  }
-  if (event.type === 'subscription.canceled' || event.type === 'subscription.expired') {
-    const email = event.data?.customer?.email;
-    if (email) {
-      db.prepare("UPDATE users SET subscription_status = 'inactive' WHERE email = ?").run(email);
-    }
-  }
-  res.json({ received: true });
-});
-
-// Tool request
-app.post('/request-tool', (req, res) => {
-  const { email, content } = req.body;
-  if (email && content) {
-    db.prepare('INSERT INTO tool_requests (email, content) VALUES (?, ?)').run(email, content);
-  }
-  res.redirect('/?requested=1');
-});
-
-// Admin
-const ADMIN_PASSWORD = 'admin123';
-
+// ========== Admin ==========
 app.get('/admin', (req, res) => {
   if (req.session.isAdmin) return res.redirect('/admin/dashboard');
   res.render('admin-login', { error: null });
 });
 
 app.post('/admin/login', (req, res) => {
-  if (req.body.password === ADMIN_PASSWORD) {
+  if (req.body.password === 'admin123') {  // 改成你自己的密码
     req.session.isAdmin = true;
     return res.redirect('/admin/dashboard');
   }
-  res.render('admin-login', { error: '密码错误' });
+  res.render('admin-login', { error: 'Wrong password' });
 });
 
 app.get('/admin/dashboard', (req, res) => {
   if (!req.session.isAdmin) return res.redirect('/admin');
-  const tools = db.prepare('SELECT * FROM tools').all();
-  const users = db.prepare('SELECT id, email, subscription_status, created_at FROM users').all();
-  res.render('admin', { tools, users });
+  const tools = db.prepare('SELECT * FROM tools ORDER BY id DESC').all();
+  res.render('admin', { tools });
 });
 
 app.post('/admin/add-tool', (req, res) => {
   if (!req.session.isAdmin) return res.redirect('/admin');
   const { name, description, category, url } = req.body;
-  db.prepare('INSERT INTO tools (name, description, category, url) VALUES (?, ?, ?, ?)').run(name, description, category, url);
+  if (!name) return res.redirect('/admin/dashboard');
+  db.prepare(`
+    INSERT INTO tools (name, description, category, url, type)
+    VALUES (?, ?, ?, ?, 'online')
+  `).run(name, description || '', category || 'Other', url || '');
+  res.redirect('/admin/dashboard');
+});
+
+app.post('/admin/delete/:id', (req, res) => {
+  if (!req.session.isAdmin) return res.redirect('/admin');
+  db.prepare('DELETE FROM tools WHERE id = ?').run(req.params.id);
   res.redirect('/admin/dashboard');
 });
 
