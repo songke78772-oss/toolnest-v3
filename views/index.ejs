@@ -7,7 +7,8 @@
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-50">
-  <nav class="bg-white border-b">
+  <!-- Nav -->
+  <nav class="bg-white border-b sticky top-0 z-10">
     <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
       <a href="/" class="flex items-center gap-2">
         <img src="/images/logo.png" alt="ToolNest" class="h-9 w-auto">
@@ -25,20 +26,62 @@
     </div>
   </nav>
 
+  <!-- Hero -->
+  <div class="bg-white border-b">
+    <div class="max-w-4xl mx-auto px-4 pt-16 pb-12 text-center">
+      <h1 class="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
+        Free Tools to Make <span class="text-blue-600">Your Work</span> Simple
+      </h1>
+      <p class="text-lg text-gray-600 mb-8">
+        PDF, Image, Office, Dev and Life tools — all in one place.
+      </p>
+
+      <!-- Pricing Badge -->
+      <div class="inline-flex items-center gap-2 bg-green-50 text-green-700 px-4 py-2 rounded-full text-sm font-medium mb-8">
+        <span>✨</span>
+        <span><strong>$3.99/month</strong> · Unlimited access to all tools</span>
+      </div>
+
+      <!-- Search -->
+      <div class="max-w-xl mx-auto relative">
+        <input type="text" id="searchInput" placeholder="Search tools..." 
+               class="w-full border border-gray-300 rounded-2xl px-5 py-4 text-lg focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm">
+      </div>
+    </div>
+  </div>
+
   <div class="max-w-6xl mx-auto p-6">
-    <!-- Search -->
-    <div class="mb-6">
-      <input type="text" id="searchInput" placeholder="Search tools..." 
-             class="w-full border border-gray-300 rounded-xl px-4 py-3 text-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+    <!-- Category Cards -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
+      <button data-category="Image" class="category-card bg-purple-500 text-white p-5 rounded-2xl text-left hover:opacity-90 transition">
+        <div class="text-2xl mb-2">🖼️</div>
+        <div class="font-semibold">Image</div>
+        <div class="text-sm opacity-90">Tools</div>
+      </button>
+      <button data-category="Office" class="category-card bg-orange-500 text-white p-5 rounded-2xl text-left hover:opacity-90 transition">
+        <div class="text-2xl mb-2">📄</div>
+        <div class="font-semibold">Office</div>
+        <div class="text-sm opacity-90">Tools</div>
+      </button>
+      <button data-category="Dev" class="category-card bg-blue-600 text-white p-5 rounded-2xl text-left hover:opacity-90 transition">
+        <div class="text-2xl mb-2">💻</div>
+        <div class="font-semibold">Dev</div>
+        <div class="text-sm opacity-90">Tools</div>
+      </button>
+      <button data-category="Life" class="category-card bg-teal-600 text-white p-5 rounded-2xl text-left hover:opacity-90 transition">
+        <div class="text-2xl mb-2">🎯</div>
+        <div class="font-semibold">Life</div>
+        <div class="text-sm opacity-90">Tools</div>
+      </button>
     </div>
 
-    <!-- Category Tabs -->
-    <div class="flex flex-wrap gap-2 mb-8" id="categoryTabs">
-      <button data-category="all" class="category-btn px-4 py-2 rounded-full text-sm font-medium bg-blue-600 text-white">All</button>
-      <button data-category="Image" class="category-btn px-4 py-2 rounded-full text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200">Image</button>
-      <button data-category="Office" class="category-btn px-4 py-2 rounded-full text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200">Office</button>
-      <button data-category="Dev" class="category-btn px-4 py-2 rounded-full text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200">Dev</button>
-      <button data-category="Life" class="category-btn px-4 py-2 rounded-full text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200">Life</button>
+    <!-- Category Filter Buttons (hidden by default, for fine filtering) -->
+    <div class="flex flex-wrap gap-2 mb-6" id="categoryTabs">
+      <button data-category="all" class="category-btn px-4 py-1.5 rounded-full text-sm font-medium bg-blue-600 text-white">All</button>
+      <button data-category="Image" class="category-btn px-4 py-1.5 rounded-full text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200">Image</button>
+      <button data-category="Office" class="category-btn px-4 py-1.5 rounded-full text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200">Office</button>
+      <button data-category="Dev" class="category-btn px-4 py-1.5 rounded-full text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200">Dev</button>
+      <button data-category="Life" class="category-btn px-4 py-1.5 rounded-full text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200">Life</button>
     </div>
 
     <!-- Tools Grid -->
@@ -52,9 +95,9 @@
              data-desc="<%= (tool.description || '').toLowerCase() %>">
             <div class="flex items-start gap-3">
               <div class="text-3xl"><%= tool.icon || '🔧' %></div>
-              <div>
+              <div class="flex-1">
                 <h3 class="font-semibold text-gray-800"><%= tool.name %></h3>
-                <p class="text-sm text-gray-500 mt-1"><%= tool.description || '' %></p>
+                <p class="text-sm text-gray-500 mt-1 line-clamp-2"><%= tool.description || '' %></p>
                 <span class="inline-block mt-2 text-xs px-2 py-0.5 bg-gray-100 text-gray-600 rounded-full"><%= tool.category || 'Office' %></span>
               </div>
             </div>
@@ -64,20 +107,37 @@
         <p class="col-span-full text-center text-gray-500 py-10">No tools yet.</p>
       <% } %>
     </div>
+
+    <!-- Bottom CTA -->
+    <% if (!loggedIn) { %>
+    <div class="mt-16 text-center bg-white rounded-2xl border p-8">
+      <h2 class="text-2xl font-bold text-gray-800 mb-2">Get Unlimited Access</h2>
+      <p class="text-gray-600 mb-6">All tools for just <strong>$3.99/month</strong>. Cancel anytime.</p>
+      <a href="/register" class="inline-block bg-blue-600 text-white px-8 py-3 rounded-xl font-medium hover:bg-blue-700">
+        Start Free Trial
+      </a>
+    </div>
+    <% } %>
   </div>
 
   <script>
-    // Category filter
-    document.querySelectorAll('.category-btn').forEach(btn => {
+    // Category cards + filter buttons
+    document.querySelectorAll('.category-card, .category-btn').forEach(btn => {
       btn.addEventListener('click', () => {
+        const category = btn.dataset.category;
+
+        // Update small filter buttons style
         document.querySelectorAll('.category-btn').forEach(b => {
           b.classList.remove('bg-blue-600', 'text-white');
           b.classList.add('bg-gray-100', 'text-gray-700');
         });
-        btn.classList.add('bg-blue-600', 'text-white');
-        btn.classList.remove('bg-gray-100', 'text-gray-700');
+        const matchingBtn = document.querySelector(`.category-btn[data-category="${category}"]`);
+        if (matchingBtn) {
+          matchingBtn.classList.add('bg-blue-600', 'text-white');
+          matchingBtn.classList.remove('bg-gray-100', 'text-gray-700');
+        }
 
-        const category = btn.dataset.category;
+        // Filter tools
         document.querySelectorAll('.tool-card').forEach(card => {
           if (category === 'all' || card.dataset.category === category) {
             card.classList.remove('hidden');
@@ -88,7 +148,7 @@
       });
     });
 
-    // Search filter
+    // Search
     document.getElementById('searchInput').addEventListener('input', (e) => {
       const q = e.target.value.toLowerCase().trim();
       document.querySelectorAll('.tool-card').forEach(card => {
