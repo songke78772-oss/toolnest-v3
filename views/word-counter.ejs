@@ -6,34 +6,26 @@
   <title>Word Counter - ToolNest</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-50">
-  <nav class="bg-white border-b">
-    <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
-      <a href="/" class="text-xl font-bold text-gray-800">ToolNest</a>
-      <a href="/" class="text-sm text-gray-600 hover:text-gray-800">← Back to Tools</a>
-    </div>
-  </nav>
-  <div class="max-w-4xl mx-auto p-6">
-    <h1 class="text-3xl font-bold text-gray-800 mb-2">Word Counter</h1>
-    <p class="text-gray-600 mb-6">Count words, characters, sentences and paragraphs.</p>
-    <div class="bg-white rounded-xl shadow-sm border p-6">
-      <textarea id="text" rows="12" class="w-full border rounded-lg p-4 font-mono text-sm" placeholder="Paste or type your text here..."></textarea>
-      <div class="mt-4 grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
-        <div class="bg-gray-50 rounded-lg p-4"><div class="text-2xl font-bold" id="words">0</div><div class="text-sm text-gray-500">Words</div></div>
-        <div class="bg-gray-50 rounded-lg p-4"><div class="text-2xl font-bold" id="chars">0</div><div class="text-sm text-gray-500">Characters</div></div>
-        <div class="bg-gray-50 rounded-lg p-4"><div class="text-2xl font-bold" id="sentences">0</div><div class="text-sm text-gray-500">Sentences</div></div>
-        <div class="bg-gray-50 rounded-lg p-4"><div class="text-2xl font-bold" id="paras">0</div><div class="text-sm text-gray-500">Paragraphs</div></div>
-      </div>
+<body class="bg-gray-50 min-h-screen">
+  <div class="max-w-3xl mx-auto p-4 md:p-8">
+    <a href="/" class="text-blue-600 text-sm">← Back to tools</a>
+    <h1 class="text-2xl font-bold mt-4 mb-6">Word Counter</h1>
+    <textarea id="text" rows="12" placeholder="Paste or type your text..."
+      class="w-full border rounded-xl p-4"></textarea>
+    <div class="mt-4 grid grid-cols-3 gap-4 text-center">
+      <div class="bg-white border rounded-xl p-4"><div class="text-2xl font-bold" id="words">0</div><div class="text-sm text-gray-500">Words</div></div>
+      <div class="bg-white border rounded-xl p-4"><div class="text-2xl font-bold" id="chars">0</div><div class="text-sm text-gray-500">Characters</div></div>
+      <div class="bg-white border rounded-xl p-4"><div class="text-2xl font-bold" id="charsNoSpace">0</div><div class="text-sm text-gray-500">No Spaces</div></div>
     </div>
   </div>
   <script>
-    const text = document.getElementById('text');
-    text.addEventListener('input', () => {
-      const v = text.value;
-      document.getElementById('words').textContent = v.trim() ? v.trim().split(/\s+/).length : 0;
-      document.getElementById('chars').textContent = v.length;
-      document.getElementById('sentences').textContent = v.split(/[.!?]+/).filter(s => s.trim()).length;
-      document.getElementById('paras').textContent = v.split(/\n\s*\n/).filter(p => p.trim()).length;
+    const textarea = document.getElementById('text');
+    textarea.addEventListener('input', () => {
+      const text = textarea.value;
+      const words = text.trim() ? text.trim().split(/\s+/).length : 0;
+      document.getElementById('words').textContent = words;
+      document.getElementById('chars').textContent = text.length;
+      document.getElementById('charsNoSpace').textContent = text.replace(/\s/g, '').length;
     });
   </script>
 </body>
