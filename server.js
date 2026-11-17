@@ -100,8 +100,11 @@ function requireAccess(req, res, next) {
 const legalRoutes = require('./routes/legal');
 app.use('/api/legal', legalRoutes);
 
+//const audioRoutes = require('./routes/audio');
+//app.use('/', requireAccess, audioRoutes);
+
 const audioRoutes = require('./routes/audio');
-app.use('/', requireAccess, audioRoutes);
+app.use('/', audioRoutes);
 
 // Home
 app.get('/', (req, res) => {
