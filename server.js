@@ -89,9 +89,7 @@ function requireLogin(req, res, next) {
 
 function hasAccess(user) {
   if (!user) return false;
-  // 已订阅
   if (user.subscription_status === 'active') return true;
-  // 试用期内
   if (user.trial_end_at && new Date() < new Date(user.trial_end_at)) return true;
   return false;
 }
@@ -101,7 +99,7 @@ function requireAccess(req, res, next) {
 
   const user = db.prepare('SELECT * FROM users WHERE id = ?').get(req.session.userId);
   if (!user || !hasAccess(user)) {
-    return res.redirect('/subscribe'); // 暂时跳到这个地址，后面再做订阅页
+    return res.redirect('/subscribe');
   }
   next();
 }
@@ -142,8 +140,6 @@ app.post('/register', (req, res) => {
   }
   try {
     const hash = bcrypt.hashSync(password, 10);
-
-    // 3天后到期
     const trialEnd = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString();
 
     db.prepare(`
@@ -188,8 +184,8 @@ app.get('/dashboard', requireLogin, (req, res) => {
   res.render('dashboard', { user, favorites });
 });
 
-// ===== 统一工具入口（AI + Word Counter + 其他） =====
-app.get('/tool/:id', requireLogin, (req, res) => {
+// ===== 统一工具入口 =====
+app.get('/tool/:id', requireAccess, (req, res) => {
   const tool = db.prepare('SELECT * FROM tools WHERE id = ?').get(req.params.id);
   if (!tool) return res.status(404).send('Tool not found');
 
@@ -199,15 +195,14 @@ app.get('/tool/:id', requireLogin, (req, res) => {
   if (tool.tool_type === 'ai') {
     return res.render('ai-tool', { tool });
   }
-  // 有自定义 url 的走原来的页面
   if (tool.url) {
     return res.redirect(tool.url);
   }
   res.status(404).send('Tool page not configured');
 });
 
-// AI 工具 API（Gemini）
-app.post('/api/ai-tool/:id', requireLogin, async (req, res) => {
+// AI 工具 API
+app.post('/api/ai-tool/:id', requireAccess, async (req, res) => {
   const tool = db.prepare('SELECT * FROM tools WHERE id = ?').get(req.params.id);
   if (!tool || tool.tool_type !== 'ai') {
     return res.json({ success: false, error: 'Invalid tool' });
@@ -246,6 +241,7 @@ app.get('/terms', (req, res) => res.render('terms'));
 app.get('/privacy', (req, res) => res.render('privacy'));
 app.get('/refund', (req, res) => res.render('refund'));
 app.get('/disclaimer', (req, res) => res.render('disclaimer'));
+
 // ===== 原有内置工具页面（保持不变） =====
 app.get('/compress', (req, res) => res.render('compress'));
 app.get('/resize', (req, res) => res.render('resize'));
