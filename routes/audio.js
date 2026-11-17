@@ -1,62 +1,57 @@
 const express = require('express');
 const router = express.Router();
+const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 const { exec } = require('child_process');
-const multer = require('multer');
+const { requireAccess } = require('../middleware/auth'); // 根据你的实际路径调整
 
 // 上传配置
-const upload = multer({ dest: path.join(__dirname, '../uploads/temp') });
+const upload = multer({
+  dest: path.join(__dirname, '../uploads/audio'),
+  limits: { fileSize: 50 * 1024 * 1024 } // 50MB
+});
 
-// 页面
-router.get('/audio-converter', (req, res) => {
+// 确保目录存在
+const uploadDir = path.join(__dirname, '../uploads/audio');
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+}
+
+// 音频转换页面（需要登录+订阅/试用）
+router.get('/audio-converter', requireAccess, (req, res) => {
   res.render('audio-converter');
 });
 
 // 转换接口
-router.post('/api/audio-convert', upload.single('file'), (req, res) => {
+router.post('/api/audio/convert', requireAccess, upload.single('file'), (req, res) => {
   if (!req.file) {
     return res.json({ success: false, error: 'No file uploaded' });
   }
 
   const inputPath = req.file.path;
+  const originalName = path.parse(req.file.originalname).name;
   const format = req.body.format || 'mp3';
-  const bitrate = req.body.bitrate || '192k';
-  const outputDir = path.join(__dirname, '../uploads/converted');
+  const outputName = `${originalName}.${format}`;
+  const outputPath = path.join(uploadDir, outputName);
 
-  if (!fs.existsSync(outputDir)) fs.mkdirSync(outputDir, { recursive: true });
+  // 使用 ffmpeg 转换
+  const cmd = `ffmpeg -y -i "${inputPath}" "${outputPath}"`;
 
-  const baseName = path.basename(inputPath, path.extname(inputPath));
-  const outputName = `${baseName}.${format}`;
-  const outputPath = path.join(outputDir, outputName);
-
-  let cmd = `ffmpeg -i "${inputPath}" -y`;
-  if (['mp3', 'aac', 'ogg'].includes(format)) {
-    cmd += ` -b:a ${bitrate}`;
-  }
-  cmd += ` "${outputPath}"`;
-
-  exec(cmd, { timeout: 120000 }, (error) => {
+  exec(cmd, { timeout: 120000 }, (error, stdout, stderr) => {
+    // 删除临时上传文件
     fs.unlink(inputPath, () => {});
 
     if (error) {
-      console.error(error);
+      console.error('FFmpeg error:', stderr || error);
       return res.json({ success: false, error: 'Conversion failed' });
     }
 
     res.json({
       success: true,
-      downloadUrl: `/download-converted/${outputName}`,
-      filename: outputName
+      downloadUrl: `/uploads/audio/${outputName}`
     });
   });
-});
-
-// 下载
-router.get('/download-converted/:filename', (req, res) => {
-  const filePath = path.join(__dirname, '../uploads/converted', req.params.filename);
-  if (!fs.existsSync(filePath)) return res.status(404).send('File not found');
-  res.download(filePath);
 });
 
 module.exports = router;
