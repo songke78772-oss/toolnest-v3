@@ -19,7 +19,11 @@
       </a>
       <div class="flex items-center gap-4 text-sm">
         <% if (loggedIn) { %>
-          <a href="/dashboard" class="text-gray-600 hover:text-gray-800">Dashboard</a>
+          <a href="/dashboard" class="flex items-center">
+            <div class="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center font-medium text-sm">
+              <%= (user && user.email ? user.email.charAt(0).toUpperCase() : 'U') %>
+            </div>
+          </a>
           <a href="/logout" class="text-gray-600 hover:text-gray-800">Logout</a>
         <% } else { %>
           <a href="/login" class="text-gray-600 hover:text-gray-800">Login</a>
