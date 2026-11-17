@@ -7,7 +7,8 @@
   <script src="https://cdn.tailwindcss.com"></script>
 
   <meta name="description" content="Free online dashboard tool by ProToolNest.">
-  <link rel="canonical" href="https://protoolnest.com/dashboard"></head>
+  <link rel="canonical" href="https://protoolnest.com/dashboard">
+</head>
 <body class="bg-gray-100 min-h-screen">
   <div class="max-w-7xl mx-auto p-4 md:p-6 flex flex-col md:flex-row gap-6">
 
@@ -66,7 +67,9 @@
             <% if (user.subscription_status === 'active') { %>
               <button class="w-full bg-gray-200 text-gray-600 rounded-lg py-2 text-sm cursor-default">Current Plan</button>
             <% } else { %>
-              <a href="/subscribe" class="block w-full bg-blue-500 text-white text-center rounded-lg py-2 text-sm">Upgrade Plan</a>
+              <button onclick="subscribe()" class="block w-full bg-blue-500 text-white text-center rounded-lg py-2 text-sm">
+                Upgrade Plan
+              </button>
             <% } %>
           </div>
         </div>
@@ -109,6 +112,20 @@
       document.getElementById('tab-billing').className = 'px-4 py-2 text-gray-500';
       document.getElementById('tab-favorites').className = 'px-4 py-2 text-gray-500';
       document.getElementById('tab-' + name).className = 'px-4 py-2 border-b-2 border-blue-500 text-blue-600 font-medium';
+    }
+
+    async function subscribe() {
+      try {
+        const res = await fetch('/create-checkout', { method: 'POST' });
+        const data = await res.json();
+        if (data.url) {
+          window.location.href = data.url;
+        } else {
+          alert('Failed to start checkout');
+        }
+      } catch (e) {
+        alert('Error');
+      }
     }
   </script>
 </body>
