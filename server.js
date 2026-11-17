@@ -267,6 +267,12 @@ app.get('/privacy', (req, res) => res.render('privacy'));
 app.get('/refund', (req, res) => res.render('refund'));
 app.get('/disclaimer', (req, res) => res.render('disclaimer'));
 
+//法律文书
+// Legal Document Generator
+app.get('/tools/legal-document', requireLogin, (req, res) => {
+  res.render('legal-document');
+});
+
 // ===== 原有内置工具页面（保持不变） =====
 app.get('/compress', (req, res) => res.render('compress'));
 app.get('/resize', (req, res) => res.render('resize'));
