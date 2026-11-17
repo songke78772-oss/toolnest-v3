@@ -214,6 +214,10 @@ app.post('/api/ai-tool/:id', requireLogin, async (req, res) => {
   }
 });
 
+app.get('/terms', (req, res) => res.render('terms'));
+app.get('/privacy', (req, res) => res.render('privacy'));
+app.get('/refund', (req, res) => res.render('refund'));
+app.get('/disclaimer', (req, res) => res.render('disclaimer'));
 // ===== 原有内置工具页面（保持不变） =====
 app.get('/compress', (req, res) => res.render('compress'));
 app.get('/resize', (req, res) => res.render('resize'));
