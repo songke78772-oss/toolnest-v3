@@ -8,20 +8,6 @@
   <meta name="keywords" content="online tools, PDF tools, AI writer, image tools, office tools, productivity tools">
   <link rel="canonical" href="https://protoolnest.com/">
   <script src="https://cdn.tailwindcss.com"></script>
-  <style>
-    .marquee {
-      overflow: hidden;
-      white-space: nowrap;
-    }
-    .marquee-content {
-      display: inline-block;
-      animation: marquee 28s linear infinite;
-    }
-    @keyframes marquee {
-      0% { transform: translateX(100%); }
-      100% { transform: translateX(-100%); }
-    }
-  </style>
 </head>
 <body class="bg-gray-50">
   <!-- Nav -->
@@ -43,7 +29,7 @@
     </div>
   </nav>
 
-  <!-- Vertical Scrolling Banner -->
+  <!-- Banner -->
   <div class="bg-blue-600 text-white text-sm overflow-hidden h-9 relative">
     <div id="ticker" class="absolute inset-0 flex items-center justify-center transition-all duration-500">
       <span>📄 Legal document service coming soon</span>
@@ -73,7 +59,6 @@
         }, 50);
       }, 400);
     }
-
     setInterval(showNext, 3500);
   </script>
 
@@ -87,38 +72,42 @@
         PDF, Image, AI Writing and Office tools — all in one place.
       </p>
 
-      <!-- Pricing Badge -->
       <div class="inline-flex items-center gap-2 bg-green-50 text-green-700 px-4 py-2 rounded-full text-sm font-medium mb-8">
         <span>✨</span>
         <span><strong>$3.99/month</strong> · Unlimited access to all tools</span>
       </div>
 
       <!-- Category Cards -->
-      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-3xl mx-auto mb-8">
+      <div class="grid grid-cols-2 md:grid-cols-5 gap-4 max-w-4xl mx-auto mb-8">
         <button data-category="Image" class="category-card bg-purple-500 text-white p-5 rounded-2xl text-left hover:opacity-90 transition">
           <div class="text-2xl mb-1">🖼️</div>
           <div class="font-semibold">Image</div>
-          <div class="text-sm opacity-90" id="count-Image">--</div>
+          <div class="text-sm opacity-90">19 tools</div>
         </button>
         <button data-category="Office" class="category-card bg-orange-500 text-white p-5 rounded-2xl text-left hover:opacity-90 transition">
           <div class="text-2xl mb-1">📄</div>
           <div class="font-semibold">Office</div>
-          <div class="text-sm opacity-90" id="count-Office">--</div>
+          <div class="text-sm opacity-90">13 tools</div>
         </button>
-        <button data-category="AI" class="category-card bg-indigo-600 text-white p-5 rounded-2xl text-left hover:opacity-90 transition">
+        <button data-category="AI Write" class="category-card bg-indigo-600 text-white p-5 rounded-2xl text-left hover:opacity-90 transition">
           <div class="text-2xl mb-1">✨</div>
-          <div class="font-semibold">AI Writing</div>
-          <div class="text-sm opacity-90" id="count-AI">--</div>
+          <div class="font-semibold">AI Write</div>
+          <div class="text-sm opacity-90">13 tools</div>
         </button>
-        <button data-category="PDF" class="category-card bg-teal-600 text-white p-5 rounded-2xl text-left hover:opacity-90 transition">
-          <div class="text-2xl mb-1">📑</div>
-          <div class="font-semibold">PDF</div>
-          <div class="text-sm opacity-90" id="count-PDF">--</div>
+        <button data-category="Dev" class="category-card bg-blue-600 text-white p-5 rounded-2xl text-left hover:opacity-90 transition">
+          <div class="text-2xl mb-1">💻</div>
+          <div class="font-semibold">Dev</div>
+          <div class="text-sm opacity-90">14 tools</div>
+        </button>
+        <button data-category="Life" class="category-card bg-teal-600 text-white p-5 rounded-2xl text-left hover:opacity-90 transition">
+          <div class="text-2xl mb-1">🎯</div>
+          <div class="font-semibold">Life</div>
+          <div class="text-sm opacity-90">12 tools</div>
         </button>
       </div>
 
       <!-- Search -->
-      <div class="max-w-xl mx-auto relative">
+      <div class="max-w-xl mx-auto">
         <input type="text" id="searchInput" placeholder="Search tools..." 
                class="w-full border border-gray-300 rounded-2xl px-5 py-4 text-lg focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm">
       </div>
@@ -126,13 +115,14 @@
   </div>
 
   <div class="max-w-6xl mx-auto p-6">
-    <!-- Category Filter Buttons -->
-    <div class="flex flex-wrap gap-2 mb-6" id="categoryTabs">
+    <!-- Filter Buttons -->
+    <div class="flex flex-wrap gap-2 mb-6">
       <button data-category="all" class="category-btn px-4 py-1.5 rounded-full text-sm font-medium bg-blue-600 text-white">All</button>
       <button data-category="Image" class="category-btn px-4 py-1.5 rounded-full text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200">Image</button>
       <button data-category="Office" class="category-btn px-4 py-1.5 rounded-full text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200">Office</button>
-      <button data-category="AI" class="category-btn px-4 py-1.5 rounded-full text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200">AI Writing</button>
-      <button data-category="PDF" class="category-btn px-4 py-1.5 rounded-full text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200">PDF</button>
+      <button data-category="AI Write" class="category-btn px-4 py-1.5 rounded-full text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200">AI Write</button>
+      <button data-category="Dev" class="category-btn px-4 py-1.5 rounded-full text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200">Dev</button>
+      <button data-category="Life" class="category-btn px-4 py-1.5 rounded-full text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200">Life</button>
     </div>
 
     <!-- Tools Grid -->
@@ -159,7 +149,6 @@
       <% } %>
     </div>
 
-    <!-- Bottom CTA -->
     <% if (!loggedIn) { %>
     <div class="mt-16 text-center bg-white rounded-2xl border p-8">
       <h2 class="text-2xl font-bold text-gray-800 mb-2">Get Unlimited Access</h2>
@@ -170,7 +159,7 @@
     </div>
     <% } %>
 
-    <!-- Tool Request -->
+    <!-- Request a Tool -->
     <section class="mt-12 bg-white p-8 rounded-xl border">
       <h2 class="text-xl font-semibold mb-4">Request a Tool</h2>
       <form action="/request-tool" method="post" class="space-y-4 max-w-lg">
@@ -194,18 +183,6 @@
   </footer>
 
   <script>
-    const baseCounts = {
-      Image: 500 + Math.floor(Math.random() * 800),
-      Office: 500 + Math.floor(Math.random() * 1200),
-      AI: 300 + Math.floor(Math.random() * 500),
-      PDF: 400 + Math.floor(Math.random() * 700)
-    };
-
-    Object.keys(baseCounts).forEach(cat => {
-      const el = document.getElementById('count-' + cat);
-      if (el) el.textContent = baseCounts[cat].toLocaleString() + ' uses';
-    });
-
     document.querySelectorAll('.category-card, .category-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         const category = btn.dataset.category;
