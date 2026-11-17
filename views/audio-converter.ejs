@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Audio Converter - ProToolNest</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50">
+  <div class="max-w-2xl mx-auto px-4 py-12">
+    <div class="text-center mb-8">
+      <h1 class="text-3xl font-bold text-gray-800">Audio Converter</h1>
+      <p class="text-gray-500 mt-2">Convert audio files to MP3, WAV, and more</p>
+    </div>
+
+    <div class="bg-white rounded-xl shadow p-6">
+      <form id="convertForm">
+        <!-- File Upload -->
+        <div class="mb-5">
+          <label class="block text-sm font-medium text-gray-700 mb-2">Select Audio File</label>
+          <input type="file" id="audioFile" accept="audio/*" required
+                 class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm file:mr-4 file:py-1 file:px-3 file:rounded file:border-0 file:text-sm file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+        </div>
+
+        <!-- Output Format -->
+        <div class="mb-5">
+          <label class="block text-sm font-medium text-gray-700 mb-2">Output Format</label>
+          <select id="format" class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm">
+            <option value="mp3">MP3</option>
+            <option value="wav">WAV</option>
+            <option value="aac">AAC</option>
+            <option value="ogg">OGG</option>
+            <option value="flac">FLAC</option>
+          </select>
+        </div>
+
+        <!-- Bitrate (only for lossy formats) -->
+        <div class="mb-6" id="bitrateBox">
+          <label class="block text-sm font-medium text-gray-700 mb-2">Bitrate</label>
+          <select id="bitrate" class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm">
+            <option value="128k">128 kbps</option>
+            <option value="192k" selected>192 kbps</option>
+            <option value="256k">256 kbps</option>
+            <option value="320k">320 kbps</option>
+          </select>
+        </div>
+
+        <button type="submit" id="convertBtn"
+                class="w-full bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 transition">
+          Convert
+        </button>
+      </form>
+
+      <!-- Progress / Result -->
+      <div id="result" class="mt-6 hidden">
+        <div id="status" class="text-sm text-gray-600 mb-3"></div>
+        <a id="downloadLink" href="#" class="inline-block bg-green-600 text-white px-5 py-2 rounded-lg text-sm hover:bg-green-700">
+          Download Converted File
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const form = document.getElementById('convertForm');
+    const resultBox = document.getElementById('result');
+    const statusEl = document.getElementById('status');
+    const downloadLink = document.getElementById('downloadLink');
+    const convertBtn = document.getElementById('convertBtn');
+    const formatSelect = document.getElementById('format');
+    const bitrateBox = document.getElementById('bitrateBox');
+
+    // Show bitrate only for lossy formats
+    formatSelect.addEventListener('change', () => {
+      const format = formatSelect.value;
+      bitrateBox.style.display = ['mp3', 'aac', 'ogg'].includes(format) ? 'block' : 'none';
+    });
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const file = document.getElementById('audioFile').files[0];
+      if (!file) return;
+
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('format', formatSelect.value);
+      formData.append('bitrate', document.getElementById('bitrate').value);
+
+      convertBtn.disabled = true;
+      convertBtn.textContent = 'Converting...';
+      resultBox.classList.add('hidden');
+
+      try {
+        const res = await fetch('/api/audio-convert', {
+          method: 'POST',
+          body: formData
+        });
+
+        const data = await res.json();
+
+        if (data.success) {
+          statusEl.textContent = 'Conversion completed!';
+          statusEl.className = 'text-sm text-green-600 mb-3';
+          downloadLink.href = data.downloadUrl;
+          downloadLink.download = data.filename;
+          resultBox.classList.remove('hidden');
+        } else {
+          statusEl.textContent = data.error || 'Conversion failed';
+          statusEl.className = 'text-sm text-red-600 mb-3';
+          resultBox.classList.remove('hidden');
+        }
+      } catch (err) {
+        statusEl.textContent = 'Error occurred';
+        statusEl.className = 'text-sm text-red-600 mb-3';
+        resultBox.classList.remove('hidden');
+      }
+
+      convertBtn.disabled = false;
+      convertBtn.textContent = 'Convert';
+    });
+  </script>
+</body>
+</html>
