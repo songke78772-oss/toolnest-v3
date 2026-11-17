@@ -87,6 +87,25 @@ function requireLogin(req, res, next) {
   next();
 }
 
+function hasAccess(user) {
+  if (!user) return false;
+  // 已订阅
+  if (user.subscription_status === 'active') return true;
+  // 试用期内
+  if (user.trial_end_at && new Date() < new Date(user.trial_end_at)) return true;
+  return false;
+}
+
+function requireAccess(req, res, next) {
+  if (!req.session.userId) return res.redirect('/login');
+
+  const user = db.prepare('SELECT * FROM users WHERE id = ?').get(req.session.userId);
+  if (!user || !hasAccess(user)) {
+    return res.redirect('/subscribe'); // 暂时跳到这个地址，后面再做订阅页
+  }
+  next();
+}
+
 // Home
 app.get('/', (req, res) => {
   const tools = db.prepare('SELECT * FROM tools ORDER BY id DESC').all();
@@ -123,7 +142,15 @@ app.post('/register', (req, res) => {
   }
   try {
     const hash = bcrypt.hashSync(password, 10);
-    db.prepare('INSERT INTO users (email, password_hash) VALUES (?, ?)').run(email, hash);
+
+    // 3天后到期
+    const trialEnd = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString();
+
+    db.prepare(`
+      INSERT INTO users (email, password_hash, trial_end_at, subscription_status, plan)
+      VALUES (?, ?, ?, 'trial', 'free')
+    `).run(email, hash, trialEnd);
+
     verificationCodes.delete(email);
     res.redirect('/login');
   } catch (err) {
