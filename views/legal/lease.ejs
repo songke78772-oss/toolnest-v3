@@ -9,136 +9,30 @@
   <div class="p-6">
     <h2 class="text-xl font-semibold mb-6">Residential Lease Agreement</h2>
 
-    <!-- Step 1: Country & State -->
+    <!-- Step 1: Country & Region -->
     <div class="mb-8 p-5 bg-gray-50 rounded-xl border border-gray-200">
       <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
         <div>
           <label class="block text-sm font-medium text-gray-700">Country</label>
-          <select id="country" onchange="onCountryChange()" class="mt-1 block w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+          <select id="country" onchange="onCountryChange()" class="mt-1 block w-full border border-gray-300 rounded-lg px-3 py-2">
             <option value="">Select Country</option>
-            <option value="US">United States</option>
-            <option value="CA">Canada</option>
-            <option value="UK">United Kingdom</option>
-            <option value="AU">Australia</option>
-            <option value="OTHER">Other</option>
           </select>
         </div>
-        <div id="stateContainer" class="hidden">
-          <label class="block text-sm font-medium text-gray-700">State</label>
-          <select id="state" class="mt-1 block w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
-            <option value="">Select State</option>
-            <option value="AL">Alabama</option>
-            <option value="AK">Alaska</option>
-            <option value="AZ">Arizona</option>
-            <option value="AR">Arkansas</option>
-            <option value="CA">California</option>
-            <option value="CO">Colorado</option>
-            <option value="CT">Connecticut</option>
-            <option value="DE">Delaware</option>
-            <option value="FL">Florida</option>
-            <option value="GA">Georgia</option>
-            <option value="HI">Hawaii</option>
-            <option value="ID">Idaho</option>
-            <option value="IL">Illinois</option>
-            <option value="IN">Indiana</option>
-            <option value="IA">Iowa</option>
-            <option value="KS">Kansas</option>
-            <option value="KY">Kentucky</option>
-            <option value="LA">Louisiana</option>
-            <option value="ME">Maine</option>
-            <option value="MD">Maryland</option>
-            <option value="MA">Massachusetts</option>
-            <option value="MI">Michigan</option>
-            <option value="MN">Minnesota</option>
-            <option value="MS">Mississippi</option>
-            <option value="MO">Missouri</option>
-            <option value="MT">Montana</option>
-            <option value="NE">Nebraska</option>
-            <option value="NV">Nevada</option>
-            <option value="NH">New Hampshire</option>
-            <option value="NJ">New Jersey</option>
-            <option value="NM">New Mexico</option>
-            <option value="NY">New York</option>
-            <option value="NC">North Carolina</option>
-            <option value="ND">North Dakota</option>
-            <option value="OH">Ohio</option>
-            <option value="OK">Oklahoma</option>
-            <option value="OR">Oregon</option>
-            <option value="PA">Pennsylvania</option>
-            <option value="RI">Rhode Island</option>
-            <option value="SC">South Carolina</option>
-            <option value="SD">South Dakota</option>
-            <option value="TN">Tennessee</option>
-            <option value="TX">Texas</option>
-            <option value="UT">Utah</option>
-            <option value="VT">Vermont</option>
-            <option value="VA">Virginia</option>
-            <option value="WA">Washington</option>
-            <option value="WV">West Virginia</option>
-            <option value="WI">Wisconsin</option>
-            <option value="WY">Wyoming</option>
+        <div id="regionContainer" class="hidden">
+          <label class="block text-sm font-medium text-gray-700">State / Region</label>
+          <select id="region" onchange="onRegionChange()" class="mt-1 block w-full border border-gray-300 rounded-lg px-3 py-2">
+            <option value="">Select</option>
           </select>
         </div>
       </div>
-      <button onclick="showForm()" class="mt-4 bg-blue-600 text-white px-5 py-2 rounded-lg hover:bg-blue-700 text-sm font-medium">
-        Continue
-      </button>
     </div>
 
-    <!-- Step 2: Form (hidden by default) -->
+    <!-- Dynamic Form -->
     <div id="leaseFormContainer" class="hidden">
-      <form class="space-y-5">
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-          <div>
-            <label class="block text-sm font-medium text-gray-700">Landlord Name</label>
-            <input type="text" id="landlordName" class="mt-1 block w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="John Smith">
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700">Tenant Name</label>
-            <input type="text" id="tenantName" class="mt-1 block w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Jane Doe">
-          </div>
-        </div>
-
-        <div>
-          <label class="block text-sm font-medium text-gray-700">Property Address</label>
-          <input type="text" id="propertyAddress" class="mt-1 block w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="123 Main St, City, State, ZIP">
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
-          <div>
-            <label class="block text-sm font-medium text-gray-700">Monthly Rent ($)</label>
-            <input type="number" id="rentAmount" class="mt-1 block w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="1500">
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700">Security Deposit ($)</label>
-            <input type="number" id="depositAmount" class="mt-1 block w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="1500">
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700">Lease Term (Months)</label>
-            <input type="number" id="leaseTerm" class="mt-1 block w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="12">
-          </div>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-          <div>
-            <label class="block text-sm font-medium text-gray-700">Start Date</label>
-            <input type="date" id="startDate" class="mt-1 block w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700">End Date</label>
-            <input type="date" id="endDate" class="mt-1 block w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
-          </div>
-        </div>
-
-        <div>
-          <label class="block text-sm font-medium text-gray-700">Additional Terms (Optional)</label>
-          <textarea id="additionalTerms" rows="3" class="mt-1 block w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Any special conditions..."></textarea>
-        </div>
-
-        <button type="button" onclick="generateLease()" class="bg-blue-600 text-white px-6 py-2.5 rounded-lg hover:bg-blue-700 font-medium">
-          Generate Document
-        </button>
-      </form>
+      <form id="leaseForm" class="space-y-5"></form>
+      <button type="button" onclick="generateLease()" class="mt-6 bg-blue-600 text-white px-6 py-2.5 rounded-lg hover:bg-blue-700 font-medium">
+        Generate Document
+      </button>
 
       <div id="leaseResult" class="mt-8 hidden">
         <div class="flex justify-between items-center mb-3">
@@ -154,73 +48,202 @@
   </div>
 
   <script>
-    function onCountryChange() {
-      const country = document.getElementById('country').value;
-      const stateContainer = document.getElementById('stateContainer');
-      if (country === 'US') {
-        stateContainer.classList.remove('hidden');
-      } else {
-        stateContainer.classList.add('hidden');
+    let availableData = null;
+    let currentTemplate = null;
+
+    // 页面加载时获取可用地区
+    async function init() {
+      try {
+        const res = await fetch('/api/legal/lease/available');
+        const data = await res.json();
+        availableData = data.countries || {};
+
+        const countrySelect = document.getElementById('country');
+        Object.keys(availableData).forEach(key => {
+          const opt = document.createElement('option');
+          opt.value = key;
+          opt.textContent = availableData[key].name;
+          countrySelect.appendChild(opt);
+        });
+      } catch (e) {
+        console.error('Failed to load available regions', e);
       }
     }
 
-    function showForm() {
+    function onCountryChange() {
       const country = document.getElementById('country').value;
-      if (!country) {
-        alert('Please select a country');
+      const regionSelect = document.getElementById('region');
+      const container = document.getElementById('regionContainer');
+
+      regionSelect.innerHTML = '<option value="">Select</option>';
+      document.getElementById('leaseFormContainer').classList.add('hidden');
+
+      if (!country || !availableData[country]) {
+        container.classList.add('hidden');
         return;
       }
-      if (country === 'US' && !document.getElementById('state').value) {
-        alert('Please select a state');
-        return;
+
+      availableData[country].regions.forEach(r => {
+        const opt = document.createElement('option');
+        opt.value = r.file;
+        opt.textContent = r.name;
+        regionSelect.appendChild(opt);
+      });
+
+      container.classList.remove('hidden');
+    }
+
+    async function onRegionChange() {
+      const file = document.getElementById('region').value;
+      if (!file) return;
+
+      try {
+        const res = await fetch(`/templates/lease/${file}`);
+        currentTemplate = await res.json();
+        renderForm(currentTemplate);
+        document.getElementById('leaseFormContainer').classList.remove('hidden');
+      } catch (e) {
+        alert('Failed to load template');
+        console.error(e);
       }
-      document.getElementById('leaseFormContainer').classList.remove('hidden');
+    }
+
+    function renderForm(data) {
+      const form = document.getElementById('leaseForm');
+      form.innerHTML = '';
+
+      // 基础当事人信息
+      form.innerHTML += `
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Landlord Name *</label>
+            <input type="text" name="landlordName" class="mt-1 block w-full border border-gray-300 rounded-lg px-3 py-2" required>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Tenant Name *</label>
+            <input type="text" name="tenantName" class="mt-1 block w-full border border-gray-300 rounded-lg px-3 py-2" required>
+          </div>
+        </div>
+      `;
+
+      (data.requiredUserFields || []).forEach(field => {
+        let input = '';
+        const note = field.note ? `<p class="text-xs text-gray-500 mt-1">${field.note}</p>` : '';
+
+        if (field.type === 'select') {
+          input = `<select name="${field.key}" class="mt-1 block w-full border border-gray-300 rounded-lg px-3 py-2" ${field.required ? 'required' : ''}>
+            <option value="">Select</option>
+            ${(field.options || []).map(o => `<option value="${o}">${o}</option>`).join('')}
+          </select>`;
+        } else if (field.type === 'textarea') {
+          input = `<textarea name="${field.key}" rows="3" class="mt-1 block w-full border border-gray-300 rounded-lg px-3 py-2" ${field.required ? 'required' : ''}></textarea>`;
+        } else if (field.type === 'boolean') {
+          input = `<select name="${field.key}" class="mt-1 block w-full border border-gray-300 rounded-lg px-3 py-2">
+            <option value="false">No</option>
+            <option value="true">Yes</option>
+          </select>`;
+        } else {
+          const type = field.type === 'number' ? 'number' : field.type === 'date' ? 'date' : 'text';
+          input = `<input type="${type}" name="${field.key}" class="mt-1 block w-full border border-gray-300 rounded-lg px-3 py-2" ${field.required ? 'required' : ''} ${field.default !== undefined ? `value="${field.default}"` : ''}>`;
+        }
+
+        form.innerHTML += `
+          <div>
+            <label class="block text-sm font-medium text-gray-700">${field.label}${field.required ? ' *' : ''}</label>
+            ${input}
+            ${note}
+          </div>
+        `;
+      });
     }
 
     function generateLease() {
-      const country = document.getElementById('country').value;
-      const state = document.getElementById('state').value || '';
-      const landlord = document.getElementById('landlordName').value || '[Landlord Name]';
-      const tenant = document.getElementById('tenantName').value || '[Tenant Name]';
-      const address = document.getElementById('propertyAddress').value || '[Property Address]';
-      const rent = document.getElementById('rentAmount').value || '[Rent Amount]';
-      const deposit = document.getElementById('depositAmount').value || '[Deposit Amount]';
-      const term = document.getElementById('leaseTerm').value || '[Lease Term]';
-      const start = document.getElementById('startDate').value || '[Start Date]';
-      const end = document.getElementById('endDate').value || '[End Date]';
-      const additional = document.getElementById('additionalTerms').value || 'None';
+      if (!currentTemplate) return alert('Please select a region first');
 
-      const jurisdiction = country === 'US' ? `${state}, United States` : country;
+      const formData = new FormData(document.getElementById('leaseForm'));
+      const data = Object.fromEntries(formData.entries());
+
+      const landlord = data.landlordName || '[Landlord Name]';
+      const tenant = data.tenantName || '[Tenant Name]';
+      const jurisdiction = currentTemplate.stateName || currentTemplate.countryName || 'Unknown';
+
+      // 处理条件披露（以加州为例，其他地区可按需扩展）
+      let flood = '';
+      let lead = '';
+      let ab1482 = '';
+
+      if (currentTemplate.conditionalDisclosures) {
+        const cd = currentTemplate.conditionalDisclosures;
+        if (cd.floodDisclosure) {
+          flood = data.inFloodZone === 'true' ? cd.floodDisclosure.ifTrue : cd.floodDisclosure.ifFalse;
+        }
+        if (cd.leadDisclosure) {
+          lead = (data.yearBuilt && parseInt(data.yearBuilt) < 1978)
+            ? cd.leadDisclosure.ifBefore1978
+            : cd.leadDisclosure.ifAfter1978;
+        }
+        if (cd.ab1482Status) {
+          ab1482 = cd.ab1482Status.covered || '';
+        }
+      }
+
+      let disclosures = '';
+      if (currentTemplate.templateOverrides?.stateDisclosures) {
+        disclosures = currentTemplate.templateOverrides.stateDisclosures
+          .replace('{{floodDisclosure}}', flood)
+          .replace('{{leadDisclosure}}', lead)
+          .replace('{{ab1482Status}}', ab1482);
+      }
+
+      let additional = currentTemplate.templateOverrides?.additionalTerms || '{{additionalTerms}}';
+      additional = additional.replace('{{additionalTerms}}', data.additionalTerms || 'None');
+
+      const depositClause = currentTemplate.templateOverrides?.stateSecurityDepositClause || 
+        `The Tenant shall pay a security deposit of $${data.depositAmount || '[Deposit]'}.`;
 
       const doc = `RESIDENTIAL LEASE AGREEMENT
+${jurisdiction}
 
 This Residential Lease Agreement ("Agreement") is entered into on ${new Date().toLocaleDateString()} between:
 
 Landlord: ${landlord}
 Tenant: ${tenant}
 
-Jurisdiction: ${jurisdiction}
-
-1. PROPERTY
-The Landlord agrees to rent to the Tenant the residential property located at:
-${address}
+1. PREMISES
+The Landlord agrees to rent to the Tenant the premises located at:
+${data.propertyAddress || '[Address]'}
+${data.premisesDescription ? '\nDescription: ' + data.premisesDescription : ''}
+${data.excludedAreas ? '\nExcluded Areas: ' + data.excludedAreas : ''}
 
 2. TERM
-The lease term shall be ${term} months, beginning on ${start} and ending on ${end}.
+The lease term begins on ${data.startDate || '[Start Date]'} and ends on ${data.endDate || '[End Date]'}.
 
 3. RENT
-The monthly rent is $${rent}, due on the 1st day of each month.
+Monthly rent is $${data.rentAmount || '[Rent]'}, payable by ${data.paymentMethod || '[Payment Method]'}.
 
 4. SECURITY DEPOSIT
-The Tenant shall pay a security deposit of $${deposit} upon signing this Agreement.
+${depositClause}
 
-5. ADDITIONAL TERMS
+Security Deposit Amount: $${data.depositAmount || '[Deposit]'}
+
+5. OCCUPANCY
+Approved Occupants: ${data.approvedOccupants || 'None specified'}
+Maximum Occupancy: ${data.maxOccupants || 'N/A'}
+
+6. POLICIES
+Smoking/Vaping: ${data.smokingPolicy || 'As permitted by law'}
+Pets: ${data.petPolicy || 'No pets unless otherwise agreed in writing'}
+
+7. ENTRY
+Landlord shall provide at least ${data.entryNoticeHours || currentTemplate.templateOverrides?.entryNoticeHours || '24'} hours written notice before entry (non-emergency).
+
+8. REQUIRED DISCLOSURES
+${disclosures || 'None specified.'}
+
+9. ADDITIONAL TERMS
 ${additional}
 
-6. GOVERNING LAW
-This Agreement shall be governed by the laws of ${jurisdiction}.
-
-IN WITNESS WHEREOF, the parties have executed this Agreement as of the date first written above.
+IN WITNESS WHEREOF, the parties have executed this Agreement.
 
 Landlord: ___________________________     Date: _______________
 
@@ -235,7 +258,7 @@ Disclaimer: This document is a template for informational purposes only and does
 
     function copyLease() {
       const text = document.getElementById('leaseOutput').textContent;
-      navigator.clipboard.writeText(text).then(() => alert('Copied to clipboard!'));
+      navigator.clipboard.writeText(text).then(() => alert('Copied!'));
     }
 
     function downloadLease() {
@@ -248,6 +271,9 @@ Disclaimer: This document is a template for informational purposes only and does
       a.click();
       URL.revokeObjectURL(url);
     }
+
+    // 启动
+    init();
   </script>
 </body>
 </html>
