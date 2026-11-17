@@ -60,22 +60,34 @@ router.post('/lease/generate', async (req, res) => {
     data.effectiveDate = data.effectiveDate || new Date().toLocaleDateString('en-US');
     data.additionalTerms = data.additionalTerms || 'None';
 
+    // 条件披露处理
     if (template.conditionalDisclosures) {
       const cd = template.conditionalDisclosures;
+
       if (cd.floodDisclosure) {
         data.floodDisclosure = (data.inFloodZone === 'true' || data.inFloodZone === true)
-          ? cd.floodDisclosure.ifTrue : cd.floodDisclosure.ifFalse;
+          ? cd.floodDisclosure.ifTrue
+          : cd.floodDisclosure.ifFalse;
       }
+
       if (cd.leadDisclosure) {
         data.leadDisclosure = (data.yearBuilt && parseInt(data.yearBuilt) < 1978)
-          ? cd.leadDisclosure.ifBefore1978 : cd.leadDisclosure.ifAfter1978;
+          ? cd.leadDisclosure.ifBefore1978
+          : cd.leadDisclosure.ifAfter1978;
+      }
+
+      // AB 1482
+      if (cd.ab1482Status) {
+        data.ab1482Status = cd.ab1482Status.covered || '';
       }
     }
 
+    // 替换 stateDisclosures 里的占位符
     if (data.stateDisclosures) {
       data.stateDisclosures = data.stateDisclosures
         .replace(/\{\{floodDisclosure\}\}/g, data.floodDisclosure || '')
-        .replace(/\{\{leadDisclosure\}\}/g, data.leadDisclosure || '');
+        .replace(/\{\{leadDisclosure\}\}/g, data.leadDisclosure || '')
+        .replace(/\{\{ab1482Status\}\}/g, data.ab1482Status || '');
     }
 
     draw('RESIDENTIAL LEASE AGREEMENT', 14, true);
