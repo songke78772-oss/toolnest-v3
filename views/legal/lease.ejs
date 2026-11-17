@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-white">
+  <div class="p-6">
+    <h2 class="text-xl font-semibold mb-6">Residential Lease Agreement</h2>
+    
+    <form class="space-y-5">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+        <div>
+          <label class="block text-sm font-medium text-gray-700">Landlord Name</label>
+          <input type="text" id="landlordName" class="mt-1 block w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="John Smith">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700">Tenant Name</label>
+          <input type="text" id="tenantName" class="mt-1 block w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Jane Doe">
+        </div>
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-gray-700">Property Address</label>
+        <input type="text" id="propertyAddress" class="mt-1 block w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="123 Main St, City, State, ZIP">
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+        <div>
+          <label class="block text-sm font-medium text-gray-700">Monthly Rent ($)</label>
+          <input type="number" id="rentAmount" class="mt-1 block w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="1500">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700">Security Deposit ($)</label>
+          <input type="number" id="depositAmount" class="mt-1 block w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="1500">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700">Lease Term (Months)</label>
+          <input type="number" id="leaseTerm" class="mt-1 block w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="12">
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+        <div>
+          <label class="block text-sm font-medium text-gray-700">Start Date</label>
+          <input type="date" id="startDate" class="mt-1 block w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700">End Date</label>
+          <input type="date" id="endDate" class="mt-1 block w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+        </div>
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-gray-700">Additional Terms (Optional)</label>
+        <textarea id="additionalTerms" rows="3" class="mt-1 block w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Any special conditions..."></textarea>
+      </div>
+
+      <button type="button" onclick="generateLease()" class="bg-blue-600 text-white px-6 py-2.5 rounded-lg hover:bg-blue-700 font-medium">
+        Generate Document
+      </button>
+    </form>
+
+    <div id="leaseResult" class="mt-8 hidden">
+      <div class="flex justify-between items-center mb-3">
+        <h3 class="font-semibold">Generated Document</h3>
+        <div class="space-x-2">
+          <button onclick="copyLease()" class="text-sm bg-gray-100 px-3 py-1.5 rounded hover:bg-gray-200">Copy</button>
+          <button onclick="downloadLease()" class="text-sm bg-gray-100 px-3 py-1.5 rounded hover:bg-gray-200">Download .txt</button>
+        </div>
+      </div>
+      <pre id="leaseOutput" class="bg-gray-50 border border-gray-200 rounded-lg p-4 text-sm whitespace-pre-wrap font-mono"></pre>
+    </div>
+  </div>
+
+  <script>
+    function generateLease() {
+      const landlord = document.getElementById('landlordName').value || '[Landlord Name]';
+      const tenant = document.getElementById('tenantName').value || '[Tenant Name]';
+      const address = document.getElementById('propertyAddress').value || '[Property Address]';
+      const rent = document.getElementById('rentAmount').value || '[Rent Amount]';
+      const deposit = document.getElementById('depositAmount').value || '[Deposit Amount]';
+      const term = document.getElementById('leaseTerm').value || '[Lease Term]';
+      const start = document.getElementById('startDate').value || '[Start Date]';
+      const end = document.getElementById('endDate').value || '[End Date]';
+      const additional = document.getElementById('additionalTerms').value || 'None';
+
+      const doc = `RESIDENTIAL LEASE AGREEMENT
+
+This Residential Lease Agreement ("Agreement") is entered into on ${new Date().toLocaleDateString()} between:
+
+Landlord: ${landlord}
+Tenant: ${tenant}
+
+1. PROPERTY
+The Landlord agrees to rent to the Tenant the residential property located at:
+${address}
+
+2. TERM
+The lease term shall be ${term} months, beginning on ${start} and ending on ${end}.
+
+3. RENT
+The monthly rent is $${rent}, due on the 1st day of each month.
+
+4. SECURITY DEPOSIT
+The Tenant shall pay a security deposit of $${deposit} upon signing this Agreement.
+
+5. ADDITIONAL TERMS
+${additional}
+
+6. GOVERNING LAW
+This Agreement shall be governed by the laws of the state where the property is located.
+
+IN WITNESS WHEREOF, the parties have executed this Agreement as of the date first written above.
+
+Landlord: ___________________________     Date: _______________
+
+Tenant: _____________________________     Date: _______________
+
+---
+Disclaimer: This document is a template for informational purposes only and does not constitute legal advice. Consult a qualified attorney before use.`;
+
+      document.getElementById('leaseOutput').textContent = doc;
+      document.getElementById('leaseResult').classList.remove('hidden');
+    }
+
+    function copyLease() {
+      const text = document.getElementById('leaseOutput').textContent;
+      navigator.clipboard.writeText(text).then(() => alert('Copied to clipboard!'));
+    }
+
+    function downloadLease() {
+      const text = document.getElementById('leaseOutput').textContent;
+      const blob = new Blob([text], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'Residential-Lease-Agreement.txt';
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+  </script>
+</body>
+</html>
