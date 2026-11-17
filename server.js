@@ -104,6 +104,13 @@ app.use('/api/legal', legalRoutes);
 //app.use('/', requireAccess, audioRoutes);
 
 const audioRoutes = require('./routes/audio');
+app.use((req, res, next) => {
+  if (req.path.startsWith('/audio-converter') || req.path.startsWith('/api/audio')) {
+    return requireAccess(req, res, next);
+  }
+  next();
+});
+
 app.use('/', audioRoutes);
 
 // Home
