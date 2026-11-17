@@ -110,6 +110,19 @@ app.use('/', requireAccess, audioRoutes);
 // Home
 app.get('/', (req, res) => {
   const tools = db.prepare('SELECT * FROM tools ORDER BY id DESC').all();
+
+  // 统计各分类数量
+  const categoryCounts = db.prepare(`
+    SELECT category, COUNT(*) as count 
+    FROM tools 
+    GROUP BY category
+  `).all();
+
+  const counts = {};
+  categoryCounts.forEach(row => {
+    counts[row.category] = row.count;
+  });
+
   let trialInfo = null;
   if (req.session.userId) {
     const user = db.prepare('SELECT trial_end_at, subscription_status FROM users WHERE id = ?').get(req.session.userId);
@@ -120,7 +133,15 @@ app.get('/', (req, res) => {
       }
     }
   }
-  res.render('index', { loggedIn: !!req.session.userId, user: req.session.userId, tools, q: req.query.q || '', trialInfo });
+
+  res.render('index', { 
+    loggedIn: !!req.session.userId, 
+    user: req.session.userId, 
+    tools, 
+    counts,          // 传给前端
+    q: req.query.q || '', 
+    trialInfo 
+  });
 });
 
 // Register
