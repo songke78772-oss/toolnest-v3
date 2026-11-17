@@ -1,0 +1,69 @@
+<!-- views/legal-document.ejs -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Legal Document Generator - ToolNest</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50">
+  <div class="max-w-5xl mx-auto px-4 py-10">
+    
+    <!-- Header -->
+    <div class="mb-8">
+      <h1 class="text-3xl font-bold text-gray-900">Legal Document Generator</h1>
+      <p class="text-gray-600 mt-2">Generate professional legal documents in minutes</p>
+    </div>
+
+    <!-- Tabs -->
+    <div class="border-b border-gray-200 mb-6">
+      <nav class="flex gap-8" id="tabs">
+        <button data-tab="lease" class="tab-btn py-3 px-1 border-b-2 font-medium text-sm border-blue-600 text-blue-600">
+          Residential Lease Agreement
+        </button>
+        <button data-tab="nda" class="tab-btn py-3 px-1 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300">
+          NDA (Non-Disclosure Agreement)
+        </button>
+      </nav>
+    </div>
+
+    <!-- Content Frames -->
+    <div id="lease-frame" class="document-frame">
+      <div class="bg-white rounded-xl border border-gray-200 p-8 text-center text-gray-500">
+        <p class="text-lg">Residential Lease Agreement</p>
+        <p class="mt-2 text-sm">Form will be added here</p>
+      </div>
+    </div>
+
+    <div id="nda-frame" class="document-frame hidden">
+      <div class="bg-white rounded-xl border border-gray-200 p-8 text-center text-gray-500">
+        <p class="text-lg">NDA (Non-Disclosure Agreement)</p>
+        <p class="mt-2 text-sm">Form will be added here</p>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    const tabs = document.querySelectorAll('.tab-btn');
+    const frames = document.querySelectorAll('.document-frame');
+
+    tabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        // Update tab styles
+        tabs.forEach(t => {
+          t.classList.remove('border-blue-600', 'text-blue-600');
+          t.classList.add('border-transparent', 'text-gray-500');
+        });
+        tab.classList.add('border-blue-600', 'text-blue-600');
+        tab.classList.remove('border-transparent', 'text-gray-500');
+
+        // Show corresponding frame
+        frames.forEach(f => f.classList.add('hidden'));
+        document.getElementById(tab.dataset.tab + '-frame').classList.remove('hidden');
+      });
+    });
+  </script>
+</body>
+</html>
