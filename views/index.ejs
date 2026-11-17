@@ -86,34 +86,39 @@
         <span><strong>$3.99/month</strong> · Unlimited access to all tools</span>
       </div>
 
-      <!-- Category Cards -->
-      <div class="grid grid-cols-2 md:grid-cols-5 gap-4 max-w-4xl mx-auto mb-8">
-        <button data-category="Image" class="category-card bg-purple-500 text-white p-5 rounded-2xl text-left hover:opacity-90 transition">
-          <div class="text-2xl mb-1">🖼️</div>
-          <div class="font-semibold">Image</div>
-          <div class="text-sm opacity-90">19 tools</div>
-        </button>
-        <button data-category="Office" class="category-card bg-orange-500 text-white p-5 rounded-2xl text-left hover:opacity-90 transition">
-          <div class="text-2xl mb-1">📄</div>
-          <div class="font-semibold">Office</div>
-          <div class="text-sm opacity-90">13 tools</div>
-        </button>
-        <button data-category="AI Write" class="category-card bg-indigo-600 text-white p-5 rounded-2xl text-left hover:opacity-90 transition">
-          <div class="text-2xl mb-1">✨</div>
-          <div class="font-semibold">AI Write</div>
-          <div class="text-sm opacity-90">13 tools</div>
-        </button>
-        <button data-category="Dev" class="category-card bg-blue-600 text-white p-5 rounded-2xl text-left hover:opacity-90 transition">
-          <div class="text-2xl mb-1">💻</div>
-          <div class="font-semibold">Dev</div>
-          <div class="text-sm opacity-90">14 tools</div>
-        </button>
-        <button data-category="Life" class="category-card bg-teal-600 text-white p-5 rounded-2xl text-left hover:opacity-90 transition">
-          <div class="text-2xl mb-1">🎯</div>
-          <div class="font-semibold">Life</div>
-          <div class="text-sm opacity-90">12 tools</div>
-        </button>
-      </div>
+     <!-- Category Cards -->
+<div class="grid grid-cols-2 md:grid-cols-6 gap-4 max-w-5xl mx-auto mb-8">
+  <button data-category="Image" class="category-card bg-purple-500 text-white p-5 rounded-2xl text-left hover:opacity-90 transition">
+    <div class="text-2xl mb-1">🖼️</div>
+    <div class="font-semibold">Image</div>
+    <div class="text-sm opacity-90"><%= counts.Image || 0 %> tools</div>
+  </button>
+  <button data-category="Office" class="category-card bg-orange-500 text-white p-5 rounded-2xl text-left hover:opacity-90 transition">
+    <div class="text-2xl mb-1">📄</div>
+    <div class="font-semibold">Office</div>
+    <div class="text-sm opacity-90"><%= counts.Office || 0 %> tools</div>
+  </button>
+  <button data-category="AI Write" class="category-card bg-indigo-600 text-white p-5 rounded-2xl text-left hover:opacity-90 transition">
+    <div class="text-2xl mb-1">✨</div>
+    <div class="font-semibold">AI Write</div>
+    <div class="text-sm opacity-90"><%= counts['AI Write'] || 0 %> tools</div>
+  </button>
+  <button data-category="Dev" class="category-card bg-blue-600 text-white p-5 rounded-2xl text-left hover:opacity-90 transition">
+    <div class="text-2xl mb-1">💻</div>
+    <div class="font-semibold">Dev</div>
+    <div class="text-sm opacity-90"><%= counts.Dev || 0 %> tools</div>
+  </button>
+  <button data-category="Life" class="category-card bg-teal-600 text-white p-5 rounded-2xl text-left hover:opacity-90 transition">
+    <div class="text-2xl mb-1">🎯</div>
+    <div class="font-semibold">Life</div>
+    <div class="text-sm opacity-90"><%= counts.Life || 0 %> tools</div>
+  </button>
+  <button data-category="Audio" class="category-card bg-pink-500 text-white p-5 rounded-2xl text-left hover:opacity-90 transition">
+    <div class="text-2xl mb-1">🎵</div>
+    <div class="font-semibold">Audio</div>
+    <div class="text-sm opacity-90"><%= counts.Audio || 0 %> tools</div>
+  </button>
+</div>
 
       <!-- Search -->
       <div class="max-w-xl mx-auto">
@@ -132,6 +137,7 @@
       <button data-category="AI Write" class="category-btn px-4 py-1.5 rounded-full text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200">AI Write</button>
       <button data-category="Dev" class="category-btn px-4 py-1.5 rounded-full text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200">Dev</button>
       <button data-category="Life" class="category-btn px-4 py-1.5 rounded-full text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200">Life</button>
+      <button data-category="Audio" class="category-btn px-4 py-1.5 rounded-full text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200">Audio</button>
     </div>
 
     <!-- Tools Grid -->
@@ -200,7 +206,7 @@
           b.classList.remove('bg-blue-600', 'text-white');
           b.classList.add('bg-gray-100', 'text-gray-700');
         });
-        const matchingBtn = document.querySelector(`.category-btn[data-category="${category}"]`);
+        const matchingBtn = document.querySelector`.category-btn[data-category="${category}"]`);
         if (matchingBtn) {
           matchingBtn.classList.add('bg-blue-600', 'text-white');
           matchingBtn.classList.remove('bg-gray-100', 'text-gray-700');
