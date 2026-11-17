@@ -11,6 +11,7 @@ const { PDFDocument } = require('pdf-lib');
 const { exec } = require('child_process');
 const { promisify } = require('util');
 const { Resend } = require('resend');
+const axios = require('axios');
 const execAsync = promisify(exec);
 
 const app = express();
@@ -323,6 +324,38 @@ app.post('/api/pdf/merge', pdfUpload.array('files', 20), async (req, res) => {
   } catch (err) {
     req.files.forEach(f => { try { fs.unlinkSync(f.path); } catch(e){} });
     res.status(500).send('Merge failed: ' + err.message);
+  }
+});
+
+// Creem 创建支付
+app.post('/create-checkout', requireLogin, async (req, res) => {
+  try {
+    const user = db.prepare('SELECT * FROM users WHERE id = ?').get(req.session.userId);
+    
+    const response = await axios.post(
+      'https://test-api.creem.io/v1/checkouts',
+      {
+        product_id: process.env.CREEM_PRODUCT_ID,
+        success_url: 'https://protoolnest.com/success',
+        customer: {
+          email: user.email
+        },
+        metadata: {
+          userId: String(user.id)
+        }
+      },
+      {
+        headers: {
+          'x-api-key': process.env.CREEM_API_KEY,
+          'Content-Type': 'application/json'
+        }
+      }
+    );
+
+    res.json({ url: response.data.checkout_url });
+  } catch (err) {
+    console.error(err.response?.data || err.message);
+    res.status(500).json({ error: 'Failed to create checkout' });
   }
 });
 
