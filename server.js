@@ -333,7 +333,7 @@ app.post('/create-checkout', requireLogin, async (req, res) => {
     const user = db.prepare('SELECT * FROM users WHERE id = ?').get(req.session.userId);
     
     const response = await axios.post(
-      'https://test-api.creem.io/v1/checkouts',
+      'https://api.creem.io/v1/checkouts',
       {
         product_id: process.env.CREEM_PRODUCT_ID,
         success_url: 'https://protoolnest.com/success',
