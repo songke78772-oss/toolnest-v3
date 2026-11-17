@@ -1,0 +1,168 @@
+{
+  "state": "CA",
+  "stateName": "California",
+  "version": "2026.11",
+  "lastUpdated": "2026-11-17",
+  "description": "California-specific overrides and required fields for residential lease agreement. Edit this file to update CA rules.",
+
+  "requiredUserFields": [
+    {
+      "key": "rentalType",
+      "label": "Rental Type",
+      "type": "select",
+      "options": ["Entire Premises", "Single Room"],
+      "required": true
+    },
+    {
+      "key": "propertyAddress",
+      "label": "Premises Address",
+      "type": "text",
+      "required": true
+    },
+    {
+      "key": "premisesDescription",
+      "label": "Description / Included Areas",
+      "type": "textarea",
+      "required": false
+    },
+    {
+      "key": "excludedAreas",
+      "label": "Excluded Areas",
+      "type": "text",
+      "required": false
+    },
+    {
+      "key": "startDate",
+      "label": "Lease Start Date",
+      "type": "date",
+      "required": true
+    },
+    {
+      "key": "endDate",
+      "label": "Lease End Date",
+      "type": "date",
+      "required": true
+    },
+    {
+      "key": "rentAmount",
+      "label": "Monthly Rent ($)",
+      "type": "number",
+      "required": true
+    },
+    {
+      "key": "depositAmount",
+      "label": "Security Deposit ($)",
+      "type": "number",
+      "required": true,
+      "note": "Max 1 month rent for most landlords; max 2 months for qualifying small landlords (non-service members)."
+    },
+    {
+      "key": "isSmallLandlord",
+      "label": "Is Landlord a qualifying small landlord?",
+      "type": "boolean",
+      "required": false,
+      "note": "Natural person or all-natural-person LLC owning ≤2 properties with ≤4 units total."
+    },
+    {
+      "key": "tenantIsServiceMember",
+      "label": "Is Tenant an active-duty service member?",
+      "type": "boolean",
+      "required": false
+    },
+    {
+      "key": "paymentMethod",
+      "label": "Payment Method",
+      "type": "text",
+      "required": true
+    },
+    {
+      "key": "lateFee",
+      "label": "Late Fee Amount ($)",
+      "type": "number",
+      "required": false,
+      "note": "Must be reasonable estimate of actual damages; no statutory cap."
+    },
+    {
+      "key": "approvedOccupants",
+      "label": "Approved Occupants",
+      "type": "text",
+      "required": false
+    },
+    {
+      "key": "maxOccupants",
+      "label": "Maximum Occupancy",
+      "type": "number",
+      "required": false
+    },
+    {
+      "key": "smokingPolicy",
+      "label": "Smoking / Vaping Policy",
+      "type": "text",
+      "required": false
+    },
+    {
+      "key": "petPolicy",
+      "label": "Pet Policy",
+      "type": "textarea",
+      "required": false
+    },
+    {
+      "key": "entryNoticeHours",
+      "label": "Entry Notice Hours",
+      "type": "number",
+      "default": 24,
+      "note": "California minimum is 24 hours written notice (non-emergency)."
+    },
+    {
+      "key": "yearBuilt",
+      "label": "Year Built",
+      "type": "number",
+      "required": false,
+      "note": "If before 1978, lead paint disclosure required."
+    },
+    {
+      "key": "inFloodZone",
+      "label": "Property in FEMA Special Flood Hazard Area?",
+      "type": "boolean",
+      "required": false
+    },
+    {
+      "key": "knownMold",
+      "label": "Known mold exceeding limits or health threat?",
+      "type": "boolean",
+      "required": false
+    }
+  ],
+
+  "templateOverrides": {
+    "stateSecurityDepositClause": "Under California Civil Code §1950.5 (as amended by AB 12), the maximum security deposit is one (1) month’s rent for most landlords, whether the unit is furnished or unfurnished. A qualifying small landlord (natural person or LLC whose members are all natural persons, owning no more than two residential rental properties totaling no more than four units) may charge up to two (2) months’ rent, except where the tenant is a service member. The Landlord shall return any remaining deposit with an itemized statement within twenty-one (21) calendar days after the Tenant vacates. The Tenant has the right to request a pre-move-out inspection. Landlord shall provide written notice of this right. For tenancies beginning on or after July 1, 2025, photographic documentation is required at move-in and in connection with deductions.",
+
+    "entryNoticeHours": "24",
+
+    "stateDisclosures": "CALIFORNIA REQUIRED DISCLOSURES:\\n\\n1. Megan’s Law Notice: Information about registered sex offenders is available at www.meganslaw.ca.gov (Civil Code §2079.10a).\\n\\n2. Bed Bug Information: Tenant has received the required bed bug information notice pursuant to Civil Code §1954.603.\\n\\n3. Mold: Tenant has received the California Department of Public Health booklet on dampness and mold. Landlord discloses any known mold that exceeds permissible exposure limits or poses a health threat.\\n\\n4. Flood Hazard: {{floodDisclosure}}\\n\\n5. AB 1482 Rent Cap / Just Cause: This property {{ab1482Status}}.\\n\\n6. Lead-Based Paint: {{leadDisclosure}}\\n\\n7. Owner/Manager Contact Information is provided in the Parties section above.",
+
+    "additionalTerms": "{{additionalTerms}}\\n\\nCalifornia-specific notes: Late fees must be a reasonable estimate of the Landlord’s actual damages and may not be punitive. Certain notice periods and tenant protections under AB 1482 may apply depending on the property and tenancy length. This Agreement does not waive any non-waivable rights under California law."
+  },
+
+  "conditionalDisclosures": {
+    "floodDisclosure": {
+      "ifTrue": "Landlord discloses that the Premises is located in a special flood hazard area designated by FEMA.",
+      "ifFalse": "Landlord has no actual knowledge that the Premises is located in a special flood hazard area."
+    },
+    "leadDisclosure": {
+      "ifBefore1978": "This property was built before 1978. Tenant has received the EPA pamphlet “Protect Your Family From Lead in Your Home” and any known information regarding lead-based paint hazards.",
+      "ifAfter1978": "This property was built in 1978 or later. Federal lead-based paint disclosure does not apply."
+    },
+    "ab1482Status": {
+      "covered": "is subject to the rent cap and just cause eviction requirements of AB 1482 (Civil Code §§1946.2, 1947.12).",
+      "exempt": "is exempt from the rent cap and just cause requirements of AB 1482. Landlord has provided the required exemption notice."
+    }
+  },
+
+  "notes": [
+    "Deposit cap is strict for most landlords. Always verify small-landlord exception eligibility.",
+    "21-day deposit return and 24-hour entry notice are non-waivable.",
+    "AB 1482 just-cause and rent-cap rules apply to many but not all properties; include appropriate notice.",
+    "Consult a California-licensed attorney for property-specific compliance, especially regarding local rent control ordinances."
+  ]
+}
