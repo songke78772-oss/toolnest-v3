@@ -107,7 +107,27 @@ function requireAccess(req, res, next) {
 // Home
 app.get('/', (req, res) => {
   const tools = db.prepare('SELECT * FROM tools ORDER BY id DESC').all();
-  res.render('index', { loggedIn: !!req.session.userId, user: req.session.userId, tools, q: req.query.q || '' });
+  
+  let trialInfo = null;
+  if (req.session.userId) {
+    const user = db.prepare('SELECT trial_end_at, subscription_status FROM users WHERE id = ?').get(req.session.userId);
+    if (user && user.subscription_status !== 'active' && user.trial_end_at) {
+      const end = new Date(user.trial_end_at);
+      if (end > new Date()) {
+        trialInfo = {
+          endDate: end.toLocaleDateString('zh-CN')
+        };
+      }
+    }
+  }
+
+  res.render('index', { 
+    loggedIn: !!req.session.userId, 
+    user: req.session.userId, 
+    tools, 
+    q: req.query.q || '',
+    trialInfo
+  });
 });
 
 // Register
