@@ -6,7 +6,7 @@
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-white">
-  <div class="p-6">
+  <div class="p-6 max-w-3xl mx-auto">
     <h2 class="text-xl font-semibold mb-6">Residential Lease Agreement</h2>
 
     <!-- Step 1: Country & Region -->
@@ -31,19 +31,9 @@
     <div id="leaseFormContainer" class="hidden">
       <form id="leaseForm" class="space-y-5"></form>
       <button type="button" onclick="generateLease()" class="mt-6 bg-blue-600 text-white px-6 py-2.5 rounded-lg hover:bg-blue-700 font-medium">
-        Generate Document
+        Generate PDF
       </button>
-
-      <div id="leaseResult" class="mt-8 hidden">
-        <div class="flex justify-between items-center mb-3">
-          <h3 class="font-semibold">Generated Document</h3>
-          <div class="space-x-2">
-            <button onclick="copyLease()" class="text-sm bg-gray-100 px-3 py-1.5 rounded hover:bg-gray-200">Copy</button>
-            <button onclick="downloadLease()" class="text-sm bg-gray-100 px-3 py-1.5 rounded hover:bg-gray-200">Download .txt</button>
-          </div>
-        </div>
-        <pre id="leaseOutput" class="bg-gray-50 border border-gray-200 rounded-lg p-4 text-sm whitespace-pre-wrap font-mono"></pre>
-      </div>
+      <div id="status" class="mt-3 text-sm text-gray-500 hidden"></div>
     </div>
   </div>
 
@@ -120,8 +110,32 @@
             <input type="text" name="landlordName" class="mt-1 block w-full border border-gray-300 rounded-lg px-3 py-2" required>
           </div>
           <div>
+            <label class="block text-sm font-medium text-gray-700">Landlord Address</label>
+            <input type="text" name="landlordAddress" class="mt-1 block w-full border border-gray-300 rounded-lg px-3 py-2">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Landlord Phone</label>
+            <input type="text" name="landlordPhone" class="mt-1 block w-full border border-gray-300 rounded-lg px-3 py-2">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Landlord Email</label>
+            <input type="email" name="landlordEmail" class="mt-1 block w-full border border-gray-300 rounded-lg px-3 py-2">
+          </div>
+          <div>
             <label class="block text-sm font-medium text-gray-700">Tenant Name *</label>
             <input type="text" name="tenantName" class="mt-1 block w-full border border-gray-300 rounded-lg px-3 py-2" required>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Tenant Address</label>
+            <input type="text" name="tenantAddress" class="mt-1 block w-full border border-gray-300 rounded-lg px-3 py-2">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Tenant Phone</label>
+            <input type="text" name="tenantPhone" class="mt-1 block w-full border border-gray-300 rounded-lg px-3 py-2">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Tenant Email</label>
+            <input type="email" name="tenantEmail" class="mt-1 block w-full border border-gray-300 rounded-lg px-3 py-2">
           </div>
         </div>
       `;
@@ -157,119 +171,49 @@
       });
     }
 
-    function generateLease() {
+    async function generateLease() {
       if (!currentTemplate) return alert('Please select a region first');
 
-      const formData = new FormData(document.getElementById('leaseForm'));
+      const form = document.getElementById('leaseForm');
+      if (!form.checkValidity()) {
+        form.reportValidity();
+        return;
+      }
+
+      const formData = new FormData(form);
       const data = Object.fromEntries(formData.entries());
 
-      const landlord = data.landlordName || '[Landlord Name]';
-      const tenant = data.tenantName || '[Tenant Name]';
-      const jurisdiction = currentTemplate.stateName || currentTemplate.countryName || 'Unknown';
+      // 补充基础字段
+      data.effectiveDate = new Date().toLocaleDateString('en-US');
+      data.jurisdiction = currentTemplate.stateName || currentTemplate.countryName || '';
 
-      // 处理条件披露（以加州为例，其他地区可按需扩展）
-      let flood = '';
-      let lead = '';
-      let ab1482 = '';
+      const status = document.getElementById('status');
+      status.textContent = 'Generating PDF...';
+      status.classList.remove('hidden');
 
-      if (currentTemplate.conditionalDisclosures) {
-        const cd = currentTemplate.conditionalDisclosures;
-        if (cd.floodDisclosure) {
-          flood = data.inFloodZone === 'true' ? cd.floodDisclosure.ifTrue : cd.floodDisclosure.ifFalse;
-        }
-        if (cd.leadDisclosure) {
-          lead = (data.yearBuilt && parseInt(data.yearBuilt) < 1978)
-            ? cd.leadDisclosure.ifBefore1978
-            : cd.leadDisclosure.ifAfter1978;
-        }
-        if (cd.ab1482Status) {
-          ab1482 = cd.ab1482Status.covered || '';
-        }
+      try {
+        const res = await fetch('/api/legal/lease/generate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ formData: data, template: currentTemplate })
+        });
+
+        if (!res.ok) throw new Error('Generation failed');
+
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'Residential-Lease-Agreement.pdf';
+        a.click();
+        URL.revokeObjectURL(url);
+
+        status.textContent = 'PDF downloaded.';
+      } catch (err) {
+        status.textContent = 'Failed to generate PDF.';
+        console.error(err);
+        alert('Failed to generate PDF');
       }
-
-      let disclosures = '';
-      if (currentTemplate.templateOverrides?.stateDisclosures) {
-        disclosures = currentTemplate.templateOverrides.stateDisclosures
-          .replace('{{floodDisclosure}}', flood)
-          .replace('{{leadDisclosure}}', lead)
-          .replace('{{ab1482Status}}', ab1482);
-      }
-
-      let additional = currentTemplate.templateOverrides?.additionalTerms || '{{additionalTerms}}';
-      additional = additional.replace('{{additionalTerms}}', data.additionalTerms || 'None');
-
-      const depositClause = currentTemplate.templateOverrides?.stateSecurityDepositClause || 
-        `The Tenant shall pay a security deposit of $${data.depositAmount || '[Deposit]'}.`;
-
-      const doc = `RESIDENTIAL LEASE AGREEMENT
-${jurisdiction}
-
-This Residential Lease Agreement ("Agreement") is entered into on ${new Date().toLocaleDateString()} between:
-
-Landlord: ${landlord}
-Tenant: ${tenant}
-
-1. PREMISES
-The Landlord agrees to rent to the Tenant the premises located at:
-${data.propertyAddress || '[Address]'}
-${data.premisesDescription ? '\nDescription: ' + data.premisesDescription : ''}
-${data.excludedAreas ? '\nExcluded Areas: ' + data.excludedAreas : ''}
-
-2. TERM
-The lease term begins on ${data.startDate || '[Start Date]'} and ends on ${data.endDate || '[End Date]'}.
-
-3. RENT
-Monthly rent is $${data.rentAmount || '[Rent]'}, payable by ${data.paymentMethod || '[Payment Method]'}.
-
-4. SECURITY DEPOSIT
-${depositClause}
-
-Security Deposit Amount: $${data.depositAmount || '[Deposit]'}
-
-5. OCCUPANCY
-Approved Occupants: ${data.approvedOccupants || 'None specified'}
-Maximum Occupancy: ${data.maxOccupants || 'N/A'}
-
-6. POLICIES
-Smoking/Vaping: ${data.smokingPolicy || 'As permitted by law'}
-Pets: ${data.petPolicy || 'No pets unless otherwise agreed in writing'}
-
-7. ENTRY
-Landlord shall provide at least ${data.entryNoticeHours || currentTemplate.templateOverrides?.entryNoticeHours || '24'} hours written notice before entry (non-emergency).
-
-8. REQUIRED DISCLOSURES
-${disclosures || 'None specified.'}
-
-9. ADDITIONAL TERMS
-${additional}
-
-IN WITNESS WHEREOF, the parties have executed this Agreement.
-
-Landlord: ___________________________     Date: _______________
-
-Tenant: _____________________________     Date: _______________
-
----
-Disclaimer: This document is a template for informational purposes only and does not constitute legal advice. Consult a qualified attorney before use.`;
-
-      document.getElementById('leaseOutput').textContent = doc;
-      document.getElementById('leaseResult').classList.remove('hidden');
-    }
-
-    function copyLease() {
-      const text = document.getElementById('leaseOutput').textContent;
-      navigator.clipboard.writeText(text).then(() => alert('Copied!'));
-    }
-
-    function downloadLease() {
-      const text = document.getElementById('leaseOutput').textContent;
-      const blob = new Blob([text], { type: 'text/plain' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'Residential-Lease-Agreement.txt';
-      a.click();
-      URL.revokeObjectURL(url);
     }
 
     // 启动
