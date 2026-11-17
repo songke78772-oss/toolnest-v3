@@ -1,4 +1,3 @@
-// routes/legal.js
 const express = require('express');
 const path = require('path');
 const fs = require('fs');
@@ -26,7 +25,9 @@ router.get('/lease/available', (req, res) => {
         countries[countryKey] = { name: countryName, regions: [] };
       }
       countries[countryKey].regions.push({ code, name, file });
-    } catch (e) {}
+    } catch (e) {
+      console.error('Parse error:', file, e.message);
+    }
   });
 
   res.json({ countries });
@@ -59,7 +60,6 @@ router.post('/lease/generate', async (req, res) => {
     data.effectiveDate = data.effectiveDate || new Date().toLocaleDateString('en-US');
     data.additionalTerms = data.additionalTerms || 'None';
 
-    // 条件披露处理
     if (template.conditionalDisclosures) {
       const cd = template.conditionalDisclosures;
       if (cd.floodDisclosure) {
