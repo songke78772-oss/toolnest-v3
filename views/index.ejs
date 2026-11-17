@@ -3,222 +3,92 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ToolNest - Online Tools</title>
+  <title>ProToolNest - Online PDF, Image, AI Writing & Office Tools</title>
+  <meta name="description" content="ProToolNest offers fast online tools for PDF translation, image processing, AI writing, and office productivity. Simple, affordable, $3.99/month after free trial.">
+  <meta name="keywords" content="online tools, PDF translator, AI writer, image compressor, office tools, productivity tools">
+  <link rel="canonical" href="https://protoolnest.com/">
   <script src="https://cdn.tailwindcss.com"></script>
-  <style>
-    .marquee {
-      overflow: hidden;
-      white-space: nowrap;
-    }
-    .marquee-content {
-      display: inline-block;
-      animation: marquee 28s linear infinite;
-    }
-    @keyframes marquee {
-      0% { transform: translateX(100%); }
-      100% { transform: translateX(-100%); }
-    }
-  </style>
 </head>
-<body class="bg-gray-50">
-  <!-- Nav -->
-  <nav class="bg-white border-b sticky top-0 z-10">
-    <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
-      <a href="/" class="flex items-center gap-2">
-        <img src="/images/logo.png" alt="ToolNest" class="h-9 w-auto">
-        <span class="text-xl font-bold text-gray-800">ToolNest</span>
-      </a>
-      <div class="flex items-center gap-4 text-sm">
-        <% if (loggedIn) { %>
-          <a href="/dashboard" class="text-gray-600 hover:text-gray-800">Dashboard</a>
-          <a href="/logout" class="text-gray-600 hover:text-gray-800">Logout</a>
-        <% } else { %>
-          <a href="/login" class="text-gray-600 hover:text-gray-800">Login</a>
-          <a href="/register" class="bg-blue-600 text-white px-4 py-1.5 rounded-lg hover:bg-blue-700">Sign Up</a>
-        <% } %>
-      </div>
+<body class="bg-gray-50 text-gray-900">
+  <header class="bg-white border-b">
+    <div class="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center">
+      <a href="/" class="text-2xl font-bold text-indigo-600">ProToolNest</a>
+      <nav class="flex gap-6 text-sm">
+        <a href="/tools" class="hover:text-indigo-600">Tools</a>
+        <a href="/pricing" class="hover:text-indigo-600">Pricing</a>
+        <a href="/login" class="hover:text-indigo-600">Login</a>
+        <a href="/register" class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700">Start Free Trial</a>
+      </nav>
     </div>
-  </nav>
+  </header>
 
-  <!-- Vertical Scrolling Banner -->
-  <div class="bg-blue-600 text-white text-sm overflow-hidden h-9 relative">
-    <div id="ticker" class="absolute inset-0 flex items-center justify-center transition-all duration-500">
-      <span>📄 Legal document service coming soon</span>
-    </div>
-  </div>
-
-  <script>
-    const messages = [
-      '📄 Legal document service coming soon',
-      '🛠️ New tools added regularly',
-      '🎁 Sign up now and get 3 days free'
-    ];
-    let current = 0;
-    const ticker = document.getElementById('ticker');
-
-    function showNext() {
-      ticker.style.opacity = '0';
-      ticker.style.transform = 'translateY(-10px)';
-      setTimeout(() => {
-        current = (current + 1) % messages.length;
-        ticker.textContent = messages[current];
-        ticker.style.transform = 'translateY(10px)';
-        ticker.style.opacity = '0';
-        setTimeout(() => {
-          ticker.style.opacity = '1';
-          ticker.style.transform = 'translateY(0)';
-        }, 50);
-      }, 400);
-    }
-
-    setInterval(showNext, 3500);
-  </script>
-
-  <!-- Hero -->
-  <div class="bg-white border-b">
-    <div class="max-w-4xl mx-auto px-4 pt-12 pb-10 text-center">
-      <h1 class="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
-        Free Tools to Make <span class="text-blue-600">Your Work</span> Simple
-      </h1>
-      <p class="text-lg text-gray-600 mb-6">
-        PDF, Image, Office, Dev and Life tools — all in one place.
+  <main class="max-w-6xl mx-auto px-4 py-12">
+    <section class="text-center mb-16">
+      <h1 class="text-4xl md:text-5xl font-bold mb-4">Simple Online Tools for Everyday Work</h1>
+      <p class="text-xl text-gray-600 max-w-2xl mx-auto mb-8">
+        PDF translation, AI writing assistants, image tools, and office utilities — all in one place. 
+        Start with a free trial, then just $3.99/month.
       </p>
-
-      <!-- Pricing Badge -->
-      <div class="inline-flex items-center gap-2 bg-green-50 text-green-700 px-4 py-2 rounded-full text-sm font-medium mb-8">
-        <span>✨</span>
-        <span><strong>$3.99/month</strong> · Unlimited access to all tools</span>
-      </div>
-
-      <!-- Category Cards -->
-      <div class="grid grid-cols-2 md:grid-cols-5 gap-4 max-w-4xl mx-auto mb-8">
-        <button data-category="Image" class="category-card bg-purple-500 text-white p-5 rounded-2xl text-left hover:opacity-90 transition">
-          <div class="text-2xl mb-1">🖼️</div>
-          <div class="font-semibold">Image</div>
-          <div class="text-sm opacity-90" id="count-Image">--</div>
-        </button>
-        <button data-category="Office" class="category-card bg-orange-500 text-white p-5 rounded-2xl text-left hover:opacity-90 transition">
-          <div class="text-2xl mb-1">📄</div>
-          <div class="font-semibold">Office</div>
-          <div class="text-sm opacity-90" id="count-Office">--</div>
-        </button>
-        <button data-category="Dev" class="category-card bg-blue-600 text-white p-5 rounded-2xl text-left hover:opacity-90 transition">
-          <div class="text-2xl mb-1">💻</div>
-          <div class="font-semibold">Dev</div>
-          <div class="text-sm opacity-90" id="count-Dev">--</div>
-        </button>
-        <button data-category="Life" class="category-card bg-teal-600 text-white p-5 rounded-2xl text-left hover:opacity-90 transition">
-          <div class="text-2xl mb-1">🎯</div>
-          <div class="font-semibold">Life</div>
-          <div class="text-sm opacity-90" id="count-Life">--</div>
-        </button>
-        <button data-category="AI Write" class="category-card bg-indigo-600 text-white p-5 rounded-2xl text-left hover:opacity-90 transition">
-          <div class="text-2xl mb-1">✍️</div>
-          <div class="font-semibold">AI Write</div>
-          <div class="text-sm opacity-90" id="count-AI Write">--</div>
-        </button>
-      </div>
-
-      <!-- Search -->
-      <div class="max-w-xl mx-auto relative">
-        <input type="text" id="searchInput" placeholder="Search tools..." 
-               class="w-full border border-gray-300 rounded-2xl px-5 py-4 text-lg focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm">
-      </div>
-    </div>
-  </div>
-
-  <div class="max-w-6xl mx-auto p-6">
-    <!-- Category Filter Buttons -->
-    <div class="flex flex-wrap gap-2 mb-6" id="categoryTabs">
-      <button data-category="all" class="category-btn px-4 py-1.5 rounded-full text-sm font-medium bg-blue-600 text-white">All</button>
-      <button data-category="Image" class="category-btn px-4 py-1.5 rounded-full text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200">Image</button>
-      <button data-category="Office" class="category-btn px-4 py-1.5 rounded-full text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200">Office</button>
-      <button data-category="Dev" class="category-btn px-4 py-1.5 rounded-full text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200">Dev</button>
-      <button data-category="Life" class="category-btn px-4 py-1.5 rounded-full text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200">Life</button>
-      <button data-category="AI Write" class="category-btn px-4 py-1.5 rounded-full text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200">AI Write</button>
-    </div>
-
-    <!-- Tools Grid -->
-    <div id="toolsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-      <% if (tools && tools.length > 0) { %>
-        <% tools.forEach(tool => { %>
-          <a href="<%= loggedIn ? '/tool/' + tool.id : '/login' %>" 
-             class="tool-card bg-white rounded-xl border p-5 hover:shadow-md transition block"
-             data-category="<%= tool.category || 'Office' %>"
-             data-name="<%= tool.name.toLowerCase() %>"
-             data-desc="<%= (tool.description || '').toLowerCase() %>">
-            <div class="flex items-start gap-3">
-              <div class="text-3xl"><%= tool.icon || '🔧' %></div>
-              <div class="flex-1">
-                <h3 class="font-semibold text-gray-800"><%= tool.name %></h3>
-                <p class="text-sm text-gray-500 mt-1 line-clamp-2"><%= tool.description || '' %></p>
-                <span class="inline-block mt-2 text-xs px-2 py-0.5 bg-gray-100 text-gray-600 rounded-full"><%= tool.category || 'Office' %></span>
-              </div>
-            </div>
-          </a>
-        <% }); %>
-      <% } else { %>
-        <p class="col-span-full text-center text-gray-500 py-10">No tools yet.</p>
-      <% } %>
-    </div>
-
-    <!-- Bottom CTA -->
-    <% if (!loggedIn) { %>
-    <div class="mt-16 text-center bg-white rounded-2xl border p-8">
-      <h2 class="text-2xl font-bold text-gray-800 mb-2">Get Unlimited Access</h2>
-      <p class="text-gray-600 mb-6">All tools for just <strong>$3.99/month</strong>. Cancel anytime.</p>
-      <a href="/register" class="inline-block bg-blue-600 text-white px-8 py-3 rounded-xl font-medium hover:bg-blue-700">
-        Start Free Trial
+      <a href="/register" class="inline-block bg-indigo-600 text-white text-lg px-8 py-3 rounded-xl hover:bg-indigo-700">
+        Try All Tools Free for 3 Days
       </a>
+    </section>
+
+    <section class="mb-16">
+      <h2 class="text-2xl font-semibold mb-6">Popular Categories</h2>
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <a href="/tools?category=office" class="bg-white p-6 rounded-xl border hover:shadow-md text-center">
+          <div class="text-3xl mb-2">📄</div>
+          <div class="font-medium">Office</div>
+        </a>
+        <a href="/tools?category=ai" class="bg-white p-6 rounded-xl border hover:shadow-md text-center">
+          <div class="text-3xl mb-2">✨</div>
+          <div class="font-medium">AI Writing</div>
+        </a>
+        <a href="/tools?category=pdf" class="bg-white p-6 rounded-xl border hover:shadow-md text-center">
+          <div class="text-3xl mb-2">📑</div>
+          <div class="font-medium">PDF</div>
+        </a>
+        <a href="/tools?category=image" class="bg-white p-6 rounded-xl border hover:shadow-md text-center">
+          <div class="text-3xl mb-2">🖼️</div>
+          <div class="font-medium">Image</div>
+        </a>
+      </div>
+    </section>
+
+    <section>
+      <h2 class="text-2xl font-semibold mb-6">Featured Tools</h2>
+      <div class="grid md:grid-cols-3 gap-6">
+        <!-- Tools will be rendered from DB in real version -->
+        <div class="bg-white p-6 rounded-xl border">
+          <div class="text-2xl mb-2">🔄</div>
+          <h3 class="font-semibold mb-1">Paragraph Rewriter</h3>
+          <p class="text-sm text-gray-600">Rewrite text while keeping the original meaning.</p>
+        </div>
+        <div class="bg-white p-6 rounded-xl border">
+          <div class="text-2xl mb-2">📑</div>
+          <h3 class="font-semibold mb-1">PDF Translator</h3>
+          <p class="text-sm text-gray-600">Translate PDF documents online with Google Translate.</p>
+        </div>
+        <div class="bg-white p-6 rounded-xl border">
+          <div class="text-2xl mb-2">✂️</div>
+          <h3 class="font-semibold mb-1">Content Shortener</h3>
+          <p class="text-sm text-gray-600">Make long text shorter and clearer.</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="bg-white border-t mt-20">
+    <div class="max-w-6xl mx-auto px-4 py-8 text-sm text-gray-500 flex flex-col md:flex-row justify-between gap-4">
+      <div>© 2026 ProToolNest. All rights reserved.</div>
+      <div class="flex gap-4">
+        <a href="/terms" class="hover:text-indigo-600">Terms</a>
+        <a href="/privacy" class="hover:text-indigo-600">Privacy</a>
+        <a href="/refund" class="hover:text-indigo-600">Refund Policy</a>
+        <a href="/disclaimer" class="hover:text-indigo-600">Disclaimer</a>
+      </div>
     </div>
-    <% } %>
-  </div>
-
-  <script>
-    const baseCounts = {
-      Image: 500 + Math.floor(Math.random() * 800),
-      Office: 500 + Math.floor(Math.random() * 1200),
-      Dev: 500 + Math.floor(Math.random() * 600),
-      Life: 500 + Math.floor(Math.random() * 900),
-      'AI Write': 300 + Math.floor(Math.random() * 500)
-    };
-
-    Object.keys(baseCounts).forEach(cat => {
-      const el = document.getElementById('count-' + cat);
-      if (el) el.textContent = baseCounts[cat].toLocaleString() + ' uses';
-    });
-
-    document.querySelectorAll('.category-card, .category-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const category = btn.dataset.category;
-
-        document.querySelectorAll('.category-btn').forEach(b => {
-          b.classList.remove('bg-blue-600', 'text-white');
-          b.classList.add('bg-gray-100', 'text-gray-700');
-        });
-        const matchingBtn = document.querySelector(`.category-btn[data-category="${category}"]`);
-        if (matchingBtn) {
-          matchingBtn.classList.add('bg-blue-600', 'text-white');
-          matchingBtn.classList.remove('bg-gray-100', 'text-gray-700');
-        }
-
-        document.querySelectorAll('.tool-card').forEach(card => {
-          if (category === 'all' || card.dataset.category === category) {
-            card.classList.remove('hidden');
-          } else {
-            card.classList.add('hidden');
-          }
-        });
-      });
-    });
-
-    document.getElementById('searchInput').addEventListener('input', (e) => {
-      const q = e.target.value.toLowerCase().trim();
-      document.querySelectorAll('.tool-card').forEach(card => {
-        const match = card.dataset.name.includes(q) || card.dataset.desc.includes(q);
-        card.classList.toggle('hidden', !match);
-      });
-    });
-  </script>
+  </footer>
 </body>
 </html>
