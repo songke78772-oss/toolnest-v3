@@ -79,6 +79,10 @@ app.use(session({
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
+
+// 让 templates 目录可被前端访问（用于加载 lease JSON）
+app.use('/templates', express.static(path.join(__dirname, 'templates')));
+
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
@@ -267,16 +271,52 @@ app.get('/privacy', (req, res) => res.render('privacy'));
 app.get('/refund', (req, res) => res.render('refund'));
 app.get('/disclaimer', (req, res) => res.render('disclaimer'));
 
-//法律文书
-// Legal Document Generator
+// ========== 法律文书 ==========
 app.get('/tools/legal-document', requireLogin, (req, res) => {
   res.render('legal-document');
 });
+
 app.get('/tools/legal/:type', requireLogin, (req, res) => {
   const type = req.params.type;
   res.render(`legal/${type}`);
 });
 
+// 扫描 templates/lease 目录，返回实际存在的地区
+app.get('/api/legal/lease/available', (req, res) => {
+  const dir = path.join(__dirname, 'templates', 'lease');
+
+  if (!fs.existsSync(dir)) {
+    return res.json({ countries: {} });
+  }
+
+  const files = fs.readdirSync(dir).filter(f => f.endsWith('.json'));
+  const countries = {};
+
+  files.forEach(file => {
+    try {
+      const content = JSON.parse(fs.readFileSync(path.join(dir, file), 'utf8'));
+      const code = content.state || content.country || file.replace('.json', '').toUpperCase();
+      const name = content.stateName || content.countryName || code;
+
+      let countryKey = content.country || 'US';
+      let countryName = content.countryName || (countryKey === 'US' ? 'United States' : countryKey);
+
+      if (!countries[countryKey]) {
+        countries[countryKey] = { name: countryName, regions: [] };
+      }
+
+      countries[countryKey].regions.push({
+        code,
+        name,
+        file
+      });
+    } catch (e) {
+      console.error('Failed to parse', file, e.message);
+    }
+  });
+
+  res.json({ countries });
+});
 
 // ===== 原有内置工具页面（保持不变） =====
 app.get('/compress', (req, res) => res.render('compress'));
