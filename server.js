@@ -272,6 +272,11 @@ app.get('/disclaimer', (req, res) => res.render('disclaimer'));
 app.get('/tools/legal-document', requireLogin, (req, res) => {
   res.render('legal-document');
 });
+app.get('/tools/legal/:type', requireLogin, (req, res) => {
+  const type = req.params.type;
+  res.render(`legal/${type}`);
+});
+
 
 // ===== 原有内置工具页面（保持不变） =====
 app.get('/compress', (req, res) => res.render('compress'));
