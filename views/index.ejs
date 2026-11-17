@@ -62,6 +62,15 @@
     setInterval(showNext, 3500);
   </script>
 
+  <% if (trialInfo) { %>
+    <div class="max-w-6xl mx-auto px-4 pt-4">
+      <div class="bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-3 rounded-lg text-sm flex justify-between items-center">
+        <span>You are on a free trial · Expires on <%= trialInfo.endDate %></span>
+        <a href="/subscribe" class="text-blue-600 hover:underline font-medium">Upgrade Now</a>
+      </div>
+    </div>
+  <% } %>
+
   <!-- Hero -->
   <div class="bg-white border-b">
     <div class="max-w-4xl mx-auto px-4 pt-12 pb-10 text-center">
