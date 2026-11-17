@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ProToolNest - Online PDF, Image, AI Writing & Office Tools</title>
   <meta name="description" content="ProToolNest offers fast online tools for PDF translation, image processing, AI writing, and office productivity. Simple, affordable, $3.99/month after free trial.">
-  <meta name="keywords" content="online tools, PDF translator, AI writer, image compressor, office tools, productivity tools">
+  <meta name="keywords" content="online tools, PDF translator, AI writer, image tools, office tools, productivity">
   <link rel="canonical" href="https://protoolnest.com/">
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
@@ -13,11 +13,16 @@
   <header class="bg-white border-b">
     <div class="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center">
       <a href="/" class="text-2xl font-bold text-indigo-600">ProToolNest</a>
-      <nav class="flex gap-6 text-sm">
-        <a href="/tools" class="hover:text-indigo-600">Tools</a>
+      <nav class="flex gap-6 text-sm items-center">
+        <a href="/#tools" class="hover:text-indigo-600">Tools</a>
         <a href="/pricing" class="hover:text-indigo-600">Pricing</a>
-        <a href="/login" class="hover:text-indigo-600">Login</a>
-        <a href="/register" class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700">Start Free Trial</a>
+        <% if (loggedIn) { %>
+          <a href="/dashboard" class="hover:text-indigo-600">Dashboard</a>
+          <a href="/logout" class="hover:text-indigo-600">Logout</a>
+        <% } else { %>
+          <a href="/login" class="hover:text-indigo-600">Login</a>
+          <a href="/register" class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700">Start Free Trial</a>
+        <% } %>
       </nav>
     </div>
   </header>
@@ -29,53 +34,74 @@
         PDF translation, AI writing assistants, image tools, and office utilities — all in one place. 
         Start with a free trial, then just $3.99/month.
       </p>
-      <a href="/register" class="inline-block bg-indigo-600 text-white text-lg px-8 py-3 rounded-xl hover:bg-indigo-700">
-        Try All Tools Free for 3 Days
-      </a>
+      <% if (!loggedIn) { %>
+        <a href="/register" class="inline-block bg-indigo-600 text-white text-lg px-8 py-3 rounded-xl hover:bg-indigo-700">
+          Try All Tools Free for 3 Days
+        </a>
+      <% } %>
     </section>
 
-    <section class="mb-16">
+    <section class="mb-12">
       <h2 class="text-2xl font-semibold mb-6">Popular Categories</h2>
       <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <a href="/tools?category=office" class="bg-white p-6 rounded-xl border hover:shadow-md text-center">
+        <a href="/?category=Office" class="bg-white p-6 rounded-xl border hover:shadow-md text-center">
           <div class="text-3xl mb-2">📄</div>
           <div class="font-medium">Office</div>
         </a>
-        <a href="/tools?category=ai" class="bg-white p-6 rounded-xl border hover:shadow-md text-center">
+        <a href="/?category=AI" class="bg-white p-6 rounded-xl border hover:shadow-md text-center">
           <div class="text-3xl mb-2">✨</div>
           <div class="font-medium">AI Writing</div>
         </a>
-        <a href="/tools?category=pdf" class="bg-white p-6 rounded-xl border hover:shadow-md text-center">
+        <a href="/?category=PDF" class="bg-white p-6 rounded-xl border hover:shadow-md text-center">
           <div class="text-3xl mb-2">📑</div>
           <div class="font-medium">PDF</div>
         </a>
-        <a href="/tools?category=image" class="bg-white p-6 rounded-xl border hover:shadow-md text-center">
+        <a href="/?category=Image" class="bg-white p-6 rounded-xl border hover:shadow-md text-center">
           <div class="text-3xl mb-2">🖼️</div>
           <div class="font-medium">Image</div>
         </a>
       </div>
     </section>
 
-    <section>
-      <h2 class="text-2xl font-semibold mb-6">Featured Tools</h2>
-      <div class="grid md:grid-cols-3 gap-6">
-        <!-- Tools will be rendered from DB in real version -->
-        <div class="bg-white p-6 rounded-xl border">
-          <div class="text-2xl mb-2">🔄</div>
-          <h3 class="font-semibold mb-1">Paragraph Rewriter</h3>
-          <p class="text-sm text-gray-600">Rewrite text while keeping the original meaning.</p>
-        </div>
-        <div class="bg-white p-6 rounded-xl border">
-          <div class="text-2xl mb-2">📑</div>
-          <h3 class="font-semibold mb-1">PDF Translator</h3>
-          <p class="text-sm text-gray-600">Translate PDF documents online with Google Translate.</p>
-        </div>
-        <div class="bg-white p-6 rounded-xl border">
-          <div class="text-2xl mb-2">✂️</div>
-          <h3 class="font-semibold mb-1">Content Shortener</h3>
-          <p class="text-sm text-gray-600">Make long text shorter and clearer.</p>
-        </div>
+    <!-- Search -->
+    <div class="mb-8">
+      <form action="/" method="get" class="max-w-md mx-auto">
+        <input type="text" name="q" value="<%= typeof q !== 'undefined' ? q : '' %>" 
+               placeholder="Search tools..." 
+               class="w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500">
+      </form>
+    </div>
+
+    <!-- All Tools -->
+    <section id="tools">
+      <h2 class="text-2xl font-semibold mb-6">All Tools</h2>
+      <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <% if (tools && tools.length > 0) { %>
+          <% tools.forEach(tool => { %>
+            <a href="/tool/<%= tool.id %>" class="bg-white p-6 rounded-xl border hover:shadow-md block">
+              <div class="flex items-start justify-between mb-2">
+                <h3 class="font-semibold"><%= tool.name %></h3>
+                <% if (tool.category) { %>
+                  <span class="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded"><%= tool.category %></span>
+                <% } %>
+              </div>
+              <p class="text-sm text-gray-600"><%= tool.description || 'Online tool' %></p>
+            </a>
+          <% }) %>
+        <% } else { %>
+          <p class="text-gray-500 col-span-full">No tools found.</p>
+        <% } %>
       </div>
+    </section>
+
+    <!-- Tool Request -->
+    <section class="mt-16 bg-white p-8 rounded-xl border">
+      <h2 class="text-xl font-semibold mb-4">Request a Tool</h2>
+      <form action="/request-tool" method="post" class="space-y-4 max-w-lg">
+        <input type="email" name="email" placeholder="Your email" required class="w-full px-4 py-2 border rounded-lg">
+        <textarea name="content" placeholder="What tool do you need?" required rows="3" class="w-full px-4 py-2 border rounded-lg"></textarea>
+        <button type="submit" class="bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700">Submit Request</button>
+      </form>
     </section>
   </main>
 
