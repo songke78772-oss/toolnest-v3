@@ -100,10 +100,6 @@ function requireAccess(req, res, next) {
 const legalRoutes = require('./routes/legal');
 app.use('/api/legal', legalRoutes);
 
-// ========== 路由模块 ==========
-const legalRoutes = require('./routes/legal');
-app.use('/api/legal', legalRoutes);
-
 const audioRoutes = require('./routes/audio');
 app.use('/', requireAccess, audioRoutes);
 
