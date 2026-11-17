@@ -6,7 +6,6 @@ const path = require('path');
 const fs = require('fs');
 const multer = require('multer');
 const Database = require('better-sqlite3');
-const crypto = require('crypto');
 const { PDFDocument } = require('pdf-lib');
 const { exec } = require('child_process');
 const { promisify } = require('util');
@@ -21,15 +20,9 @@ const verificationCodes = new Map();
 const db = new Database(path.join(__dirname, 'data', 'app.db'));
 
 // 确保 AI 工具需要的字段存在
-try {
-  db.exec(`ALTER TABLE tools ADD COLUMN tool_type TEXT DEFAULT 'link'`);
-} catch (e) {}
-try {
-  db.exec(`ALTER TABLE tools ADD COLUMN prompt_template TEXT`);
-} catch (e) {}
-try {
-  db.exec(`ALTER TABLE tools ADD COLUMN input_placeholder TEXT`);
-} catch (e) {}
+try { db.exec(`ALTER TABLE tools ADD COLUMN tool_type TEXT DEFAULT 'link'`); } catch (e) {}
+try { db.exec(`ALTER TABLE tools ADD COLUMN prompt_template TEXT`); } catch (e) {}
+try { db.exec(`ALTER TABLE tools ADD COLUMN input_placeholder TEXT`); } catch (e) {}
 
 db.exec(`
   CREATE TABLE IF NOT EXISTS users (
@@ -79,8 +72,6 @@ app.use(session({
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
-
-// 让 templates 目录可被前端访问（用于加载 lease JSON）
 app.use('/templates', express.static(path.join(__dirname, 'templates')));
 
 app.set('view engine', 'ejs');
@@ -100,38 +91,29 @@ function hasAccess(user) {
 
 function requireAccess(req, res, next) {
   if (!req.session.userId) return res.redirect('/login');
-
   const user = db.prepare('SELECT * FROM users WHERE id = ?').get(req.session.userId);
-  if (!user || !hasAccess(user)) {
-    return res.redirect('/subscribe');
-  }
+  if (!user || !hasAccess(user)) return res.redirect('/subscribe');
   next();
 }
+
+// ========== 路由模块 ==========
+const legalRoutes = require('./routes/legal');
+app.use('/api/legal', legalRoutes);
 
 // Home
 app.get('/', (req, res) => {
   const tools = db.prepare('SELECT * FROM tools ORDER BY id DESC').all();
-  
   let trialInfo = null;
   if (req.session.userId) {
     const user = db.prepare('SELECT trial_end_at, subscription_status FROM users WHERE id = ?').get(req.session.userId);
     if (user && user.subscription_status !== 'active' && user.trial_end_at) {
       const end = new Date(user.trial_end_at);
       if (end > new Date()) {
-        trialInfo = {
-          endDate: end.toLocaleDateString('zh-CN')
-        };
+        trialInfo = { endDate: end.toLocaleDateString('zh-CN') };
       }
     }
   }
-
-  res.render('index', { 
-    loggedIn: !!req.session.userId, 
-    user: req.session.userId, 
-    tools, 
-    q: req.query.q || '',
-    trialInfo
-  });
+  res.render('index', { loggedIn: !!req.session.userId, user: req.session.userId, tools, q: req.query.q || '', trialInfo });
 });
 
 // Register
@@ -165,12 +147,10 @@ app.post('/register', (req, res) => {
   try {
     const hash = bcrypt.hashSync(password, 10);
     const trialEnd = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString();
-
     db.prepare(`
       INSERT INTO users (email, password_hash, trial_end_at, subscription_status, plan)
       VALUES (?, ?, ?, 'trial', 'free')
     `).run(email, hash, trialEnd);
-
     verificationCodes.delete(email);
     res.redirect('/login');
   } catch (err) {
@@ -247,9 +227,7 @@ app.post('/api/ai-tool/:id', requireAccess, async (req, res) => {
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }]
-        })
+        body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
       }
     );
 
@@ -271,54 +249,16 @@ app.get('/privacy', (req, res) => res.render('privacy'));
 app.get('/refund', (req, res) => res.render('refund'));
 app.get('/disclaimer', (req, res) => res.render('disclaimer'));
 
-// ========== 法律文书 ==========
+// ========== 法律文书页面 ==========
 app.get('/tools/legal-document', requireLogin, (req, res) => {
   res.render('legal-document');
 });
 
 app.get('/tools/legal/:type', requireLogin, (req, res) => {
-  const type = req.params.type;
-  res.render(`legal/${type}`);
+  res.render(`legal/${req.params.type}`);
 });
 
-// 扫描 templates/lease 目录，返回实际存在的地区
-app.get('/api/legal/lease/available', (req, res) => {
-  const dir = path.join(__dirname, 'templates', 'lease');
-
-  if (!fs.existsSync(dir)) {
-    return res.json({ countries: {} });
-  }
-
-  const files = fs.readdirSync(dir).filter(f => f.endsWith('.json'));
-  const countries = {};
-
-  files.forEach(file => {
-    try {
-      const content = JSON.parse(fs.readFileSync(path.join(dir, file), 'utf8'));
-      const code = content.state || content.country || file.replace('.json', '').toUpperCase();
-      const name = content.stateName || content.countryName || code;
-
-      let countryKey = content.country || 'US';
-      let countryName = content.countryName || (countryKey === 'US' ? 'United States' : countryKey);
-
-      if (!countries[countryKey]) {
-        countries[countryKey] = { name: countryName, regions: [] };
-      }
-
-      countries[countryKey].regions.push({
-        code,
-        name,
-        file
-      });
-    } catch (e) {
-      console.error('Failed to parse', file, e.message);
-    }
-  });
-
-  res.json({ countries });
-});
-
-// ===== 原有内置工具页面（保持不变） =====
+// ===== 原有内置工具页面 =====
 app.get('/compress', (req, res) => res.render('compress'));
 app.get('/resize', (req, res) => res.render('resize'));
 app.get('/crop', (req, res) => res.render('crop'));
@@ -426,60 +366,6 @@ app.post('/api/pdf/merge', pdfUpload.array('files', 20), async (req, res) => {
   }
 });
 
-// Creem 创建支付
-app.post('/create-checkout', requireLogin, async (req, res) => {
-  try {
-    const user = db.prepare('SELECT * FROM users WHERE id = ?').get(req.session.userId);
-    
-    const response = await axios.post(
-      'https://api.creem.io/v1/checkouts',
-      {
-        product_id: process.env.CREEM_PRODUCT_ID,
-        success_url: 'https://protoolnest.com/success',
-        customer: {
-          email: user.email
-        },
-        metadata: {
-          userId: String(user.id)
-        }
-      },
-      {
-        headers: {
-          'x-api-key': process.env.CREEM_API_KEY,
-          'Content-Type': 'application/json'
-        }
-      }
-    );
-
-    res.json({ url: response.data.checkout_url });
-  } catch (err) {
-    console.error(err.response?.data || err.message);
-    res.status(500).json({ error: 'Failed to create checkout' });
-  }
-});
-
-// 支付成功回调
-app.get('/success', requireLogin, (req, res) => {
-  const { checkout_id, subscription_id, customer_id } = req.query;
-
-  if (subscription_id) {
-    try {
-      db.prepare(`
-        UPDATE users 
-        SET subscription_status = 'active',
-            subscription_id = ?,
-            stripe_customer_id = ?,
-            current_period_end = datetime('now', '+30 days')
-        WHERE id = ?
-      `).run(subscription_id, customer_id || '', req.session.userId);
-    } catch (e) {
-      console.error('Update subscription error:', e);
-    }
-  }
-
-  res.render('success');
-});
-
 app.post('/api/pdf/split', pdfUpload.single('file'), async (req, res) => {
   if (!req.file) return res.status(400).send('No file');
   const from = Math.max(1, parseInt(req.body.from) || 1);
@@ -507,6 +393,51 @@ app.post('/api/pdf/split', pdfUpload.single('file'), async (req, res) => {
     try { fs.unlinkSync(req.file.path); } catch(e){}
     res.status(500).send('Split failed: ' + err.message);
   }
+});
+
+// Creem 支付
+app.post('/create-checkout', requireLogin, async (req, res) => {
+  try {
+    const user = db.prepare('SELECT * FROM users WHERE id = ?').get(req.session.userId);
+    const response = await axios.post(
+      'https://api.creem.io/v1/checkouts',
+      {
+        product_id: process.env.CREEM_PRODUCT_ID,
+        success_url: 'https://protoolnest.com/success',
+        customer: { email: user.email },
+        metadata: { userId: String(user.id) }
+      },
+      {
+        headers: {
+          'x-api-key': process.env.CREEM_API_KEY,
+          'Content-Type': 'application/json'
+        }
+      }
+    );
+    res.json({ url: response.data.checkout_url });
+  } catch (err) {
+    console.error(err.response?.data || err.message);
+    res.status(500).json({ error: 'Failed to create checkout' });
+  }
+});
+
+app.get('/success', requireLogin, (req, res) => {
+  const { subscription_id, customer_id } = req.query;
+  if (subscription_id) {
+    try {
+      db.prepare(`
+        UPDATE users 
+        SET subscription_status = 'active',
+            subscription_id = ?,
+            stripe_customer_id = ?,
+            current_period_end = datetime('now', '+30 days')
+        WHERE id = ?
+      `).run(subscription_id, customer_id || '', req.session.userId);
+    } catch (e) {
+      console.error('Update subscription error:', e);
+    }
+  }
+  res.render('success');
 });
 
 // Tool request
