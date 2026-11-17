@@ -4,8 +4,8 @@
   <meta charset="UTF-8">
   <title>Admin - ProToolNest</title>
   <script src="https://cdn.tailwindcss.com"></script>
-
-  <link rel="canonical" href="https://protoolnest.com/admin"></head>
+  <link rel="canonical" href="https://protoolnest.com/admin">
+</head>
 <body class="bg-gray-100">
   <div class="max-w-5xl mx-auto p-6">
     <div class="flex justify-between items-center mb-6">
@@ -19,8 +19,9 @@
       <form method="POST" action="/admin/add-tool" class="space-y-3">
         <input name="name" placeholder="Tool Name" class="w-full border p-2 rounded" required>
         <input name="description" placeholder="Description" class="w-full border p-2 rounded">
-        <input name="category" placeholder="Category" class="w-full border p-2 rounded">
-        <input name="url" placeholder="Tool URL" class="w-full border p-2 rounded">
+        <input name="category" placeholder="Category (e.g. audio, image, office)" class="w-full border p-2 rounded">
+        <input name="url" placeholder="Tool URL (e.g. /audio-converter)" class="w-full border p-2 rounded">
+        <input name="icon" placeholder="Icon (emoji, e.g. 🎵)" class="w-full border p-2 rounded">
         <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded">Add Tool</button>
       </form>
     </div>
@@ -32,6 +33,7 @@
         <thead>
           <tr class="text-left border-b">
             <th class="py-2">ID</th>
+            <th>Icon</th>
             <th>Name</th>
             <th>Category</th>
             <th>Action</th>
@@ -41,6 +43,7 @@
           <% tools.forEach(tool => { %>
             <tr class="border-b">
               <td class="py-2"><%= tool.id %></td>
+              <td class="text-xl"><%= tool.icon || '🔧' %></td>
               <td><%= tool.name %></td>
               <td><%= tool.category || '-' %></td>
               <td>
