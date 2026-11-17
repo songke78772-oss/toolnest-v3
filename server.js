@@ -359,6 +359,28 @@ app.post('/create-checkout', requireLogin, async (req, res) => {
   }
 });
 
+// 支付成功回调
+app.get('/success', requireLogin, (req, res) => {
+  const { checkout_id, subscription_id, customer_id } = req.query;
+
+  if (subscription_id) {
+    try {
+      db.prepare(`
+        UPDATE users 
+        SET subscription_status = 'active',
+            subscription_id = ?,
+            stripe_customer_id = ?,
+            current_period_end = datetime('now', '+30 days')
+        WHERE id = ?
+      `).run(subscription_id, customer_id || '', req.session.userId);
+    } catch (e) {
+      console.error('Update subscription error:', e);
+    }
+  }
+
+  res.render('success');
+});
+
 app.post('/api/pdf/split', pdfUpload.single('file'), async (req, res) => {
   if (!req.file) return res.status(400).send('No file');
   const from = Math.max(1, parseInt(req.body.from) || 1);
