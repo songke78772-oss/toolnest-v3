@@ -506,10 +506,20 @@ app.get('/admin/dashboard', (req, res) => {
 
 app.post('/admin/add-tool', (req, res) => {
   if (!req.session.isAdmin) return res.redirect('/admin');
-  const { name, description, category, url } = req.body;
+  const { name, description, category, url, icon } = req.body;
   if (!name) return res.redirect('/admin/dashboard');
-  db.prepare('INSERT INTO tools (name, description, category, url, type) VALUES (?, ?, ?, ?, "online")')
-    .run(name, description || '', category || 'Other', url || '');
+
+  db.prepare(`
+    INSERT INTO tools (name, description, category, url, icon)
+    VALUES (?, ?, ?, ?, ?)
+  `).run(
+    name,
+    description || '',
+    category || 'Other',
+    url || '',
+    icon || '🔧'
+  );
+
   res.redirect('/admin/dashboard');
 });
 
