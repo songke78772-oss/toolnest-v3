@@ -184,6 +184,11 @@ app.get('/dashboard', requireLogin, (req, res) => {
   res.render('dashboard', { user, favorites });
 });
 
+app.get('/subscribe', requireLogin, (req, res) => {
+  const user = db.prepare('SELECT * FROM users WHERE id = ?').get(req.session.userId);
+  res.render('subscribe', { user });
+});
+
 // ===== 统一工具入口 =====
 app.get('/tool/:id', requireAccess, (req, res) => {
   const tool = db.prepare('SELECT * FROM tools WHERE id = ?').get(req.params.id);
