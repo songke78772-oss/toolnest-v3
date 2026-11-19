@@ -79,6 +79,12 @@ app.use(session({
 
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
+// Sitemap with correct content type
+app.get('/sitemap.xml', (req, res) => {
+  res.type('application/xml');
+  res.sendFile(path.join(__dirname, 'public', 'sitemap.xml'));
+});
+
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/templates', express.static(path.join(__dirname, 'templates')));
 
@@ -165,7 +171,14 @@ app.get('/', (req, res) => {
 });
 
 // Register
-app.get('/register', (req, res) => res.render('register', { error: null }));
+app.get('/register', (req, res) => {
+  try {
+    res.render('register', { error: null });
+  } catch (e) {
+    console.error('Register page error:', e);
+    res.status(500).send('Register page error: ' + e.message);
+  }
+});
 
 app.post('/api/send-code', async (req, res) => {
   const { email } = req.body;
@@ -207,7 +220,14 @@ app.post('/register', (req, res) => {
 });
 
 // Login / Logout
-app.get('/login', (req, res) => res.render('login', { error: null }));
+app.get('/login', (req, res) => {
+  try {
+    res.render('login', { error: null, verified: false });
+  } catch (e) {
+    console.error('Login page error:', e);
+    res.status(500).send('Login page error: ' + e.message);
+  }
+});
 
 app.post('/login', (req, res) => {
   const { email, password } = req.body;
@@ -291,10 +311,7 @@ app.post('/api/ai-tool/:id', requireAccess, async (req, res) => {
     res.json({ success: false, error: 'AI service error' });
   }
 });
-app.get('/sitemap.xml', (req, res) => {
-  res.type('application/xml');
-  res.sendFile(path.join(__dirname, 'public', 'sitemap.xml'));
-});
+
 app.get('/terms', (req, res) => res.render('terms'));
 app.get('/privacy', (req, res) => res.render('privacy'));
 app.get('/refund', (req, res) => res.render('refund'));
