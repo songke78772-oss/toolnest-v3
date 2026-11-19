@@ -347,19 +347,75 @@ app.get('/chart', (req, res) => res.render('chart'));
 app.get('/splitter', (req, res) => res.render('splitter'));
 
 app.get('/word-counter', (req, res) => res.render('word-counter'));
-app.get('/case-converter', (req, res) => res.render('case-converter'));
-app.get('/text-diff', (req, res) => res.render('text-diff'));
-app.get('/json-formatter', (req, res) => res.render('json-formatter'));
+app.get('/case-converter', (req, res) => {
+  try {
+    res.render('case-converter');
+  } catch (e) {
+    console.error('case-converter error:', e);
+    res.status(500).send('case-converter error: ' + e.message);
+  }
+});
+app.get('/text-diff', (req, res) => {
+  try {
+    res.render('text-diff');
+  } catch (e) {
+    console.error('text-diff error:', e);
+    res.status(500).send('text-diff error: ' + e.message);
+  }
+});
+app.get('/json-formatter', (req, res) => {
+  try {
+    res.render('json-formatter');
+  } catch (e) {
+    console.error('json-formatter error:', e);
+    res.status(500).send('json-formatter error: ' + e.message);
+  }
+});
 app.get('/base64', (req, res) => res.render('base64'));
 app.get('/password-generator', (req, res) => res.render('password-generator'));
-app.get('/lorem-ipsum', (req, res) => res.render('lorem-ipsum'));
-app.get('/markdown-preview', (req, res) => res.render('markdown-preview'));
+app.get('/lorem-ipsum', (req, res) => {
+  try {
+    res.render('lorem-ipsum');
+  } catch (e) {
+    console.error('lorem-ipsum error:', e);
+    res.status(500).send('lorem-ipsum error: ' + e.message);
+  }
+});
+app.get('/markdown-preview', (req, res) => {
+  try {
+    res.render('markdown-preview');
+  } catch (e) {
+    console.error('markdown-preview error:', e);
+    res.status(500).send('markdown-preview error: ' + e.message);
+  }
+});
 app.get('/csv-to-json', (req, res) => res.render('csv-to-json'));
 app.get('/url-encode', (req, res) => res.render('url-encode'));
 
-app.get('/regex-tester', (req, res) => res.render('regex-tester'));
-app.get('/uuid-generator', (req, res) => res.render('uuid-generator'));
-app.get('/hash-generator', (req, res) => res.render('hash-generator'));
+app.get('/regex-tester', (req, res) => {
+  try {
+    res.render('regex-tester');
+  } catch (e) {
+    console.error('regex-tester error:', e);
+    res.status(500).send('regex-tester error: ' + e.message);
+  }
+});
+app.get('/uuid-generator', (req, res) => {
+  try {
+    res.render('uuid-generator');
+  } catch (e) {
+    console.error('uuid-generator error:', e);
+    res.status(500).send('uuid-generator error: ' + e.message);
+  }
+});
+app.get('/hash-generator', (req, res) => {
+  try {
+    res.render('hash-generator');
+  } catch (e) {
+    console.error('hash-generator error:', e);
+    res.status(500).send('hash-generator error: ' + e.message);
+  }
+});
 app.get('/timestamp-converter', (req, res) => res.render('timestamp-converter'));
 app.get('/color-converter', (req, res) => res.render('color-converter'));
 app.get('/jwt-decoder', (req, res) => res.render('jwt-decoder'));
@@ -367,7 +423,14 @@ app.get('/base-converter', (req, res) => res.render('base-converter'));
 app.get('/html-encoder', (req, res) => res.render('html-encoder'));
 app.get('/dummy-json', (req, res) => res.render('dummy-json'));
 
-app.get('/age-calculator', (req, res) => res.render('age-calculator'));
+app.get('/age-calculator', (req, res) => {
+  try {
+    res.render('age-calculator');
+  } catch (e) {
+    console.error('age-calculator error:', e);
+    res.status(500).send('age-calculator error: ' + e.message);
+  }
+});
 app.get('/bmi-calculator', (req, res) => res.render('bmi-calculator'));
 app.get('/tip-calculator', (req, res) => res.render('tip-calculator'));
 app.get('/countdown', (req, res) => res.render('countdown'));
@@ -378,13 +441,34 @@ app.get('/unit-converter', (req, res) => res.render('unit-converter'));
 app.get('/percentage', (req, res) => res.render('percentage'));
 app.get('/days-between', (req, res) => res.render('days-between'));
 
-app.get('/qr-generator', (req, res) => res.render('qr-generator'));
+app.get('/qr-generator', (req, res) => {
+  try {
+    res.render('qr-generator');
+  } catch (e) {
+    console.error('qr-generator error:', e);
+    res.status(500).send('qr-generator error: ' + e.message);
+  }
+});
 app.get('/remove-duplicates', (req, res) => res.render('remove-duplicates'));
 app.get('/text-to-slug', (req, res) => res.render('text-to-slug'));
-app.get('/meta-tags', (req, res) => res.render('meta-tags'));
+app.get('/meta-tags', (req, res) => {
+  try {
+    res.render('meta-tags');
+  } catch (e) {
+    console.error('meta-tags error:', e);
+    res.status(500).send('meta-tags error: ' + e.message);
+  }
+});
 app.get('/emoji-picker', (req, res) => res.render('emoji-picker'));
 app.get('/cron-explainer', (req, res) => res.render('cron-explainer'));
-app.get('/css-minifier', (req, res) => res.render('css-minifier'));
+app.get('/css-minifier', (req, res) => {
+  try {
+    res.render('css-minifier');
+  } catch (e) {
+    console.error('css-minifier error:', e);
+    res.status(500).send('css-minifier error: ' + e.message);
+  }
+});
 app.get('/find-replace', (req, res) => res.render('find-replace'));
 app.get('/og-preview', (req, res) => res.render('og-preview'));
 app.get('/tools/pdf-toolkit', (req, res) => res.render('pdf-toolkit'));
@@ -393,7 +477,14 @@ app.get('/tools/pdf-toolkit', (req, res) => res.render('pdf-toolkit'));
 const pdfUpload = multer({ dest: '/tmp/pdf-uploads/' });
 if (!fs.existsSync('/tmp/pdf-uploads')) fs.mkdirSync('/tmp/pdf-uploads', { recursive: true });
 
-app.get('/pdf-tools', (req, res) => res.render('pdf-tools'));
+app.get('/pdf-tools', (req, res) => {
+  try {
+    res.render('pdf-tools');
+  } catch (e) {
+    console.error('pdf-tools error:', e);
+    res.status(500).send('pdf-tools error: ' + e.message);
+  }
+});
 
 app.post('/api/pdf/compress', pdfUpload.single('file'), async (req, res) => {
   if (!req.file) return res.status(400).send('No file');
