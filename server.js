@@ -21,8 +21,16 @@ const db = new Database(path.join(__dirname, 'data', 'app.db'));
 
 // 确保 AI 工具需要的字段存在
 try { db.exec(`ALTER TABLE tools ADD COLUMN tool_type TEXT DEFAULT 'link'`); } catch (e) {}
+try { db.exec(`ALTER TABLE tools ADD COLUMN icon TEXT DEFAULT '🔧'`); } catch (e) {}
 try { db.exec(`ALTER TABLE tools ADD COLUMN prompt_template TEXT`); } catch (e) {}
 try { db.exec(`ALTER TABLE tools ADD COLUMN input_placeholder TEXT`); } catch (e) {}
+
+
+// Ensure required columns exist
+try { db.exec(`ALTER TABLE users ADD COLUMN trial_end_at DATETIME`); } catch (e) {}
+try { db.exec(`ALTER TABLE users ADD COLUMN plan TEXT DEFAULT 'free'`); } catch (e) {}
+try { db.exec(`ALTER TABLE users ADD COLUMN stripe_customer_id TEXT`); } catch (e) {}
+try { db.exec(`ALTER TABLE users ADD COLUMN current_period_end DATETIME`); } catch (e) {}
 
 db.exec(`
   CREATE TABLE IF NOT EXISTS users (
@@ -112,6 +120,12 @@ app.use((req, res, next) => {
 });
 
 app.use('/', audioRoutes);
+
+
+// Static pages
+app.get('/tools', (req, res) => res.render('tools'));
+app.get('/pricing', (req, res) => res.render('pricing'));
+app.get('/pdf-toolkit', (req, res) => res.render('pdf-toolkit'));
 
 // Home
 app.get('/', (req, res) => {
