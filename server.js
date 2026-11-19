@@ -54,6 +54,15 @@ db.exec(`
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
   );
 
+  CREATE TABLE IF NOT EXISTS secrets (
+    token TEXT PRIMARY KEY,
+    data TEXT NOT NULL,
+    iv TEXT NOT NULL,
+    expires_at INTEGER NOT NULL,
+    created_at INTEGER DEFAULT (strftime('%s', 'now'))
+  );
+
+
   CREATE TABLE IF NOT EXISTS favorites (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id INTEGER,
@@ -661,4 +670,32 @@ app.post('/admin/delete-user/:id', (req, res) => {
 });
 
 const PORT = process.env.PORT || 3000;
+
+// One-Time Secret (encrypted, burn after reading, no logging)
+app.get('/one-time-secret', (req, res) => res.render('one-time-secret'));
+
+app.post('/api/secret', express.json(), (req, res) => {
+  const { data, iv, ttl } = req.body;
+  if (!data || !iv) return res.status(400).json({ error: 'Missing data' });
+  const token = require('crypto').randomBytes(16).toString('hex');
+  const expires = Math.floor(Date.now() / 1000) + (ttl || 86400);
+  db.prepare('INSERT INTO secrets (token, data, iv, expires_at) VALUES (?, ?, ?, ?)').run(token, data, iv, expires);
+  res.json({ token });
+});
+
+app.get('/api/secret/:token', (req, res) => {
+  const row = db.prepare('SELECT data, iv, expires_at FROM secrets WHERE token = ?').get(req.params.token);
+  if (!row) return res.status(404).send('Secret not found or already viewed');
+  if (row.expires_at < Math.floor(Date.now() / 1000)) {
+    db.prepare('DELETE FROM secrets WHERE token = ?').run(req.params.token);
+    return res.status(410).send('Secret expired');
+  }
+  // Burn after reading
+  db.prepare('DELETE FROM secrets WHERE token = ?').run(req.params.token);
+  res.set('Cache-Control', 'no-store');
+  res.json({ data: row.data, iv: row.iv });
+});
+
+app.get('/secret/:token', (req, res) => res.render('one-time-secret'));
+
 app.listen(PORT, () => console.log(`ToolNest running on port ${PORT}`));
