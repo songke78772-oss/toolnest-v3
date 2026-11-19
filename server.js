@@ -291,7 +291,10 @@ app.post('/api/ai-tool/:id', requireAccess, async (req, res) => {
     res.json({ success: false, error: 'AI service error' });
   }
 });
-
+app.get('/sitemap.xml', (req, res) => {
+  res.type('application/xml');
+  res.sendFile(path.join(__dirname, 'public', 'sitemap.xml'));
+});
 app.get('/terms', (req, res) => res.render('terms'));
 app.get('/privacy', (req, res) => res.render('privacy'));
 app.get('/refund', (req, res) => res.render('refund'));
