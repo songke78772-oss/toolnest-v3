@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>File Encryption - ToolNest</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 min-h-screen">
+  <div class="max-w-2xl mx-auto py-10 px-4">
+    <a href="/" class="text-blue-600 hover:underline text-sm">← Back to Tools</a>
+    <h1 class="text-2xl font-bold mt-2 mb-1">File Encryption</h1>
+    <p class="text-gray-500 text-sm mb-4">AES-256-GCM encryption in your browser. The file never leaves your device.</p>
+
+    <div class="bg-amber-50 border border-amber-200 rounded-lg p-4 text-sm text-amber-800 mb-6">
+      <strong>Warning:</strong> Save the key immediately after encryption. Without the key, the encrypted file cannot be recovered.
+    </div>
+
+    <div class="flex gap-2 mb-6">
+      <button id="tabEnc" class="px-4 py-2 rounded bg-blue-600 text-white">Encrypt</button>
+      <button id="tabDec" class="px-4 py-2 rounded bg-gray-200 text-gray-700">Decrypt</button>
+    </div>
+
+    <!-- Encrypt Panel -->
+    <div id="panelEnc" class="bg-white rounded-xl shadow p-6">
+      <label class="block text-sm font-medium mb-2">Select file to encrypt</label>
+      <input type="file" id="encFile" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:bg-blue-50 file:text-blue-700">
+      <button id="encBtn" class="mt-4 bg-blue-600 text-white px-5 py-2 rounded hover:bg-blue-700 disabled:opacity-50" disabled>Encrypt & Generate Key</button>
+      <div id="encResult" class="hidden mt-6 space-y-4">
+        <div>
+          <label class="block text-sm font-medium mb-1">Encryption Key (save this!)</label>
+          <div class="flex gap-2">
+            <input id="keyOut" readonly class="flex-1 border rounded px-3 py-2 bg-gray-50 font-mono text-sm">
+            <button id="copyKey" class="px-3 py-2 bg-gray-100 rounded hover:bg-gray-200 text-sm">Copy</button>
+          </div>
+        </div>
+        <button id="dlEnc" class="bg-green-600 text-white px-5 py-2 rounded hover:bg-green-700">Download Encrypted File</button>
+      </div>
+    </div>
+
+    <!-- Decrypt Panel -->
+    <div id="panelDec" class="bg-white rounded-xl shadow p-6 hidden">
+      <label class="block text-sm font-medium mb-2">Encrypted file</label>
+      <input type="file" id="decFile" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:bg-blue-50 file:text-blue-700 mb-4">
+      <label class="block text-sm font-medium mb-2">Encryption Key</label>
+      <input id="keyIn" class="w-full border rounded px-3 py-2 font-mono text-sm mb-4" placeholder="Paste key here">
+      <button id="decBtn" class="bg-blue-600 text-white px-5 py-2 rounded hover:bg-blue-700 disabled:opacity-50" disabled>Decrypt & Download</button>
+    </div>
+
+    <div id="status" class="mt-4 text-sm text-gray-500"></div>
+
+    <div class="mt-8 text-xs text-gray-400">
+      <p>100% client-side. Files and keys never leave your browser.</p>
+    </div>
+  </div>
+
+  <script>
+    const tabEnc = document.getElementById('tabEnc');
+    const tabDec = document.getElementById('tabDec');
+    const panelEnc = document.getElementById('panelEnc');
+    const panelDec = document.getElementById('panelDec');
+
+    tabEnc.onclick = () => {
+      tabEnc.className = 'px-4 py-2 rounded bg-blue-600 text-white';
+      tabDec.className = 'px-4 py-2 rounded bg-gray-200 text-gray-700';
+      panelEnc.classList.remove('hidden');
+      panelDec.classList.add('hidden');
+    };
+    tabDec.onclick = () => {
+      tabDec.className = 'px-4 py-2 rounded bg-blue-600 text-white';
+      tabEnc.className = 'px-4 py-2 rounded bg-gray-200 text-gray-700';
+      panelDec.classList.remove('hidden');
+      panelEnc.classList.add('hidden');
+    };
+
+    // Encrypt
+    const encFile = document.getElementById('encFile');
+    const encBtn = document.getElementById('encBtn');
+    const encResult = document.getElementById('encResult');
+    const keyOut = document.getElementById('keyOut');
+    const dlEnc = document.getElementById('dlEnc');
+    const status = document.getElementById('status');
+
+    let encryptedBlob = null;
+    let originalName = '';
+
+    encFile.onchange = () => { encBtn.disabled = !encFile.files[0]; encResult.classList.add('hidden'); };
+
+    encBtn.onclick = async () => {
+      const file = encFile.files[0];
+      if (!file) return;
+      encBtn.disabled = true;
+      status.textContent = 'Encrypting...';
+      try {
+        const key = await crypto.subtle.generateKey({ name: 'AES-GCM', length: 256 }, true, ['encrypt', 'decrypt']);
+        const iv = crypto.getRandomValues(new Uint8Array(12));
+        const data = await file.arrayBuffer();
+        const ciphertext = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, data);
+        const rawKey = await crypto.subtle.exportKey('raw', key);
+        const keyB64 = btoa(String.fromCharCode(...new Uint8Array(rawKey)));
+
+        // Layout: [2-byte name length][filename][12-byte IV][ciphertext]
+        const nameBytes = new TextEncoder().encode(file.name);
+        const header = new Uint8Array(2 + nameBytes.length + 12);
+        header[0] = nameBytes.length >> 8;
+        header[1] = nameBytes.length & 0xff;
+        header.set(nameBytes, 2);
+        header.set(iv, 2 + nameBytes.length);
+        const out = new Uint8Array(header.length + ciphertext.byteLength);
+        out.set(header);
+        out.set(new Uint8Array(ciphertext), header.length);
+
+        encryptedBlob = new Blob([out]);
+        originalName = file.name;
+        keyOut.value = keyB64;
+        encResult.classList.remove('hidden');
+        status.textContent = 'Done. Save the key now!';
+      } catch (e) {
+        status.textContent = 'Error: ' + e.message;
+      }
+      encBtn.disabled = false;
+    };
+
+    document.getElementById('copyKey').onclick = () => {
+      navigator.clipboard.writeText(keyOut.value);
+      status.textContent = 'Key copied.';
+    };
+
+    dlEnc.onclick = () => {
+      if (!encryptedBlob) return;
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(encryptedBlob);
+      a.download = originalName + '.enc';
+      a.click();
+    };
+
+    // Decrypt
+    const decFile = document.getElementById('decFile');
+    const keyIn = document.getElementById('keyIn');
+    const decBtn = document.getElementById('decBtn');
+
+    function checkDec() { decBtn.disabled = !(decFile.files[0] && keyIn.value.trim()); }
+    decFile.onchange = checkDec;
+    keyIn.oninput = checkDec;
+
+    decBtn.onclick = async () => {
+      const file = decFile.files[0];
+      const keyB64 = keyIn.value.trim();
+      if (!file || !keyB64) return;
+      decBtn.disabled = true;
+      status.textContent = 'Decrypting...';
+      try {
+        const buf = new Uint8Array(await file.arrayBuffer());
+        const nameLen = (buf[0] << 8) | buf[1];
+        const nameBytes = buf.slice(2, 2 + nameLen);
+        const name = new TextDecoder().decode(nameBytes);
+        const iv = buf.slice(2 + nameLen, 2 + nameLen + 12);
+        const ciphertext = buf.slice(2 + nameLen + 12);
+
+        const rawKey = Uint8Array.from(atob(keyB64), c => c.charCodeAt(0));
+        const key = await crypto.subtle.importKey('raw', rawKey, { name: 'AES-GCM' }, false, ['decrypt']);
+        const plain = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, ciphertext);
+
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(new Blob([plain]));
+        a.download = name || 'decrypted';
+        a.click();
+        status.textContent = 'Decrypted: ' + name;
+      } catch (e) {
+        status.textContent = 'Decryption failed. Wrong key or corrupted file.';
+      }
+      decBtn.disabled = false;
+    };
+  </script>
+</body>
+</html>
