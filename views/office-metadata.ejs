@@ -3,144 +3,139 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Office Metadata Cleaner - ProToolNest</title>
+  <title>Office Metadata Cleaner - ToolNest</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-50">
-  <nav class="bg-white border-b">
-    <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
-      <a href="/" class="text-xl font-bold text-gray-800">ProToolNest</a>
-      <a href="/" class="text-sm text-gray-600 hover:text-gray-800">← Back to Tools</a>
-    </div>
-  </nav>
+<body class="bg-gray-50 min-h-screen">
+  <div class="max-w-3xl mx-auto py-10 px-4">
+    <a href="/" class="text-blue-600 hover:underline text-sm">← Back to Tools</a>
+    <h1 class="text-2xl font-bold mt-2 mb-1">Office Metadata Cleaner</h1>
+    <p class="text-gray-500 text-sm mb-6">Remove author, company, and other metadata from Word, Excel, and PowerPoint files. All processing is done on the server and the file is deleted immediately after.</p>
 
-  <div class="max-w-3xl mx-auto p-6">
-    <h1 class="text-3xl font-bold text-gray-800 mb-2">Office Metadata Cleaner</h1>
-    <p class="text-gray-600 mb-6">Remove author, company, timestamps and other metadata from Word, Excel and PowerPoint files.</p>
-
-    <!-- Step 1: Upload -->
-    <div id="uploadSection" class="bg-white rounded-xl shadow-sm border p-6">
-      <label class="block border-2 border-dashed border-gray-300 rounded-lg p-8 text-center cursor-pointer hover:border-blue-400 transition">
-        <input type="file" id="fileInput" accept=".docx,.xlsx,.pptx" class="hidden">
-        <div class="text-4xl mb-2">📄</div>
-        <div class="font-medium text-gray-700">Click to upload .docx / .xlsx / .pptx</div>
-        <div class="text-sm text-gray-500 mt-1">Max 20 MB</div>
-      </label>
+    <div class="bg-white rounded-xl shadow p-6 mb-6">
+      <label class="block text-sm font-medium text-gray-700 mb-2">Upload file (.docx / .xlsx / .pptx)</label>
+      <input type="file" id="fileInput" accept=".docx,.xlsx,.pptx" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+      <button id="parseBtn" class="mt-4 bg-blue-600 text-white px-5 py-2 rounded hover:bg-blue-700 disabled:opacity-50" disabled>Analyze Metadata</button>
     </div>
 
-    <!-- Step 2: Metadata list -->
-    <div id="metaSection" class="hidden mt-6 bg-white rounded-xl shadow-sm border p-6">
-      <h2 class="text-lg font-semibold mb-4">Select metadata to remove</h2>
-      <div id="metaList" class="space-y-2 max-h-96 overflow-y-auto"></div>
-      <div class="mt-4 flex gap-3">
+    <div id="result" class="hidden bg-white rounded-xl shadow p-6">
+      <h2 class="font-semibold mb-1">Metadata Found</h2>
+      <p class="text-xs text-gray-500 mb-4">Items in <span class="text-red-600 font-medium">red</span> are recommended to remove. Others are usually safe to keep.</p>
+      <div id="metaList" class="space-y-2 mb-4 text-sm"></div>
+      <div class="flex gap-3 flex-wrap">
+        <button id="selectRecommended" class="text-sm text-red-600 hover:underline">Select recommended only</button>
         <button id="selectAll" class="text-sm text-blue-600 hover:underline">Select all</button>
-        <button id="selectNone" class="text-sm text-gray-600 hover:underline">Select none</button>
+        <button id="selectNone" class="text-sm text-gray-500 hover:underline">Clear selection</button>
       </div>
-      <button id="cleanBtn" class="mt-4 bg-emerald-600 text-white px-6 py-2 rounded-lg hover:bg-emerald-700 disabled:opacity-50" disabled>
-        Remove Selected & Download
-      </button>
+      <button id="cleanBtn" class="mt-4 bg-red-600 text-white px-5 py-2 rounded hover:bg-red-700">Remove Selected & Download</button>
     </div>
 
-    <div id="status" class="mt-4 text-sm text-gray-600"></div>
+    <div id="status" class="mt-4 text-sm text-gray-500"></div>
   </div>
 
   <script>
     const fileInput = document.getElementById('fileInput');
-    const uploadSection = document.getElementById('uploadSection');
-    const metaSection = document.getElementById('metaSection');
+    const parseBtn = document.getElementById('parseBtn');
+    const result = document.getElementById('result');
     const metaList = document.getElementById('metaList');
     const cleanBtn = document.getElementById('cleanBtn');
     const status = document.getElementById('status');
 
+    // Recommended to remove
+    const recommendedKeys = [
+      'creator', 'lastmodifiedby', 'author', 'company', 'manager',
+      'lastprinted', 'revision', 'totaltime', 'template',
+      'hyperlinkbase', 'application', 'appversion'
+    ];
+
     let currentFile = null;
-    let currentMeta = [];
+    let metadata = [];
 
-    fileInput.onchange = async (e) => {
-      const file = e.target.files[0];
-      if (!file) return;
-      currentFile = file;
-      status.textContent = 'Reading metadata...';
-
-      const form = new FormData();
-      form.append('file', file);
-
-      try {
-        const res = await fetch('/api/office-metadata/parse', { method: 'POST', body: form });
-        const json = await res.json();
-        if (!json.success) throw new Error(json.error || 'Failed to parse');
-
-        currentMeta = json.metadata || [];
-        renderMeta(currentMeta);
-        metaSection.classList.remove('hidden');
-        status.textContent = `Found ${currentMeta.length} metadata fields`;
-      } catch (err) {
-        status.textContent = 'Error: ' + err.message;
-      }
+    fileInput.onchange = () => {
+      parseBtn.disabled = !fileInput.files[0];
+      result.classList.add('hidden');
+      status.textContent = '';
     };
 
-    function renderMeta(items) {
-      metaList.innerHTML = '';
-      if (items.length === 0) {
-        metaList.innerHTML = '<p class="text-gray-500">No metadata found.</p>';
-        cleanBtn.disabled = true;
-        return;
+    parseBtn.onclick = async () => {
+      currentFile = fileInput.files[0];
+      if (!currentFile) return;
+      parseBtn.disabled = true;
+      status.textContent = 'Analyzing...';
+      const fd = new FormData();
+      fd.append('file', currentFile);
+      try {
+        const res = await fetch('/api/office-metadata/parse', { method: 'POST', body: fd });
+        const data = await res.json();
+        if (!data.success) throw new Error(data.error || 'Failed');
+        metadata = data.metadata || [];
+        renderMeta();
+        result.classList.remove('hidden');
+        status.textContent = metadata.length ? '' : 'No metadata found.';
+      } catch (e) {
+        status.textContent = 'Error: ' + e.message;
       }
-      items.forEach((item, i) => {
-        const div = document.createElement('label');
-        div.className = 'flex items-start gap-3 p-2 hover:bg-gray-50 rounded cursor-pointer';
-        div.innerHTML = `
-          <input type="checkbox" class="mt-1 meta-check" data-index="${i}" checked>
-          <div class="flex-1 min-w-0">
-            <div class="text-sm font-medium text-gray-800">${escapeHtml(item.name)}</div>
-            <div class="text-xs text-gray-500 truncate">${escapeHtml(item.value || '(empty)')}</div>
-          </div>
-        `;
-        metaList.appendChild(div);
+      parseBtn.disabled = false;
+    };
+
+    function isRecommended(key) {
+      const k = (key || '').toLowerCase();
+      return recommendedKeys.some(r => k.includes(r));
+    }
+
+    function renderMeta() {
+      metaList.innerHTML = metadata.map((m, i) => {
+        const rec = isRecommended(m.key) || isRecommended(m.name);
+        return `<label class="flex items-start gap-2 p-2 rounded ${rec ? 'bg-red-50' : 'hover:bg-gray-50'}">
+          <input type="checkbox" data-key="${m.key}" class="mt-1" ${rec ? 'checked' : ''}>
+          <span class="flex-1">
+            <span class="${rec ? 'text-red-700 font-medium' : 'text-gray-800'}">${m.name}</span>
+            <span class="text-gray-400 ml-2 text-xs">${m.value}</span>
+            ${rec ? '<span class="ml-2 text-xs text-red-500">(recommended)</span>' : ''}
+          </span>
+        </label>`;
+      }).join('');
+    }
+
+    document.getElementById('selectRecommended').onclick = () => {
+      document.querySelectorAll('#metaList input').forEach(cb => {
+        const key = cb.dataset.key;
+        cb.checked = isRecommended(key);
       });
-      cleanBtn.disabled = false;
-    }
-
-    function escapeHtml(s) {
-      return String(s).replace(/[&<>"']/g, c => ({'&':'&','<':'<','>':'>','"':'"',"'":'&#39;'}[c]));
-    }
-
+    };
     document.getElementById('selectAll').onclick = () => {
-      document.querySelectorAll('.meta-check').forEach(c => c.checked = true);
+      document.querySelectorAll('#metaList input').forEach(cb => cb.checked = true);
     };
     document.getElementById('selectNone').onclick = () => {
-      document.querySelectorAll('.meta-check').forEach(c => c.checked = false);
+      document.querySelectorAll('#metaList input').forEach(cb => cb.checked = false);
     };
 
     cleanBtn.onclick = async () => {
-      const selected = [];
-      document.querySelectorAll('.meta-check:checked').forEach(c => {
-        selected.push(currentMeta[parseInt(c.dataset.index)].key);
-      });
-      if (selected.length === 0) return alert('Please select at least one field');
+      if (!currentFile) return;
+      const checked = [...document.querySelectorAll('#metaList input:checked')].map(cb => cb.dataset.key);
+      if (!checked.length) return alert('Please select at least one item to remove.');
 
-      status.textContent = 'Cleaning...';
+      const msg = 'After removing metadata, if you open the file in an office application and save it again, new metadata will be generated.\n\nIf you plan to send this file to someone, please do not edit or save it after cleaning.\n\nContinue?';
+      if (!confirm(msg)) return;
+
       cleanBtn.disabled = true;
-
-      const form = new FormData();
-      form.append('file', currentFile);
-      form.append('remove', JSON.stringify(selected));
-
+      status.textContent = 'Cleaning...';
+      const fd = new FormData();
+      fd.append('file', currentFile);
+      fd.append('remove', JSON.stringify(checked));
       try {
-        const res = await fetch('/api/office-metadata/clean', { method: 'POST', body: form });
+        const res = await fetch('/api/office-metadata/clean', { method: 'POST', body: fd });
         if (!res.ok) throw new Error(await res.text());
         const blob = await res.blob();
-        const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
-        a.href = url;
-        a.download = currentFile.name.replace(/(\.[^.]+)$/, '-clean$1');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'clean-' + currentFile.name;
         a.click();
-        URL.revokeObjectURL(url);
-        status.textContent = 'Done. File downloaded.';
-      } catch (err) {
-        status.textContent = 'Error: ' + err.message;
-      } finally {
-        cleanBtn.disabled = false;
+        status.textContent = 'Download started.';
+      } catch (e) {
+        status.textContent = 'Error: ' + e.message;
       }
+      cleanBtn.disabled = false;
     };
   </script>
 </body>
