@@ -55,6 +55,24 @@
   </div>
 
   <script>
+    const mimeMap = {
+      '.docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      '.xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      '.pptx': 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+      '.pdf': 'application/pdf',
+      '.zip': 'application/zip',
+      '.png': 'image/png',
+      '.jpg': 'image/jpeg',
+      '.jpeg': 'image/jpeg',
+      '.txt': 'text/plain',
+      '.csv': 'text/csv'
+    };
+
+    function getMime(name) {
+      const ext = (name.match(/\.[^.]+$/) || [''])[0].toLowerCase();
+      return mimeMap[ext] || 'application/octet-stream';
+    }
+
     const tabEnc = document.getElementById('tabEnc');
     const tabDec = document.getElementById('tabDec');
     const panelEnc = document.getElementById('panelEnc');
@@ -99,7 +117,6 @@
         const rawKey = await crypto.subtle.exportKey('raw', key);
         const keyB64 = btoa(String.fromCharCode(...new Uint8Array(rawKey)));
 
-        // Layout: [2-byte name length][filename][12-byte IV][ciphertext]
         const nameBytes = new TextEncoder().encode(file.name);
         const header = new Uint8Array(2 + nameBytes.length + 12);
         header[0] = nameBytes.length >> 8;
@@ -110,7 +127,7 @@
         out.set(header);
         out.set(new Uint8Array(ciphertext), header.length);
 
-        encryptedBlob = new Blob([out]);
+        encryptedBlob = new Blob([out], { type: 'application/octet-stream' });
         originalName = file.name;
         keyOut.value = keyB64;
         encResult.classList.remove('hidden');
@@ -161,8 +178,9 @@
         const key = await crypto.subtle.importKey('raw', rawKey, { name: 'AES-GCM' }, false, ['decrypt']);
         const plain = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, ciphertext);
 
+        const mime = getMime(name);
         const a = document.createElement('a');
-        a.href = URL.createObjectURL(new Blob([plain]));
+        a.href = URL.createObjectURL(new Blob([new Uint8Array(plain)], { type: mime }));
         a.download = name || 'decrypted';
         a.click();
         status.textContent = 'Decrypted: ' + name;
