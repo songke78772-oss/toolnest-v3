@@ -93,6 +93,29 @@
       </div>
     </div>
 
+    <!-- How to Use -->
+    <div class="bg-white rounded-xl shadow p-6 mt-8">
+      <h2 class="text-lg font-bold mb-4">How to Use</h2>
+      <div class="space-y-4 text-sm text-gray-700">
+        <div>
+          <p class="font-semibold text-gray-900">① Generate — create the grid</p>
+          <p class="mt-1">Pick a size (5×5 to 9×9; larger = harder to guess) → click Generate. The grid is filled with cryptographically secure randomness. Character set: A–Z (no O), a–z (no o), 1–9 (no 0), plus safe symbols — confusing look-alikes are removed on purpose.</p>
+        </div>
+        <div>
+          <p class="font-semibold text-gray-900">② Download — <span class="text-red-600 font-bold">one-time only</span></p>
+          <p class="mt-1">Export as PNG (image) or TXT (table with row/column headers). You can download only once — both buttons lock right after the first download. The grid then lives only in this tab's memory — <span class="text-red-600 font-bold">close the page and it's gone forever, unrecoverable.</span> Save it now (print it, or store the file in a password manager).</p>
+        </div>
+        <div>
+          <p class="font-semibold text-gray-900">③ Seal — wrap it in a cipher · <span class="text-red-600 font-bold">REQUIRED, not optional</span></p>
+          <p class="mt-1">Set a passphrase (or click "Make passphrase" to generate a strong one) → Generate cipher → you get a PTC1-… string. That string is your entire codebook, encrypted (AES-256-GCM + PBKDF2, 250,000 iterations). <span class="text-red-600 font-bold">It is the only durable copy of your grid — if you skip this, closing the tab destroys the codebook with no way back.</span> Store the cipher anywhere; it's useless without the passphrase.</p>
+        </div>
+        <div>
+          <p class="font-semibold text-gray-900">④ Decode / Test — look up one cell at a time</p>
+          <p class="mt-1">Go to the Decode / Test tab → paste the cipher + enter the passphrase → Decode. Decryption happens in memory only; the full grid is deliberately never shown on screen — you'll see just ✓ Decoded. In the lookup box, type pairs like 74 28 91 (first digit = row, second digit = column; separate multiple with spaces or commas) → only that one character is revealed. Read it out or compare it with the other person; <span class="text-red-600 font-bold">the grid stays hidden the whole time.</span></p>
+        </div>
+      </div>
+    </div>
+
     <p class="text-xs text-gray-400 text-center mt-8">100% client-side. Your matrix is never transmitted or stored on any server.</p>
   </div>
 
@@ -337,7 +360,6 @@
         let body = c; if (body.startsWith(MAGIC + "-")) body = body.slice(MAGIC.length + 1);
         const grid = await openCipher(body, p);
         DEC = { n: grid.length, grid };
-        // Do not render the full matrix
         document.getElementById("decGrid").innerHTML = "";
         document.getElementById("decGridCard").classList.remove("hidden");
         st.textContent = "✓ Unlocked. Enter coordinates to check characters (matrix not shown).";
