@@ -80,9 +80,9 @@
       </div>
 
       <div id="decGridCard" class="bg-white rounded-xl shadow p-6 hidden">
-        <label class="block text-sm font-medium mb-2">Recovered codebook</label>
-        <div id="decGrid" class="inline-grid gap-1 mb-4 p-3 bg-gray-900 rounded-lg"></div>
-        <hr class="my-4">
+        <label class="block text-sm font-medium mb-2">Codebook unlocked</label>
+        <p class="text-xs text-gray-500 mb-4">Matrix not shown. Enter coordinates to check individual characters only.</p>
+        <div id="decGrid" class="hidden"></div>
         <label class="block text-sm font-medium mb-2">Look up coordinates</label>
         <p class="text-xs text-gray-500 mb-2">Enter row+col pairs. 74 = row 7, col 4. Separate with spaces: 74 28 91</p>
         <div class="flex gap-2">
@@ -337,9 +337,10 @@
         let body = c; if (body.startsWith(MAGIC + "-")) body = body.slice(MAGIC.length + 1);
         const grid = await openCipher(body, p);
         DEC = { n: grid.length, grid };
-        renderGrid(document.getElementById("decGrid"), grid);
+        // Do not render the full matrix
+        document.getElementById("decGrid").innerHTML = "";
         document.getElementById("decGridCard").classList.remove("hidden");
-        st.textContent = "✓ Codebook recovered (" + grid.length + "×" + grid.length + ").";
+        st.textContent = "✓ Unlocked. Enter coordinates to check characters (matrix not shown).";
         st.className = "text-sm mt-2 text-green-600";
       } catch (e) {
         st.textContent = "✗ " + e.message;
