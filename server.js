@@ -698,4 +698,80 @@ app.get('/api/secret/:token', (req, res) => {
 
 app.get('/secret/:token', (req, res) => res.render('one-time-secret'));
 
+
+// Office Metadata Cleaner
+const JSZip = require('jszip');
+const uploadMeta = multer({ dest: '/tmp/office-meta/', limits: { fileSize: 20 * 1024 * 1024 } });
+require('fs').mkdirSync('/tmp/office-meta', { recursive: true });
+
+function parseOfficeMetadata(buffer) {
+  return JSZip.loadAsync(buffer).then(zip => {
+    const meta = [];
+    const files = ['docProps/core.xml', 'docProps/app.xml', 'docProps/custom.xml'];
+    return Promise.all(files.map(f => zip.file(f) ? zip.file(f).async('string') : Promise.resolve(null)))
+      .then(contents => {
+        contents.forEach((xml, i) => {
+          if (!xml) return;
+          const name = files[i].split('/')[1].replace('.xml', '');
+          // Extract simple tags
+          const re = /<([^\/!?][^>]*?)>([^<]*)<\/\1>/g;
+          let m;
+          while ((m = re.exec(xml))) {
+            const tag = m[1].split(' ')[0];
+            const val = m[2].trim();
+            if (val) meta.push({ key: name + ':' + tag, name: name + ' / ' + tag, value: val });
+          }
+        });
+        return meta;
+      });
+  });
+}
+
+app.get('/office-metadata', (req, res) => res.render('office-metadata'));
+
+app.post('/api/office-metadata/parse', uploadMeta.single('file'), async (req, res) => {
+  if (!req.file) return res.json({ success: false, error: 'No file' });
+  try {
+    const buf = require('fs').readFileSync(req.file.path);
+    const metadata = await parseOfficeMetadata(buf);
+    require('fs').unlinkSync(req.file.path);
+    res.json({ success: true, metadata });
+  } catch (e) {
+    if (req.file) try { require('fs').unlinkSync(req.file.path); } catch {}
+    res.json({ success: false, error: e.message });
+  }
+});
+
+app.post('/api/office-metadata/clean', uploadMeta.single('file'), async (req, res) => {
+  if (!req.file) return res.status(400).send('No file');
+  try {
+    const remove = JSON.parse(req.body.remove || '[]');
+    const buf = require('fs').readFileSync(req.file.path);
+    const zip = await JSZip.loadAsync(buf);
+
+    const files = ['docProps/core.xml', 'docProps/app.xml', 'docProps/custom.xml'];
+    for (const f of files) {
+      const file = zip.file(f);
+      if (!file) continue;
+      let xml = await file.async('string');
+      const prefix = f.split('/')[1].replace('.xml', '') + ':';
+      remove.filter(k => k.startsWith(prefix)).forEach(k => {
+        const tag = k.slice(prefix.length);
+        const re = new RegExp('<' + tag + '[^>]*>[^<]*</' + tag + '>', 'g');
+        xml = xml.replace(re, '<' + tag + '></' + tag + '>');
+      });
+      zip.file(f, xml);
+    }
+
+    const out = await zip.generateAsync({ type: 'nodebuffer' });
+    require('fs').unlinkSync(req.file.path);
+    res.set('Content-Disposition', 'attachment; filename="clean-' + (req.file.originalname || 'file') + '"');
+    res.set('Content-Type', 'application/octet-stream');
+    res.send(out);
+  } catch (e) {
+    if (req.file) try { require('fs').unlinkSync(req.file.path); } catch {}
+    res.status(500).send(e.message);
+  }
+});
+
 app.listen(PORT, () => console.log(`ToolNest running on port ${PORT}`));
