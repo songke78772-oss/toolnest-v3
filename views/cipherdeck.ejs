@@ -44,7 +44,8 @@
           <span id="lockTag" class="text-amber-600 text-sm hidden">🔒 Downloaded · locked</span>
         </div>
         <div id="grid" class="inline-grid gap-1 mb-4 p-3 bg-gray-900 rounded-lg"></div>
-        <p class="text-sm text-red-600 font-bold mb-3 animate-pulse">⚠️ Save it now. Once downloaded, it cannot be downloaded again in this session.</p>        <div class="flex gap-2">
+        <p class="text-sm text-red-600 font-bold mb-3 animate-pulse">⚠️ Save it now. Once downloaded, it cannot be downloaded again in this session.</p>
+        <div class="flex gap-2">
           <button id="dlPng" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">Download PNG</button>
           <button id="dlTxt" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">Download TXT</button>
         </div>
@@ -92,74 +93,81 @@
       </div>
     </div>
 
-    <!-- How to Use -->
-    <div class="bg-white rounded-xl shadow p-6 mt-8">
-      <h2 class="text-lg font-bold mb-4">How to Use</h2>
-      <div class="space-y-4 text-sm text-gray-700">
-        <div>
-          <p class="font-semibold text-gray-900">① Generate — create the grid</p>
-          <p class="mt-1">Pick a size (5×5 to 9×9; larger = harder to guess) → click Generate. The grid is filled with cryptographically secure randomness. Character set: A–Z (no O), a–z (no o), 1–9 (no 0), plus safe symbols — confusing look-alikes are removed on purpose.</p>
+    <!-- Tabs: How to Use / Important Notes -->
+    <div class="bg-white rounded-xl shadow mt-8">
+      <div class="flex border-b">
+        <button id="infoTabUse" class="px-5 py-3 text-sm font-medium border-b-2 border-blue-600 text-blue-600">How to Use</button>
+        <button id="infoTabNotes" class="px-5 py-3 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700">Important Notes</button>
+      </div>
+
+      <!-- How to Use -->
+      <div id="infoPanelUse" class="p-6">
+        <div class="space-y-4 text-sm text-gray-700">
+          <div>
+            <p class="font-semibold text-gray-900">① Generate — create the grid</p>
+            <p class="mt-1">Pick a size (5×5 to 9×9; larger = harder to guess) → click Generate. The grid is filled with cryptographically secure randomness. Character set: A–Z (no O), a–z (no o), 1–9 (no 0), plus safe symbols — confusing look-alikes are removed on purpose.</p>
+          </div>
+          <div>
+            <p class="font-semibold text-gray-900">② Download — <span class="text-red-600 font-bold">one-time only</span></p>
+            <p class="mt-1">Export as PNG (image) or TXT (table with row/column headers). You can download only once — both buttons lock right after the first download. The grid then lives only in this tab's memory — <span class="text-red-600 font-bold">close the page and it's gone forever, unrecoverable.</span> Save it now (print it, or store the file in a password manager).</p>
+          </div>
+          <div>
+            <p class="font-semibold text-gray-900">③ Seal — wrap it in a cipher · <span class="text-red-600 font-bold">REQUIRED, not optional</span></p>
+            <p class="mt-1">Set a passphrase (or click "Make passphrase" to generate a strong one) → Generate cipher → you get a PTC1-… string. That string is your entire codebook, encrypted (AES-256-GCM + PBKDF2, 250,000 iterations). <span class="text-red-600 font-bold">It is the only durable copy of your grid — if you skip this, closing the tab destroys the codebook with no way back.</span> Store the cipher anywhere; it's useless without the passphrase.</p>
+          </div>
+          <div>
+            <p class="font-semibold text-gray-900">④ Decode / Test — look up one cell at a time</p>
+            <p class="mt-1">Go to the Decode / Test tab → paste the cipher + enter the passphrase → Decode. Decryption happens in memory only; the full grid is deliberately never shown on screen — you'll see just ✓ Decoded. In the lookup box, type pairs like 74 28 91 (first digit = row, second digit = column; separate multiple with spaces or commas) → only that one character is revealed. Read it out or compare it with the other person; <span class="text-red-600 font-bold">the grid stays hidden the whole time.</span></p>
+          </div>
         </div>
-        <div>
-          <p class="font-semibold text-gray-900">② Download — <span class="text-red-600 font-bold">one-time only</span></p>
-          <p class="mt-1">Export as PNG (image) or TXT (table with row/column headers). You can download only once — both buttons lock right after the first download. The grid then lives only in this tab's memory — <span class="text-red-600 font-bold">close the page and it's gone forever, unrecoverable.</span> Save it now (print it, or store the file in a password manager).</p>
+      </div>
+
+      <!-- Important Notes -->
+      <div id="infoPanelNotes" class="p-6 hidden">
+        <div class="space-y-3 text-sm">
+          <div class="flex gap-3">
+            <div class="w-1 bg-amber-400 rounded-full shrink-0"></div>
+            <p class="text-gray-600"><span class="font-medium text-gray-900">The grid never touches our server.</span> Generate, download, encrypt, decrypt, lookup — all inside your browser. No backend, no database, no analytics. We have nothing to hand over, because we never receive anything.</p>
+          </div>
+          <div class="flex gap-3">
+            <div class="w-1 bg-amber-400 rounded-full shrink-0"></div>
+            <p class="text-gray-600"><span class="font-medium text-gray-900">"One-time download" is a convenience lock, not magic.</span> The buttons disable after one download, but once a file leaves your browser you can obviously copy it again. The one real, provable guarantee: the grid is never transmitted to us. That's the line we hold.</p>
+          </div>
+          <div class="flex gap-3">
+            <div class="w-1 bg-amber-400 rounded-full shrink-0"></div>
+            <p class="text-gray-600"><span class="font-medium text-gray-900">We stop strangers, not insiders.</span> CipherDeck stops an outsider from guessing their way in. It cannot stop someone who already holds the grid (or a file, or a resolved character) from forwarding it. Once a secret is in someone's hands, keeping it is their responsibility, not ours.</p>
+          </div>
+          <div class="flex gap-3">
+            <div class="w-1 bg-amber-400 rounded-full shrink-0"></div>
+            <p class="text-gray-600"><span class="font-medium text-gray-900">The test page never shows the full grid — by design.</span> A full grid on screen is a fully leaked grid. We resolve one cell at a time, shrinking any single leak to only the cell you just looked up.</p>
+          </div>
+          <div class="flex gap-3">
+            <div class="w-1 bg-amber-400 rounded-full shrink-0"></div>
+            <p class="text-gray-600"><span class="font-medium text-gray-900">The passphrase is everything.</span> Forget it and the grid is gone forever — no reset, no backdoor, no recovery. That's a feature, not a flaw. Store the passphrase separately from the cipher.</p>
+          </div>
+          <div class="flex gap-3">
+            <div class="w-1 bg-amber-400 rounded-full shrink-0"></div>
+            <p class="text-gray-600"><span class="font-medium text-gray-900">Size = strength.</span> Every coordinate you reveal leaks one cell. When reusing a codebook, retire a coordinate after use; for high-risk use, generate a fresh codebook every time.</p>
+          </div>
+          <div class="flex gap-3">
+            <div class="w-1 bg-amber-400 rounded-full shrink-0"></div>
+            <p class="text-gray-600"><span class="font-medium text-gray-900">What it is not.</span> Not military-grade crypto, not DRM, not anonymous, not a replacement for end-to-end encrypted messaging. It's an honest, verifiable "no-server secret agreement" helper.</p>
+          </div>
         </div>
-        <div>
-          <p class="font-semibold text-gray-900">③ Seal — wrap it in a cipher · <span class="text-red-600 font-bold">REQUIRED, not optional</span></p>
-          <p class="mt-1">Set a passphrase (or click "Make passphrase" to generate a strong one) → Generate cipher → you get a PTC1-… string. That string is your entire codebook, encrypted (AES-256-GCM + PBKDF2, 250,000 iterations). <span class="text-red-600 font-bold">It is the only durable copy of your grid — if you skip this, closing the tab destroys the codebook with no way back.</span> Store the cipher anywhere; it's useless without the passphrase.</p>
-        </div>
-        <div>
-          <p class="font-semibold text-gray-900">④ Decode / Test — look up one cell at a time</p>
-          <p class="mt-1">Go to the Decode / Test tab → paste the cipher + enter the passphrase → Decode. Decryption happens in memory only; the full grid is deliberately never shown on screen — you'll see just ✓ Decoded. In the lookup box, type pairs like 74 28 91 (first digit = row, second digit = column; separate multiple with spaces or commas) → only that one character is revealed. Read it out or compare it with the other person; <span class="text-red-600 font-bold">the grid stays hidden the whole time.</span></p>
-        </div>
+
+        <h3 class="text-sm font-semibold text-gray-900 mt-6 mb-3">Before you trust a codebook</h3>
+        <ol class="list-decimal list-inside space-y-2 text-sm text-gray-600">
+          <li>Seal the grid into a cipher and copy the <code class="bg-gray-100 px-1.5 py-0.5 rounded text-xs">PTC1-…</code> string — this is required, or the codebook dies with the tab.</li>
+          <li>Download and safely store the grid <span class="font-medium text-gray-900">before</span> closing the tab.</li>
+          <li>If using a cipher, confirm the decoded size matches your downloaded copy.</li>
+          <li>Never send the passphrase through the same channel as the cipher.</li>
+        </ol>
       </div>
     </div>
 
     <p class="text-xs text-gray-400 text-center mt-8">100% client-side. Your matrix is never transmitted or stored on any server.</p>
   </div>
 
-<!-- Important Notes -->
-<div class="mt-10">
-  <h2 class="text-base font-semibold text-gray-900 mb-4">Important Notes</h2>
-  <div class="space-y-3">
-    <div class="flex gap-3 text-sm">
-      <div class="w-1 bg-amber-400 rounded-full shrink-0"></div>
-      <p class="text-gray-600"><span class="font-medium text-gray-900">The grid never touches our server.</span> Generate, download, encrypt, decrypt, lookup — all inside your browser. No backend, no database, no analytics. We have nothing to hand over, because we never receive anything.</p>
-    </div>
-    <div class="flex gap-3 text-sm">
-      <div class="w-1 bg-amber-400 rounded-full shrink-0"></div>
-      <p class="text-gray-600"><span class="font-medium text-gray-900">"One-time download" is a convenience lock, not magic.</span> The buttons disable after one download, but once a file leaves your browser you can obviously copy it again. The one real, provable guarantee: the grid is never transmitted to us. That's the line we hold.</p>
-    </div>
-    <div class="flex gap-3 text-sm">
-      <div class="w-1 bg-amber-400 rounded-full shrink-0"></div>
-      <p class="text-gray-600"><span class="font-medium text-gray-900">We stop strangers, not insiders.</span> CipherDeck stops an outsider from guessing their way in. It cannot stop someone who already holds the grid (or a file, or a resolved character) from forwarding it. Once a secret is in someone's hands, keeping it is their responsibility, not ours.</p>
-    </div>
-    <div class="flex gap-3 text-sm">
-      <div class="w-1 bg-amber-400 rounded-full shrink-0"></div>
-      <p class="text-gray-600"><span class="font-medium text-gray-900">The test page never shows the full grid — by design.</span> A full grid on screen is a fully leaked grid. We resolve one cell at a time, shrinking any single leak to only the cell you just looked up.</p>
-    </div>
-    <div class="flex gap-3 text-sm">
-      <div class="w-1 bg-amber-400 rounded-full shrink-0"></div>
-      <p class="text-gray-600"><span class="font-medium text-gray-900">The passphrase is everything.</span> Forget it and the grid is gone forever — no reset, no backdoor, no recovery. That's a feature, not a flaw. Store the passphrase separately from the cipher.</p>
-    </div>
-    <div class="flex gap-3 text-sm">
-      <div class="w-1 bg-amber-400 rounded-full shrink-0"></div>
-      <p class="text-gray-600"><span class="font-medium text-gray-900">Size = strength.</span> Every coordinate you reveal leaks one cell. When reusing a codebook, retire a coordinate after use; for high-risk use, generate a fresh codebook every time.</p>
-    </div>
-    <div class="flex gap-3 text-sm">
-      <div class="w-1 bg-amber-400 rounded-full shrink-0"></div>
-      <p class="text-gray-600"><span class="font-medium text-gray-900">What it is not.</span> Not military-grade crypto, not DRM, not anonymous, not a replacement for end-to-end encrypted messaging. It's an honest, verifiable "no-server secret agreement" helper.</p>
-    </div>
-  </div>
-
-  <h3 class="text-base font-semibold text-gray-900 mt-8 mb-3">Before you trust a codebook</h3>
-  <ol class="list-decimal list-inside space-y-2 text-sm text-gray-600">
-    <li>Seal the grid into a cipher and copy the <code class="bg-gray-100 px-1.5 py-0.5 rounded text-xs">PTC1-…</code> string — this is required, or the codebook dies with the tab.</li>
-    <li>Download and safely store the grid <span class="font-medium text-gray-900">before</span> closing the tab.</li>
-    <li>If using a cipher, confirm the decoded size matches your downloaded copy.</li>
-    <li>Never send the passphrase through the same channel as the cipher.</li>
-  </ol>
-</div>
   <canvas id="cv" class="hidden"></canvas>
 
   <script>
@@ -176,6 +184,20 @@
       document.getElementById("tabGen").className = "px-4 py-2 rounded bg-gray-200 text-gray-700";
       document.getElementById("panelDec").classList.remove("hidden");
       document.getElementById("panelGen").classList.add("hidden");
+    };
+
+    // Info tabs
+    document.getElementById("infoTabUse").onclick = () => {
+      document.getElementById("infoTabUse").className = "px-5 py-3 text-sm font-medium border-b-2 border-blue-600 text-blue-600";
+      document.getElementById("infoTabNotes").className = "px-5 py-3 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700";
+      document.getElementById("infoPanelUse").classList.remove("hidden");
+      document.getElementById("infoPanelNotes").classList.add("hidden");
+    };
+    document.getElementById("infoTabNotes").onclick = () => {
+      document.getElementById("infoTabNotes").className = "px-5 py-3 text-sm font-medium border-b-2 border-blue-600 text-blue-600";
+      document.getElementById("infoTabUse").className = "px-5 py-3 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700";
+      document.getElementById("infoPanelNotes").classList.remove("hidden");
+      document.getElementById("infoPanelUse").classList.add("hidden");
     };
 
     // Character pool
