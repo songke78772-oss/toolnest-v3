@@ -354,7 +354,13 @@ app.get('/combine', (req, res) => res.render('combine'));
 app.get('/collage', (req, res) => res.render('collage'));
 app.get('/chart', (req, res) => res.render('chart'));
 app.get('/splitter', (req, res) => res.render('splitter'));
+
+
+//安全工具
 app.get('/file-encrypt', (req, res) => res.render('file-encrypt'));
+app.get('/cipherdeck', (req, res) => res.render('cipherdeck'));
+
+
 app.get('/word-counter', (req, res) => res.render('word-counter'));
 app.get('/case-converter', (req, res) => {
   try {
