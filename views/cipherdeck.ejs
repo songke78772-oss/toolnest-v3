@@ -119,33 +119,47 @@
   </div>
 
 <!-- Important Notes -->
-<div class="bg-amber-50 border border-amber-200 rounded-xl p-6 mt-6">
-  <h2 class="text-lg font-bold text-amber-900 mb-4 flex items-center gap-2">
-    <span>⚠️</span> Important Notes
-  </h2>
-  <div class="space-y-3 text-sm text-gray-700">
-    <p><span class="font-semibold text-amber-800">🔒 The grid never touches our server.</span> Generate, download, encrypt, decrypt, lookup — all inside your browser. No backend, no database, no analytics. We have nothing to hand over, because we never receive anything.</p>
-    <p><span class="font-semibold text-amber-800">⚠️ "One-time download" is a convenience lock, not magic.</span> The buttons disable after one download, but once a file leaves your browser you can obviously copy it again. The one real, provable guarantee: the grid is never transmitted to us. That's the line we hold.</p>
-    <p><span class="font-semibold text-amber-800">🛡️ We stop strangers, not insiders.</span> CipherDeck stops an outsider from guessing their way in. It cannot stop someone who already holds the grid (or a file, or a resolved character) from forwarding it — Signal, Proton, nobody can. Once a secret is in someone's hands, keeping it is their responsibility, not ours.</p>
-    <p><span class="font-semibold text-amber-800">👁️ The test page never shows the full grid — by design.</span> A full grid on screen is a fully leaked grid (one shoulder-surf, one screen-share, one screenshot). We resolve one cell at a time, shrinking any single leak to "only the cell you just looked up."</p>
-    <p><span class="font-semibold text-amber-800">🔑 The passphrase is everything.</span> Forget it and the grid is gone forever — no reset, no backdoor, no recovery. That's a feature, not a flaw. Store the passphrase separately from the cipher.</p>
-    <p><span class="font-semibold text-amber-800">💎 Size = strength.</span> Every coordinate you reveal leaks one cell. When reusing a codebook, retire a coordinate after use; for high-risk use, generate a fresh codebook every time (it's cheap — we encourage it).</p>
-    <p><span class="font-semibold text-amber-800">🚫 What it is not.</span> Not military-grade crypto, not DRM, not anonymous, not a replacement for end-to-end encrypted messaging. It's an honest, verifiable "no-server secret agreement" helper — used for exactly what it can do.</p>
+<div class="mt-10">
+  <h2 class="text-base font-semibold text-gray-900 mb-4">Important Notes</h2>
+  <div class="space-y-3">
+    <div class="flex gap-3 text-sm">
+      <div class="w-1 bg-amber-400 rounded-full shrink-0"></div>
+      <p class="text-gray-600"><span class="font-medium text-gray-900">The grid never touches our server.</span> Generate, download, encrypt, decrypt, lookup — all inside your browser. No backend, no database, no analytics. We have nothing to hand over, because we never receive anything.</p>
+    </div>
+    <div class="flex gap-3 text-sm">
+      <div class="w-1 bg-amber-400 rounded-full shrink-0"></div>
+      <p class="text-gray-600"><span class="font-medium text-gray-900">"One-time download" is a convenience lock, not magic.</span> The buttons disable after one download, but once a file leaves your browser you can obviously copy it again. The one real, provable guarantee: the grid is never transmitted to us. That's the line we hold.</p>
+    </div>
+    <div class="flex gap-3 text-sm">
+      <div class="w-1 bg-amber-400 rounded-full shrink-0"></div>
+      <p class="text-gray-600"><span class="font-medium text-gray-900">We stop strangers, not insiders.</span> CipherDeck stops an outsider from guessing their way in. It cannot stop someone who already holds the grid (or a file, or a resolved character) from forwarding it. Once a secret is in someone's hands, keeping it is their responsibility, not ours.</p>
+    </div>
+    <div class="flex gap-3 text-sm">
+      <div class="w-1 bg-amber-400 rounded-full shrink-0"></div>
+      <p class="text-gray-600"><span class="font-medium text-gray-900">The test page never shows the full grid — by design.</span> A full grid on screen is a fully leaked grid. We resolve one cell at a time, shrinking any single leak to only the cell you just looked up.</p>
+    </div>
+    <div class="flex gap-3 text-sm">
+      <div class="w-1 bg-amber-400 rounded-full shrink-0"></div>
+      <p class="text-gray-600"><span class="font-medium text-gray-900">The passphrase is everything.</span> Forget it and the grid is gone forever — no reset, no backdoor, no recovery. That's a feature, not a flaw. Store the passphrase separately from the cipher.</p>
+    </div>
+    <div class="flex gap-3 text-sm">
+      <div class="w-1 bg-amber-400 rounded-full shrink-0"></div>
+      <p class="text-gray-600"><span class="font-medium text-gray-900">Size = strength.</span> Every coordinate you reveal leaks one cell. When reusing a codebook, retire a coordinate after use; for high-risk use, generate a fresh codebook every time.</p>
+    </div>
+    <div class="flex gap-3 text-sm">
+      <div class="w-1 bg-amber-400 rounded-full shrink-0"></div>
+      <p class="text-gray-600"><span class="font-medium text-gray-900">What it is not.</span> Not military-grade crypto, not DRM, not anonymous, not a replacement for end-to-end encrypted messaging. It's an honest, verifiable "no-server secret agreement" helper.</p>
+    </div>
   </div>
 
-  <div class="mt-5 pt-4 border-t border-amber-200">
-    <h3 class="font-bold text-green-800 mb-3 flex items-center gap-2">
-      <span>✅</span> Before you trust a codebook — mandatory checklist
-    </h3>
-    <ol class="list-decimal list-inside space-y-2 text-sm text-gray-700">
-      <li>Seal the grid into a cipher and copy the <code class="bg-amber-100 px-1 rounded">PTC1-…</code> string — this is required, or the codebook dies with the tab.</li>
-      <li>Download and safely store the grid <span class="font-semibold">before</span> closing the tab.</li>
-      <li>If using a cipher, confirm the decoded size matches your downloaded copy.</li>
-      <li>Never send the passphrase through the same channel as the cipher.</li>
-    </ol>
-  </div>
+  <h3 class="text-base font-semibold text-gray-900 mt-8 mb-3">Before you trust a codebook</h3>
+  <ol class="list-decimal list-inside space-y-2 text-sm text-gray-600">
+    <li>Seal the grid into a cipher and copy the <code class="bg-gray-100 px-1.5 py-0.5 rounded text-xs">PTC1-…</code> string — this is required, or the codebook dies with the tab.</li>
+    <li>Download and safely store the grid <span class="font-medium text-gray-900">before</span> closing the tab.</li>
+    <li>If using a cipher, confirm the decoded size matches your downloaded copy.</li>
+    <li>Never send the passphrase through the same channel as the cipher.</li>
+  </ol>
 </div>
-
   <canvas id="cv" class="hidden"></canvas>
 
   <script>
