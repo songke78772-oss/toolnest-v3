@@ -704,26 +704,43 @@ const JSZip = require('jszip');
 const uploadMeta = multer({ dest: '/tmp/office-meta/', limits: { fileSize: 20 * 1024 * 1024 } });
 require('fs').mkdirSync('/tmp/office-meta', { recursive: true });
 
+function extractTags(xml, prefix) {
+  const meta = [];
+  if (!xml) return meta;
+  const re = /<([a-zA-Z0-9:]+)[^>]*>([^<]*)<\/\1>/g;
+  let m;
+  while ((m = re.exec(xml))) {
+    const tag = m[1];
+    const val = m[2].trim();
+    if (val && val.length < 500) {
+      const shortTag = tag.includes(':') ? tag.split(':').pop() : tag;
+      meta.push({
+        key: prefix + ':' + shortTag,
+        name: prefix + ' / ' + shortTag,
+        value: val
+      });
+    }
+  }
+  return meta;
+}
+
 function parseOfficeMetadata(buffer) {
   return JSZip.loadAsync(buffer).then(zip => {
     const meta = [];
-    const files = ['docProps/core.xml', 'docProps/app.xml', 'docProps/custom.xml'];
-    return Promise.all(files.map(f => zip.file(f) ? zip.file(f).async('string') : Promise.resolve(null)))
-      .then(contents => {
-        contents.forEach((xml, i) => {
-          if (!xml) return;
-          const name = files[i].split('/')[1].replace('.xml', '');
-          // Extract simple tags
-          const re = /<([^\/!?][^>]*?)>([^<]*)<\/\1>/g;
-          let m;
-          while ((m = re.exec(xml))) {
-            const tag = m[1].split(' ')[0];
-            const val = m[2].trim();
-            if (val) meta.push({ key: name + ':' + tag, name: name + ' / ' + tag, value: val });
-          }
-        });
-        return meta;
+    const targets = [
+      { path: 'docProps/core.xml', prefix: 'core' },
+      { path: 'docProps/app.xml', prefix: 'app' },
+      { path: 'docProps/custom.xml', prefix: 'custom' }
+    ];
+    return Promise.all(targets.map(t => {
+      const f = zip.file(t.path);
+      return f ? f.async('string').then(xml => ({ xml, prefix: t.prefix })) : Promise.resolve(null);
+    })).then(results => {
+      results.forEach(r => {
+        if (r && r.xml) meta.push(...extractTags(r.xml, r.prefix));
       });
+      return meta;
+    });
   });
 }
 
@@ -749,18 +766,21 @@ app.post('/api/office-metadata/clean', uploadMeta.single('file'), async (req, re
     const buf = require('fs').readFileSync(req.file.path);
     const zip = await JSZip.loadAsync(buf);
 
-    const files = ['docProps/core.xml', 'docProps/app.xml', 'docProps/custom.xml'];
+    const files = [
+      { path: 'docProps/core.xml', prefix: 'core:' },
+      { path: 'docProps/app.xml', prefix: 'app:' },
+      { path: 'docProps/custom.xml', prefix: 'custom:' }
+    ];
     for (const f of files) {
-      const file = zip.file(f);
+      const file = zip.file(f.path);
       if (!file) continue;
       let xml = await file.async('string');
-      const prefix = f.split('/')[1].replace('.xml', '') + ':';
-      remove.filter(k => k.startsWith(prefix)).forEach(k => {
-        const tag = k.slice(prefix.length);
-        const re = new RegExp('<' + tag + '[^>]*>[^<]*</' + tag + '>', 'g');
-        xml = xml.replace(re, '<' + tag + '></' + tag + '>');
+      remove.filter(k => k.startsWith(f.prefix)).forEach(k => {
+        const tag = k.slice(f.prefix.length);
+        const re = new RegExp('<([a-zA-Z0-9:]*:?)' + tag + '([^>]*)>[^<]*</\\1' + tag + '>', 'g');
+        xml = xml.replace(re, '<$1' + tag + '$2></$1' + tag + '>');
       });
-      zip.file(f, xml);
+      zip.file(f.path, xml);
     }
 
     const out = await zip.generateAsync({ type: 'nodebuffer' });
