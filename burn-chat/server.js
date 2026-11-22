@@ -39,21 +39,21 @@ function getAvailableNames(category, usedNames) {
 app.post('/api/create-room', (req, res) => {
   const { maxPeople, hours, category, creatorName, deepEncrypt, password } = req.body;
 
-  if (!maxPeople || maxPeople < 1 || maxPeople > 10) {
-    return res.status(400).json({ error: '人数必须在 1-10 之间' });
-  }
-  if (![1, 2, 5].includes(Number(hours))) {
-    return res.status(400).json({ error: '时长只能是 1、2 或 5 小时' });
-  }
-  if (!namePools[category]) {
-    return res.status(400).json({ error: '无效的名字分类' });
-  }
-  if (!creatorName || !namePools[category].includes(creatorName)) {
-    return res.status(400).json({ error: '请从分类中选择创建者名字' });
-  }
-  if (deepEncrypt && (!password || password.length > 5)) {
-    return res.status(400).json({ error: '深度加密密码最多 5 位' });
-  }
+ if (!maxPeople || maxPeople < 1 || maxPeople > 10) {
+  return res.status(400).json({ error: 'Participants must be between 1 and 10' });
+}
+if (![1, 2, 5].includes(Number(hours))) {
+  return res.status(400).json({ error: 'Duration must be 1, 2, or 5 hours' });
+}
+if (!namePools[category]) {
+  return res.status(400).json({ error: 'Invalid name category' });
+}
+if (!creatorName || !namePools[category].includes(creatorName)) {
+  return res.status(400).json({ error: 'Please select a name from the category' });
+}
+if (deepEncrypt && (!password || password.length > 5)) {
+  return res.status(400).json({ error: 'Password must be 1-5 characters' });
+}
 
   const roomId = generateId();
   const expireAt = Date.now() + hours * 60 * 60 * 1000;
