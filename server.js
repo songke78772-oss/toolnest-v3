@@ -1,3 +1,50 @@
+const http = require('http');
+const WebSocket = require('ws');
+
+const server = http.createServer(app);
+const wss = new WebSocket.Server({ server });
+
+const rooms = new Map(); // roomId -> Set of sockets
+
+wss.on('connection', (ws) => {
+  ws.on('message', (msg) => {
+    try {
+      const data = JSON.parse(msg);
+      const { type, roomId, payload } = data;
+
+      if (type === 'join') {
+        if (!rooms.has(roomId)) rooms.set(roomId, new Set());
+        rooms.get(roomId).add(ws);
+        ws.roomId = roomId;
+        
+        // Notify others in room
+        rooms.get(roomId).forEach(client => {
+          if (client !== ws && client.readyState === WebSocket.OPEN) {
+            client.send(JSON.stringify({ type: 'peer-joined' }));
+          }
+        });
+      }
+
+      if (type === 'signal' && ws.roomId) {
+        rooms.get(ws.roomId)?.forEach(client => {
+          if (client !== ws && client.readyState === WebSocket.OPEN) {
+            client.send(JSON.stringify({ type: 'signal', payload }));
+          }
+        });
+      }
+    } catch (e) {}
+  });
+
+  ws.on('close', () => {
+    if (ws.roomId && rooms.has(ws.roomId)) {
+      rooms.get(ws.roomId).delete(ws);
+    }
+  });
+});
+
+// 把原来的 app.listen 改成：
+server.listen(PORT, () => console.log(`ToolNest running on port ${PORT}`));
+
 require('dotenv').config();
 const express = require('express');
 const session = require('express-session');
