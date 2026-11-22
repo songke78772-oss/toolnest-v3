@@ -87,7 +87,7 @@ if (deepEncrypt && (!password || password.length > 5)) {
   // 自动过期清理
   setTimeout(() => {
     if (rooms.has(roomId)) {
-      io.to(roomId).emit('system', '房间已到期，自动解散');
+      io.to(roomId).emit('system', 'Room session has expired; room automatically disbanded.');
       rooms.delete(roomId);
     }
   }, hours * 60 * 60 * 1000);
@@ -107,16 +107,16 @@ app.post('/api/join/:roomId/:token', (req, res) => {
   const room = rooms.get(roomId);
 
   if (!room || room.dissolved || room.expireAt < Date.now()) {
-    return res.status(404).json({ error: '房间不存在或已过期' });
+    return res.status(404).json({ error: 'The room does not exist or has expired.' });
   }
   if (!room.availableTokens.has(token)) {
-    return res.status(403).json({ error: '邀请链接无效或已被使用' });
+    return res.status(403).json({ error: 'The invitation link is invalid or has already been used.' });
   }
   if (room.deepEncrypt && room.password !== password) {
-    return res.status(401).json({ error: '密码错误' });
+    return res.status(401).json({ error: 'Incorrect password' });
   }
   if (room.users.size >= room.maxPeople) {
-    return res.status(403).json({ error: '房间已满' });
+    return res.status(403).json({ error: 'This meeting room is already full.' });
   }
 
   // 标记链接已使用
@@ -138,14 +138,14 @@ io.on('connection', (socket) => {
   socket.on('join-room', ({ roomId, isCreator, name }) => {
     const room = rooms.get(roomId);
     if (!room || room.dissolved) {
-      return socket.emit('error', '房间不存在');
+      return socket.emit('error', 'Room does not exist');
     }
 
     let displayName = name;
     if (!isCreator) {
       const available = getAvailableNames(room.category, new Set([...room.users.values(), room.creatorName]));
       if (available.length === 0) {
-        return socket.emit('error', '没有可用名字');
+        return socket.emit('error', 'No name available');
       }
       displayName = available[Math.floor(Math.random() * available.length)];
     }
@@ -155,7 +155,7 @@ io.on('connection', (socket) => {
     socket.roomId = roomId;
     socket.isCreator = isCreator;
 
-    io.to(roomId).emit('system', `${displayName} 加入了房间`);
+    io.to(roomId).emit('system', `${displayName} has joined the room`);
     socket.emit('joined', { name: displayName, expireAt: room.expireAt });
     socket.emit('history', room.messages.slice(-100));
   });
@@ -179,7 +179,7 @@ io.on('connection', (socket) => {
     const room = rooms.get(roomId);
     if (room && socket.isCreator) {
       room.dissolved = true;
-      io.to(roomId).emit('system', '房间已被创建者解散');
+      io.to(roomId).emit('system', 'The room has been disbanded by its creator.');
       rooms.delete(roomId);
       io.in(roomId).disconnectSockets();
     }
@@ -191,7 +191,7 @@ io.on('connection', (socket) => {
     if (room && room.users.has(socket.id)) {
       const name = room.users.get(socket.id);
       room.users.delete(socket.id);
-      io.to(socket.roomId).emit('system', `${name} 已经离会`);
+      io.to(socket.roomId).emit('system', `${name} Has left the meeting`);
     }
   });
 });
