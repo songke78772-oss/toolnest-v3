@@ -5,30 +5,59 @@
   <title>Image Metadata Remover - ToolNest</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/piexifjs@1.0.6/piexif.min.js"></script>
 </head>
 <body class="bg-gray-100 min-h-screen p-4">
-  <div class="max-w-2xl mx-auto">
+  <div class="max-w-3xl mx-auto">
     <a href="/" class="inline-flex items-center text-blue-600 hover:underline mb-6">
       ← Back to Tools
     </a>
 
     <div class="bg-white rounded-xl shadow-lg p-8">
       <h1 class="text-2xl font-bold text-center mb-2">Image Metadata Remover</h1>
-      <p class="text-center text-gray-500 text-sm mb-8">Remove EXIF and other metadata from images. Everything stays in your browser.</p>
+      <p class="text-center text-gray-500 text-sm mb-8">View and selectively remove EXIF metadata. Everything stays in your browser.</p>
 
       <div class="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center hover:border-blue-400 transition" id="dropZone">
-        <input type="file" id="fileInput" accept="image/*" class="hidden">
-        <p class="text-gray-600 mb-4">Drag & drop image here, or</p>
+        <input type="file" id="fileInput" accept="image/jpeg,image/jpg" class="hidden">
+        <p class="text-gray-600 mb-4">Drag & drop a JPEG image here, or</p>
         <button type="button" onclick="document.getElementById('fileInput').click()" class="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700">
           Choose Image
         </button>
-        <p class="text-xs text-gray-400 mt-3">Supports JPG, PNG, WebP, GIF</p>
+        <p class="text-xs text-gray-400 mt-3">Best support for JPEG (EXIF)</p>
       </div>
 
-      <div id="preview" class="hidden mt-6 text-center">
-        <img id="previewImg" class="max-h-64 mx-auto rounded shadow mb-4">
-        <p id="fileInfo" class="text-sm text-gray-500 mb-4"></p>
-        <button id="downloadBtn" class="bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700">
+      <div id="result" class="hidden mt-8">
+        <div class="mb-6">
+          <img id="previewImg" class="max-h-48 mx-auto rounded shadow mb-2">
+          <p id="fileName" class="text-center text-sm text-gray-500"></p>
+        </div>
+
+        <h2 class="font-semibold text-lg mb-3">Detected Metadata</h2>
+        <div id="metaList" class="bg-gray-50 rounded-lg p-4 text-sm max-h-64 overflow-auto mb-6 font-mono text-gray-700"></div>
+
+        <div class="space-y-3 mb-6">
+          <label class="flex items-center gap-2">
+            <input type="checkbox" id="removeAll" class="rounded" checked>
+            <span>Remove all metadata</span>
+          </label>
+          <label class="flex items-center gap-2">
+            <input type="checkbox" id="removeGPS" class="rounded">
+            <span>Remove GPS / Location only</span>
+          </label>
+          <label class="flex items-center gap-2">
+            <input type="checkbox" id="removeCamera" class="rounded">
+            <span>Remove camera info (Make, Model, etc.)</span>
+          </label>
+        </div>
+
+        <button id="processBtn" class="w-full bg-green-600 text-white py-2.5 rounded hover:bg-green-700 font-medium">
+          Generate Clean Image
+        </button>
+      </div>
+
+      <div id="downloadArea" class="hidden mt-6 text-center">
+        <p class="text-green-600 font-medium mb-4">Metadata removed successfully</p>
+        <button id="downloadBtn" class="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700">
           Download Clean Image
         </button>
       </div>
@@ -37,9 +66,10 @@
     <div class="bg-white rounded-xl shadow p-6 mt-6 text-sm text-gray-600">
       <p class="font-medium text-gray-800 mb-2">How it works</p>
       <ul class="list-disc list-inside space-y-1">
-        <li>Image is re-encoded in your browser</li>
-        <li>All EXIF, GPS, and other metadata are removed</li>
-        <li>No upload to any server</li>
+        <li>Reads EXIF metadata from the image</li>
+        <li>Lets you choose what to remove</li>
+        <li>Generates a new image with selected metadata stripped</li>
+        <li>No upload — everything happens in your browser</li>
       </ul>
     </div>
   </div>
@@ -47,39 +77,55 @@
   <script>
     const dropZone = document.getElementById('dropZone');
     const fileInput = document.getElementById('fileInput');
-    const preview = document.getElementById('preview');
+    const result = document.getElementById('result');
     const previewImg = document.getElementById('previewImg');
-    const fileInfo = document.getElementById('fileInfo');
+    const fileName = document.getElementById('fileName');
+    const metaList = document.getElementById('metaList');
+    const processBtn = document.getElementById('processBtn');
+    const downloadArea = document.getElementById('downloadArea');
     const downloadBtn = document.getElementById('downloadBtn');
 
-    let cleanBlob = null;
-    let originalName = '';
+    let originalDataUrl = null;
+    let originalFileName = '';
+    let cleanDataUrl = null;
+
+    function parseExif(dataUrl) {
+      try {
+        const exifObj = piexif.load(dataUrl);
+        const items = [];
+        for (const ifd in exifObj) {
+          if (ifd === 'thumbnail') continue;
+          for (const tag in exifObj[ifd]) {
+            const name = piexif.TAGS[ifd][tag]?.name || tag;
+            let value = exifObj[ifd][tag];
+            if (typeof value === 'object') value = JSON.stringify(value);
+            items.push(`${ifd} - ${name}: ${value}`);
+          }
+        }
+        return items.length ? items : ['No EXIF metadata found'];
+      } catch (e) {
+        return ['No EXIF metadata found'];
+      }
+    }
 
     function handleFile(file) {
-      if (!file.type.startsWith('image/')) {
-        alert('Please select an image file');
+      if (!file.type.match(/image\/jpe?g/)) {
+        alert('Please select a JPEG image for best EXIF support');
         return;
       }
-      originalName = file.name.replace(/\.[^/.]+$/, '') + '-clean.jpg';
+      originalFileName = file.name.replace(/\.[^/.]+$/, '') + '-clean.jpg';
 
       const reader = new FileReader();
       reader.onload = (e) => {
-        const img = new Image();
-        img.onload = () => {
-          const canvas = document.createElement('canvas');
-          canvas.width = img.width;
-          canvas.height = img.height;
-          const ctx = canvas.getContext('2d');
-          ctx.drawImage(img, 0, 0);
+        originalDataUrl = e.target.result;
+        previewImg.src = originalDataUrl;
+        fileName.textContent = file.name;
 
-          canvas.toBlob((blob) => {
-            cleanBlob = blob;
-            previewImg.src = URL.createObjectURL(blob);
-            fileInfo.textContent = `${file.name} → ${originalName} (${(blob.size / 1024).toFixed(1)} KB)`;
-            preview.classList.remove('hidden');
-          }, 'image/jpeg', 0.92);
-        };
-        img.src = e.target.result;
+        const metas = parseExif(originalDataUrl);
+        metaList.innerHTML = metas.map(m => `<div class="py-0.5">${m}</div>`).join('');
+
+        result.classList.remove('hidden');
+        downloadArea.classList.add('hidden');
       };
       reader.readAsDataURL(file);
     }
@@ -92,22 +138,67 @@
       e.preventDefault();
       dropZone.classList.add('border-blue-400', 'bg-blue-50');
     });
-
     dropZone.addEventListener('dragleave', () => {
       dropZone.classList.remove('border-blue-400', 'bg-blue-50');
     });
-
     dropZone.addEventListener('drop', (e) => {
       e.preventDefault();
       dropZone.classList.remove('border-blue-400', 'bg-blue-50');
       if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);
     });
 
+    processBtn.addEventListener('click', () => {
+      if (!originalDataUrl) return;
+
+      const removeAll = document.getElementById('removeAll').checked;
+      const removeGPS = document.getElementById('removeGPS').checked;
+      const removeCamera = document.getElementById('removeCamera').checked;
+
+      let exifObj;
+      try {
+        exifObj = piexif.load(originalDataUrl);
+      } catch (e) {
+        // No EXIF, just re-encode
+        cleanDataUrl = originalDataUrl;
+        downloadArea.classList.remove('hidden');
+        return;
+      }
+
+      if (removeAll) {
+        exifObj = { '0th': {}, 'Exif': {}, 'GPS': {}, '1st': {}, thumbnail: null };
+      } else {
+        if (removeGPS) {
+          delete exifObj['GPS'];
+        }
+        if (removeCamera) {
+          const cameraTags = ['Make', 'Model', 'Software', 'DateTime', 'DateTimeOriginal', 'DateTimeDigitized'];
+          for (const ifd in exifObj) {
+            if (ifd === 'thumbnail') continue;
+            for (const tag in { ...exifObj[ifd] }) {
+              const name = piexif.TAGS[ifd]?.[tag]?.name;
+              if (cameraTags.includes(name)) {
+                delete exifObj[ifd][tag];
+              }
+            }
+          }
+        }
+      }
+
+      try {
+        const exifBytes = piexif.dump(exifObj);
+        cleanDataUrl = piexif.insert(exifBytes, originalDataUrl);
+      } catch (e) {
+        cleanDataUrl = originalDataUrl;
+      }
+
+      downloadArea.classList.remove('hidden');
+    });
+
     downloadBtn.addEventListener('click', () => {
-      if (!cleanBlob) return;
+      if (!cleanDataUrl) return;
       const a = document.createElement('a');
-      a.href = URL.createObjectURL(cleanBlob);
-      a.download = originalName;
+      a.href = cleanDataUrl;
+      a.download = originalFileName;
       a.click();
     });
   </script>
