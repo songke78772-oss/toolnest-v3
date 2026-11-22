@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Secure File Transfer Room</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 min-h-screen p-4">
+  <div class="max-w-2xl mx-auto">
+    <div class="bg-white rounded-xl shadow-lg p-6 mb-6">
+      <div class="flex justify-between items-center mb-4">
+        <h1 class="text-xl font-bold">File Transfer Room</h1>
+        <span class="text-sm text-gray-500">Expires in <span id="timer">--:--</span></span>
+      </div>
+
+      <div class="bg-gray-100 rounded-lg p-4 mb-4">
+        <p class="text-sm text-gray-600 mb-2">Invite Link (share with others):</p>
+        <div class="flex gap-2">
+          <input type="text" id="inviteLink" readonly class="flex-1 border rounded px-3 py-2 text-sm bg-white" value="<%= inviteLink %>">
+          <button onclick="copyLink()" class="bg-blue-600 text-white px-4 py-2 rounded text-sm hover:bg-blue-700">Copy</button>
+        </div>
+      </div>
+
+      <div class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center mb-4" id="dropZone">
+        <p class="text-gray-500">Drag & drop files here or</p>
+        <label class="mt-2 inline-block bg-blue-600 text-white px-4 py-2 rounded cursor-pointer hover:bg-blue-700">
+          Select Files
+          <input type="file" id="fileInput" multiple class="hidden">
+        </label>
+      </div>
+
+      <div id="fileList" class="space-y-2"></div>
+    </div>
+
+    <div class="bg-white rounded-xl shadow-lg p-6">
+      <h2 class="font-bold mb-3">Participants (<span id="participantCount">1</span>)</h2>
+      <div id="participants" class="text-sm text-gray-600">You (Host)</div>
+    </div>
+  </div>
+
+  <script>
+    function copyLink() {
+      const input = document.getElementById('inviteLink');
+      input.select();
+      document.execCommand('copy');
+      alert('Link copied!');
+    }
+
+    // Basic file selection UI (P2P logic will be added next)
+    document.getElementById('fileInput').addEventListener('change', (e) => {
+      const files = e.target.files;
+      const list = document.getElementById('fileList');
+      list.innerHTML = '';
+      for (let file of files) {
+        const div = document.createElement('div');
+        div.className = 'flex justify-between items-center bg-gray-50 p-3 rounded';
+        div.innerHTML = `<span>${file.name}</span><span class="text-sm text-gray-500">${(file.size/1024/1024).toFixed(2)} MB</span>`;
+        list.appendChild(div);
+      }
+    });
+  </script>
+</body>
+</html>
