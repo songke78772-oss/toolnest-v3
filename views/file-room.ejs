@@ -11,109 +11,191 @@
     <div class="bg-white rounded-xl shadow-lg p-6 mb-6">
       <div class="flex justify-between items-center mb-4">
         <h1 class="text-xl font-bold">File Transfer Room</h1>
-        <span class="text-sm text-gray-500">Expires in <span id="timer">--:--</span></span>
+        <span class="text-sm text-gray-500" id="statusText">Connecting...</span>
       </div>
 
       <% if (isHost) { %>
-        <!-- Host View -->
         <div class="bg-gray-100 rounded-lg p-4 mb-4">
-          <p class="text-sm text-gray-600 mb-2">Invite Link (share with others):</p>
+          <p class="text-sm text-gray-600 mb-2">Invite Link:</p>
           <div class="flex gap-2">
-            <input type="text" id="inviteLink" readonly class="flex-1 border rounded px-3 py-2 text-sm bg-white" value="<%= inviteLink %>">
-            <button onclick="copyLink()" class="bg-blue-600 text-white px-4 py-2 rounded text-sm hover:bg-blue-700">Copy</button>
+            <input type="text" id="inviteLink" readonly class="flex-1 border rounded px-3 py-2 text-sm" value="<%= inviteLink %>">
+            <button onclick="copyLink()" class="bg-blue-600 text-white px-4 py-2 rounded text-sm">Copy</button>
           </div>
         </div>
 
-        <div class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center mb-4" id="dropZone">
-          <p class="text-gray-500">Drag & drop files here or</p>
-          <label class="mt-2 inline-block bg-blue-600 text-white px-4 py-2 rounded cursor-pointer hover:bg-blue-700">
-            Select Files
-            <input type="file" id="fileInput" multiple class="hidden">
-          </label>
+        <div id="uploadSection" class="hidden">
+          <div class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
+            <p class="text-gray-500 mb-2">Select files to send</p>
+            <label class="inline-block bg-blue-600 text-white px-4 py-2 rounded cursor-pointer hover:bg-blue-700">
+              Select Files
+              <input type="file" id="fileInput" multiple class="hidden">
+            </label>
+          </div>
         </div>
       <% } else { %>
-        <!-- Receiver View -->
         <div class="text-center py-8">
-          <p class="text-gray-600 mb-4" id="status">Waiting for files from the host...</p>
-          <div class="text-4xl">📥</div>
+          <p class="text-gray-600 mb-4" id="guestStatus">Waiting for host...</p>
+          <button id="startReceive" class="bg-green-600 text-white px-6 py-2 rounded hidden hover:bg-green-700">Start Receiving</button>
         </div>
       <% } %>
 
-      <div id="fileList" class="space-y-2"></div>
+      <div id="fileList" class="space-y-2 mt-4"></div>
     </div>
 
     <div class="bg-white rounded-xl shadow-lg p-6">
       <h2 class="font-bold mb-3">Participants (<span id="participantCount">1</span>)</h2>
-      <div id="participants" class="text-sm text-gray-600">
-        <%= isHost ? 'You (Host)' : 'You (Guest)' %>
-      </div>
+      <div id="participants" class="text-sm text-gray-600"><%= isHost ? 'You (Host)' : 'You (Guest)' %></div>
     </div>
   </div>
 
   <script>
     const roomId = '<%= roomId %>';
     const isHost = <%= isHost ? 'true' : 'false' %>;
+    const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const ws = new WebSocket(`${protocol}//${location.host}`);
+    
+    let pc = null;
+    let dataChannel = null;
 
     function copyLink() {
-      const input = document.getElementById('inviteLink');
-      if (input) {
-        input.select();
-        document.execCommand('copy');
-        alert('Link copied!');
-      }
+      document.getElementById('inviteLink').select();
+      document.execCommand('copy');
+      alert('Copied');
     }
 
-    // Simple signaling using the server (basic version)
-    // For full P2P you need WebSocket, this is a simplified demo
-    <% if (isHost) { %>
-    document.getElementById('fileInput').addEventListener('change', async (e) => {
-      const files = e.target.files;
-      const list = document.getElementById('fileList');
-      list.innerHTML = '';
+    ws.onopen = () => {
+      ws.send(JSON.stringify({ type: 'join', roomId }));
+      document.getElementById('statusText').textContent = 'Connected';
+    };
+
+    ws.onmessage = async (event) => {
+      const data = JSON.parse(event.data);
       
-      for (let file of files) {
-        const div = document.createElement('div');
-        div.className = 'flex justify-between items-center bg-gray-50 p-3 rounded';
-        div.innerHTML = `<span>${file.name}</span><span class="text-sm text-gray-500">${(file.size/1024/1024).toFixed(2)} MB</span>`;
-        list.appendChild(div);
-
-        // Upload file to temporary storage on server (simplified for now)
-        const formData = new FormData();
-        formData.append('file', file);
-        formData.append('roomId', roomId);
-
-        await fetch('/file-transfer/upload', {
-          method: 'POST',
-          body: formData
-        });
+      if (data.type === 'peer-joined' && isHost) {
+        document.getElementById('uploadSection').classList.remove('hidden');
+        document.getElementById('statusText').textContent = 'Guest joined - Ready to send';
       }
-      alert('Files ready for download');
-    });
-    <% } else { %>
-    // Receiver: poll for files
-    async function checkFiles() {
-      try {
-        const res = await fetch(`/file-transfer/files/${roomId}`);
-        const data = await res.json();
-        if (data.files && data.files.length > 0) {
-          document.getElementById('status').textContent = 'Files received:';
-          const list = document.getElementById('fileList');
-          list.innerHTML = '';
-          data.files.forEach(file => {
-            const div = document.createElement('div');
-            div.className = 'flex justify-between items-center bg-green-50 p-3 rounded';
-            div.innerHTML = `
-              <span>${file.name}</span>
-              <a href="/file-transfer/download/${roomId}/${file.name}" class="bg-green-600 text-white px-3 py-1 rounded text-sm">Download</a>
-            `;
-            list.appendChild(div);
-          });
+
+      if (data.type === 'signal') {
+        await handleSignal(data.payload);
+      }
+    };
+
+    async function createPeer() {
+      pc = new RTCPeerConnection({ iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] });
+      
+      if (isHost) {
+        dataChannel = pc.createDataChannel('file');
+        setupDataChannel(dataChannel);
+      } else {
+        pc.ondatachannel = (e) => {
+          dataChannel = e.channel;
+          setupDataChannel(dataChannel);
+        };
+      }
+
+      pc.onicecandidate = (e) => {
+        if (e.candidate) {
+          ws.send(JSON.stringify({ type: 'signal', roomId, payload: { candidate: e.candidate } }));
         }
-      } catch (e) {}
+      };
+
+      if (isHost) {
+        const offer = await pc.createOffer();
+        await pc.setLocalDescription(offer);
+        ws.send(JSON.stringify({ type: 'signal', roomId, payload: { offer } }));
+      }
     }
-    setInterval(checkFiles, 2000);
-    checkFiles();
-    <% } %>
+
+    async function handleSignal(payload) {
+      if (!pc) await createPeer();
+
+      if (payload.offer) {
+        await pc.setRemoteDescription(payload.offer);
+        const answer = await pc.createAnswer();
+        await pc.setLocalDescription(answer);
+        ws.send(JSON.stringify({ type: 'signal', roomId, payload: { answer } }));
+      }
+
+      if (payload.answer) {
+        await pc.setRemoteDescription(payload.answer);
+      }
+
+      if (payload.candidate) {
+        await pc.addIceCandidate(payload.candidate);
+      }
+    }
+
+    function setupDataChannel(channel) {
+      channel.onopen = () => {
+        document.getElementById('statusText').textContent = 'Connected - Ready';
+        if (!isHost) {
+          document.getElementById('startReceive').classList.remove('hidden');
+        }
+      };
+
+      channel.onmessage = (e) => {
+        if (typeof e.data === 'string') {
+          const meta = JSON.parse(e.data);
+          if (meta.type === 'file-meta') {
+            receiveFile(meta);
+          }
+        } else {
+          appendChunk(e.data);
+        }
+      };
+    }
+
+    let receivedChunks = [];
+    let fileMeta = null;
+
+    function receiveFile(meta) {
+      fileMeta = meta;
+      receivedChunks = [];
+      document.getElementById('guestStatus').textContent = `Receiving: ${meta.name}`;
+    }
+
+    function appendChunk(chunk) {
+      receivedChunks.push(chunk);
+      if (receivedChunks.length === fileMeta.chunks) {
+        const blob = new Blob(receivedChunks);
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = fileMeta.name;
+        a.click();
+        document.getElementById('guestStatus').textContent = 'File received';
+      }
+    }
+
+    if (isHost) {
+      document.getElementById('fileInput')?.addEventListener('change', async (e) => {
+        if (!pc) await createPeer();
+        for (const file of e.target.files) {
+          await sendFile(file);
+        }
+      });
+    }
+
+    async function sendFile(file) {
+      const chunkSize = 16384;
+      const chunks = Math.ceil(file.size / chunkSize);
+      
+      dataChannel.send(JSON.stringify({ type: 'file-meta', name: file.name, size: file.size, chunks }));
+
+      for (let i = 0; i < chunks; i++) {
+        const chunk = file.slice(i * chunkSize, (i + 1) * chunkSize);
+        dataChannel.send(await chunk.arrayBuffer());
+        await new Promise(r => setTimeout(r, 10));
+      }
+    }
+
+    if (!isHost) {
+      document.getElementById('startReceive').addEventListener('click', () => {
+        document.getElementById('guestStatus').textContent = 'Waiting for file...';
+        document.getElementById('startReceive').classList.add('hidden');
+      });
+    }
   </script>
 </body>
 </html>
