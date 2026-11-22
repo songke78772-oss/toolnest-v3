@@ -359,7 +359,9 @@ app.get('/splitter', (req, res) => res.render('splitter'));
 //安全工具
 app.get('/file-encrypt', (req, res) => res.render('file-encrypt'));
 app.get('/cipherdeck', (req, res) => res.render('cipherdeck'));
-
+app.get('/image-metadata', requireLogin, (req, res) => {
+  res.render('image-metadata');
+});
 
 app.get('/word-counter', (req, res) => res.render('word-counter'));
 app.get('/case-converter', (req, res) => {
