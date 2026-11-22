@@ -56,9 +56,11 @@
       </div>
 
       <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700">
-        Create & Enter
+        Create Room
       </button>
     </form>
+
+    <div id="resultBox" class="hidden mt-6"></div>
   </div>
 
   <script>
@@ -106,8 +108,24 @@
         return;
       }
 
-      // Creator enters directly
-      window.location.href = `/chat/room/${result.roomId}?creator=1&name=${encodeURIComponent(data.creatorName)}`;
+      // 显示邀请链接
+      const resultBox = document.getElementById('resultBox');
+      let html = '<div class="p-4 bg-green-50 rounded text-sm">';
+      html += '<p class="font-medium mb-2">Room created! Send these links to others:</p>';
+      result.inviteLinks.forEach(link => {
+        const fullUrl = window.location.origin + '/chat' + link.url;
+        html += `<div class="mb-2 break-all"><a href="${fullUrl}" class="text-blue-600 underline" target="_blank">${fullUrl}</a></div>`;
+      });
+      html += '</div>';
+      html += `<button onclick="enterRoom()" class="mt-4 w-full bg-green-600 text-white py-2 rounded hover:bg-green-700">Enter Room</button>`;
+
+      resultBox.innerHTML = html;
+      resultBox.classList.remove('hidden');
+      document.getElementById('createForm').classList.add('hidden');
+
+      window.enterRoom = function() {
+        window.location.href = `/chat/room/${result.roomId}?creator=1&name=${encodeURIComponent(data.creatorName)}`;
+      };
     });
   </script>
 </body>
