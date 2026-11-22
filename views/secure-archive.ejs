@@ -16,9 +16,8 @@
 
   <div class="max-w-4xl mx-auto px-4 py-8">
     <h1 class="text-3xl font-bold mb-2">Secure Archive</h1>
-    <p class="text-gray-600 mb-8">Encrypt any file locally in your browser. Nothing is uploaded. You get an encrypted file, a self-contained decryptor, and key file(s).</p>
+    <p class="text-gray-600 mb-8">Encrypt any file locally in your browser. Nothing is uploaded. You get an encrypted file, a self-contained decryptor, and key shares.</p>
 
-    <!-- Encrypt Card -->
     <div class="bg-white rounded-xl shadow-lg p-6 mb-6">
       <h2 class="font-bold text-lg mb-4">Encrypt a File</h2>
 
@@ -27,10 +26,16 @@
         <input type="file" id="fileInput" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
       </div>
 
-      <div class="mb-4">
-        <label class="block text-sm font-medium text-gray-700 mb-2">Number of key shares (1–5)</label>
-        <input type="number" id="keyCount" value="1" min="1" max="5" class="border rounded px-3 py-2 w-24">
-        <p class="text-xs text-gray-500 mt-1">Each share is a separate .key file. You need all of them to decrypt.</p>
+      <div class="grid grid-cols-2 gap-4 mb-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Total key shares</label>
+          <input type="number" id="keyCount" value="3" min="2" max="5" class="border rounded px-3 py-2 w-full">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Minimum required</label>
+          <input type="number" id="threshold" value="2" min="2" max="5" class="border rounded px-3 py-2 w-full">
+          <p class="text-xs text-gray-500 mt-1">Any this many shares can decrypt</p>
+        </div>
       </div>
 
       <button id="encryptBtn" class="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 disabled:opacity-50" disabled>
@@ -40,44 +45,118 @@
       <div id="status" class="mt-4 text-sm text-gray-600"></div>
     </div>
 
-    <!-- How to Use -->
     <div class="bg-white rounded-xl shadow-lg p-6">
       <div class="border-b mb-4">
         <span class="text-blue-600 font-medium border-b-2 border-blue-600 pb-2">How to Use</span>
       </div>
       <div class="space-y-4 text-sm text-gray-600">
         <div>
-          <strong class="text-gray-900">1. Select a file and set key shares</strong><br>
-          Choose how many separate key files you want. You will need all of them to decrypt later.
+          <strong class="text-gray-900">1. Set total shares and minimum required</strong><br>
+          Example: 3 total shares, minimum 2. Any 2 of the 3 key files can decrypt.
         </div>
         <div>
           <strong class="text-gray-900">2. Encrypt & Download</strong><br>
-          The browser generates a random 256-bit key, encrypts the file locally, then downloads the encrypted file (.enc), a self-contained decryptor (decrypt.html), and key file(s) (.key).
+          Downloads the encrypted file (.enc), a self-contained decryptor (decrypt.html), and the key share files (.key).
         </div>
         <div>
           <strong class="text-gray-900">3. Store them separately</strong><br>
-          Keep the .enc file and decrypt.html together (or publicly). Store the .key file(s) in a different place.
+          Keep .enc + decrypt.html together. Distribute the .key files to different people or places.
         </div>
         <div>
           <strong class="text-gray-900">4. Decrypt later</strong><br>
-          Open decrypt.html in any browser (works offline). Upload the .enc file and all .key files. The original file is restored locally.
+          Open decrypt.html, upload the .enc file and at least the minimum number of .key files.
         </div>
         <div class="text-red-600">
           <strong class="text-red-700">5. Important</strong><br>
-          If you lose the key file(s), the encrypted file cannot be recovered. There is no password reset or recovery.
+          If fewer than the minimum number of key shares are available, the file cannot be recovered.
         </div>
       </div>
     </div>
   </div>
 
   <script>
+  // Shamir's Secret Sharing over GF(256)
+  const PRIME = 257; // Use 256 for bytes, but we work in GF(256) with irreducible polynomial
+
+  function gfMul(a, b) {
+    let p = 0;
+    for (let i = 0; i < 8; i++) {
+      if (b & 1) p ^= a;
+      const hi = a & 0x80;
+      a = (a << 1) & 0xff;
+      if (hi) a ^= 0x1b; // AES polynomial
+      b >>= 1;
+    }
+    return p;
+  }
+
+  function gfDiv(a, b) {
+    if (b === 0) throw new Error('Division by zero');
+    // Find inverse of b
+    let inv = 1;
+    for (let i = 1; i < 256; i++) {
+      if (gfMul(b, i) === 1) { inv = i; break; }
+    }
+    return gfMul(a, inv);
+  }
+
+  function shamirSplit(secret, n, k) {
+    // secret is Uint8Array(32), n shares, threshold k
+    const shares = Array.from({ length: n }, () => new Uint8Array(33)); // [x, ...32 bytes]
+    for (let byteIdx = 0; byteIdx < 32; byteIdx++) {
+      const coeffs = [secret[byteIdx]];
+      for (let i = 1; i < k; i++) {
+        coeffs.push(crypto.getRandomValues(new Uint8Array(1))[0] || 1);
+      }
+      for (let x = 1; x <= n; x++) {
+        let y = 0;
+        for (let i = k - 1; i >= 0; i--) {
+          y = gfMul(y, x) ^ coeffs[i];
+        }
+        shares[x - 1][0] = x;
+        shares[x - 1][byteIdx + 1] = y;
+      }
+    }
+    return shares;
+  }
+
+  function shamirCombine(shares) {
+    // shares: array of Uint8Array(33) where [0]=x, [1..32]=y
+    const k = shares.length;
+    const secret = new Uint8Array(32);
+    for (let byteIdx = 0; byteIdx < 32; byteIdx++) {
+      let result = 0;
+      for (let i = 0; i < k; i++) {
+        const xi = shares[i][0];
+        const yi = shares[i][byteIdx + 1];
+        let num = 1, den = 1;
+        for (let j = 0; j < k; j++) {
+          if (i === j) continue;
+          const xj = shares[j][0];
+          num = gfMul(num, xj);
+          den = gfMul(den, xi ^ xj);
+        }
+        result ^= gfMul(yi, gfDiv(num, den));
+      }
+      secret[byteIdx] = result;
+    }
+    return secret;
+  }
+
   const fileInput = document.getElementById('fileInput');
   const keyCountInput = document.getElementById('keyCount');
+  const thresholdInput = document.getElementById('threshold');
   const encryptBtn = document.getElementById('encryptBtn');
   const statusDiv = document.getElementById('status');
 
   fileInput.addEventListener('change', () => {
     encryptBtn.disabled = !fileInput.files.length;
+  });
+
+  keyCountInput.addEventListener('change', () => {
+    const n = parseInt(keyCountInput.value) || 2;
+    thresholdInput.max = n;
+    if (parseInt(thresholdInput.value) > n) thresholdInput.value = n;
   });
 
   function downloadBlob(blob, filename) {
@@ -92,7 +171,9 @@
     const file = fileInput.files[0];
     if (!file) return;
 
-    const keyCount = Math.min(5, Math.max(1, parseInt(keyCountInput.value) || 1));
+    const n = Math.min(5, Math.max(2, parseInt(keyCountInput.value) || 3));
+    const k = Math.min(n, Math.max(2, parseInt(thresholdInput.value) || 2));
+
     statusDiv.textContent = 'Encrypting...';
     encryptBtn.disabled = true;
 
@@ -105,43 +186,30 @@
 
       const iv = crypto.getRandomValues(new Uint8Array(12));
       const fileBuffer = await file.arrayBuffer();
-
       const encrypted = await crypto.subtle.encrypt(
         { name: 'AES-GCM', iv },
         key,
         fileBuffer
       );
 
-      const rawKey = await crypto.subtle.exportKey('raw', key);
-
-      // XOR key splitting
-      const shares = [];
-      const keyBytes = new Uint8Array(rawKey);
-      let remaining = new Uint8Array(keyBytes);
-
-      for (let i = 0; i < keyCount - 1; i++) {
-        const share = crypto.getRandomValues(new Uint8Array(32));
-        shares.push(share);
-        for (let j = 0; j < 32; j++) remaining[j] ^= share[j];
-      }
-      shares.push(remaining);
+      const rawKey = new Uint8Array(await crypto.subtle.exportKey('raw', key));
+      const shares = shamirSplit(rawKey, n, k);
 
       const baseName = file.name.replace(/\.[^/.]+$/, '') || 'file';
 
       // Download encrypted file
-      const encBlob = new Blob([iv, new Uint8Array(encrypted)]);
-      downloadBlob(encBlob, baseName + '.enc');
+      downloadBlob(new Blob([iv, new Uint8Array(encrypted)]), baseName + '.enc');
 
-      // Download key files
+      // Download key shares
       shares.forEach((share, idx) => {
         downloadBlob(new Blob([share]), baseName + '-key-' + (idx + 1) + '.key');
       });
 
-      // Download self-contained decryptor
-      const decryptHtml = generateDecryptHtml(file.name);
+      // Download decryptor
+      const decryptHtml = generateDecryptHtml(file.name, k);
       downloadBlob(new Blob([decryptHtml], { type: 'text/html' }), 'decrypt.html');
 
-      statusDiv.textContent = 'Done. Downloaded ' + baseName + '.enc, decrypt.html, and ' + keyCount + ' key file(s).';
+      statusDiv.textContent = `Done. Total ${n} shares, any ${k} can decrypt.`;
     } catch (err) {
       console.error(err);
       statusDiv.textContent = 'Encryption failed: ' + err.message;
@@ -150,7 +218,7 @@
     }
   });
 
-  function generateDecryptHtml(originalName) {
+  function generateDecryptHtml(originalName, threshold) {
     return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -165,27 +233,69 @@ button { background: #2563eb; color: white; border: none; border-radius: 4px; cu
 </head>
 <body>
 <h2>Decrypt File</h2>
-<p>Select the encrypted file (.enc) and all key files (.key).</p>
+<p>Upload the .enc file and at least ${threshold} key files.</p>
 <input type="file" id="encFile" accept=".enc">
 <input type="file" id="keyFiles" accept=".key" multiple>
 <button id="decryptBtn">Decrypt</button>
 <div id="status"></div>
 <script>
+function gfMul(a, b) {
+  let p = 0;
+  for (let i = 0; i < 8; i++) {
+    if (b & 1) p ^= a;
+    const hi = a & 0x80;
+    a = (a << 1) & 0xff;
+    if (hi) a ^= 0x1b;
+    b >>= 1;
+  }
+  return p;
+}
+function gfDiv(a, b) {
+  let inv = 1;
+  for (let i = 1; i < 256; i++) {
+    if (gfMul(b, i) === 1) { inv = i; break; }
+  }
+  return gfMul(a, inv);
+}
+function shamirCombine(shares) {
+  const k = shares.length;
+  const secret = new Uint8Array(32);
+  for (let byteIdx = 0; byteIdx < 32; byteIdx++) {
+    let result = 0;
+    for (let i = 0; i < k; i++) {
+      const xi = shares[i][0];
+      const yi = shares[i][byteIdx + 1];
+      let num = 1, den = 1;
+      for (let j = 0; j < k; j++) {
+        if (i === j) continue;
+        const xj = shares[j][0];
+        num = gfMul(num, xj);
+        den = gfMul(den, xi ^ xj);
+      }
+      result ^= gfMul(yi, gfDiv(num, den));
+    }
+    secret[byteIdx] = result;
+  }
+  return secret;
+}
 document.getElementById('decryptBtn').onclick = async () => {
   const status = document.getElementById('status');
   const encFile = document.getElementById('encFile').files[0];
   const keyFiles = document.getElementById('keyFiles').files;
-  if (!encFile || keyFiles.length === 0) { status.textContent = 'Please select both files.'; return; }
+  if (!encFile || keyFiles.length < ${threshold}) {
+    status.textContent = 'Need at least ${threshold} key files.';
+    return;
+  }
   status.textContent = 'Decrypting...';
   try {
     const encBuf = await encFile.arrayBuffer();
     const iv = new Uint8Array(encBuf.slice(0, 12));
     const ciphertext = encBuf.slice(12);
-    let keyBytes = new Uint8Array(32);
+    const shares = [];
     for (const kf of keyFiles) {
-      const share = new Uint8Array(await kf.arrayBuffer());
-      for (let i = 0; i < 32; i++) keyBytes[i] ^= share[i];
+      shares.push(new Uint8Array(await kf.arrayBuffer()));
     }
+    const keyBytes = shamirCombine(shares.slice(0, ${threshold}));
     const key = await crypto.subtle.importKey('raw', keyBytes, 'AES-GCM', false, ['decrypt']);
     const decrypted = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, ciphertext);
     const a = document.createElement('a');
@@ -194,7 +304,7 @@ document.getElementById('decryptBtn').onclick = async () => {
     a.click();
     status.textContent = 'Decrypted successfully.';
   } catch (e) {
-    status.textContent = 'Decryption failed. Make sure you have all key files.';
+    status.textContent = 'Decryption failed. Check that you have enough valid key files.';
   }
 };
 <\/script>
