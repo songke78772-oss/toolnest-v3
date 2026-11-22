@@ -56,16 +56,25 @@
     
     let pc = null;
     let dataChannel = null;
+    let receivingFile = null;
+    let receivedChunks = [];
 
     function copyLink() {
-      document.getElementById('inviteLink').select();
+      const input = document.getElementById('inviteLink');
+      input.select();
       document.execCommand('copy');
       alert('Copied');
     }
 
+    function log(msg) {
+      console.log(msg);
+      const status = document.getElementById('statusText');
+      if (status) status.textContent = msg;
+    }
+
     ws.onopen = () => {
       ws.send(JSON.stringify({ type: 'join', roomId }));
-      document.getElementById('statusText').textContent = 'Connected';
+      log('Connected');
     };
 
     ws.onmessage = async (event) => {
@@ -73,7 +82,8 @@
       
       if (data.type === 'peer-joined' && isHost) {
         document.getElementById('uploadSection').classList.remove('hidden');
-        document.getElementById('statusText').textContent = 'Guest joined - Ready to send';
+        log('Guest joined - Ready to send');
+        await createPeerConnection();
       }
 
       if (data.type === 'signal') {
@@ -81,11 +91,13 @@
       }
     };
 
-    async function createPeer() {
-      pc = new RTCPeerConnection({ iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] });
-      
+    async function createPeerConnection() {
+      pc = new RTCPeerConnection({ 
+        iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] 
+      });
+
       if (isHost) {
-        dataChannel = pc.createDataChannel('file');
+        dataChannel = pc.createDataChannel('fileTransfer');
         setupDataChannel(dataChannel);
       } else {
         pc.ondatachannel = (e) => {
@@ -96,82 +108,101 @@
 
       pc.onicecandidate = (e) => {
         if (e.candidate) {
-          ws.send(JSON.stringify({ type: 'signal', roomId, payload: { candidate: e.candidate } }));
+          ws.send(JSON.stringify({ 
+            type: 'signal', 
+            roomId, 
+            payload: { candidate: e.candidate } 
+          }));
         }
       };
 
       if (isHost) {
         const offer = await pc.createOffer();
         await pc.setLocalDescription(offer);
-        ws.send(JSON.stringify({ type: 'signal', roomId, payload: { offer } }));
+        ws.send(JSON.stringify({ 
+          type: 'signal', 
+          roomId, 
+          payload: { offer } 
+        }));
       }
     }
 
     async function handleSignal(payload) {
-      if (!pc) await createPeer();
-
-      if (payload.offer) {
-        await pc.setRemoteDescription(payload.offer);
-        const answer = await pc.createAnswer();
-        await pc.setLocalDescription(answer);
-        ws.send(JSON.stringify({ type: 'signal', roomId, payload: { answer } }));
+      if (!pc && !isHost) {
+        await createPeerConnection();
       }
+      if (!pc) return;
 
-      if (payload.answer) {
-        await pc.setRemoteDescription(payload.answer);
-      }
+      try {
+        if (payload.offer) {
+          await pc.setRemoteDescription(new RTCSessionDescription(payload.offer));
+          const answer = await pc.createAnswer();
+          await pc.setLocalDescription(answer);
+          ws.send(JSON.stringify({ 
+            type: 'signal', 
+            roomId, 
+            payload: { answer } 
+          }));
+        }
 
-      if (payload.candidate) {
-        await pc.addIceCandidate(payload.candidate);
+        if (payload.answer) {
+          await pc.setRemoteDescription(new RTCSessionDescription(payload.answer));
+        }
+
+        if (payload.candidate) {
+          await pc.addIceCandidate(new RTCIceCandidate(payload.candidate));
+        }
+      } catch (err) {
+        console.error('Signal error:', err);
       }
     }
 
     function setupDataChannel(channel) {
+      channel.binaryType = 'arraybuffer';
+      
       channel.onopen = () => {
-        document.getElementById('statusText').textContent = 'Connected - Ready';
+        log('P2P Connected');
         if (!isHost) {
           document.getElementById('startReceive').classList.remove('hidden');
+          document.getElementById('guestStatus').textContent = 'Connected. Waiting for file...';
         }
       };
 
       channel.onmessage = (e) => {
         if (typeof e.data === 'string') {
-          const meta = JSON.parse(e.data);
-          if (meta.type === 'file-meta') {
-            receiveFile(meta);
+          const msg = JSON.parse(e.data);
+          if (msg.type === 'file-meta') {
+            receivingFile = msg;
+            receivedChunks = [];
+            log(`Receiving: ${msg.name}`);
           }
         } else {
-          appendChunk(e.data);
+          receivedChunks.push(e.data);
+          if (receivingFile && receivedChunks.length >= receivingFile.chunks) {
+            const blob = new Blob(receivedChunks);
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = receivingFile.name;
+            a.click();
+            URL.revokeObjectURL(url);
+            log('File received');
+            receivingFile = null;
+            receivedChunks = [];
+          }
         }
       };
     }
 
-    let receivedChunks = [];
-    let fileMeta = null;
-
-    function receiveFile(meta) {
-      fileMeta = meta;
-      receivedChunks = [];
-      document.getElementById('guestStatus').textContent = `Receiving: ${meta.name}`;
-    }
-
-    function appendChunk(chunk) {
-      receivedChunks.push(chunk);
-      if (receivedChunks.length === fileMeta.chunks) {
-        const blob = new Blob(receivedChunks);
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = fileMeta.name;
-        a.click();
-        document.getElementById('guestStatus').textContent = 'File received';
-      }
-    }
-
     if (isHost) {
-      document.getElementById('fileInput')?.addEventListener('change', async (e) => {
-        if (!pc) await createPeer();
-        for (const file of e.target.files) {
+      document.getElementById('fileInput').addEventListener('change', async (e) => {
+        const files = Array.from(e.target.files);
+        if (!dataChannel || dataChannel.readyState !== 'open') {
+          alert('Connection not ready. Please wait.');
+          return;
+        }
+        
+        for (const file of files) {
           await sendFile(file);
         }
       });
@@ -181,18 +212,36 @@
       const chunkSize = 16384;
       const chunks = Math.ceil(file.size / chunkSize);
       
-      dataChannel.send(JSON.stringify({ type: 'file-meta', name: file.name, size: file.size, chunks }));
+      const list = document.getElementById('fileList');
+      const div = document.createElement('div');
+      div.className = 'bg-gray-50 p-3 rounded text-sm';
+      div.textContent = `Sending: ${file.name}`;
+      list.appendChild(div);
+
+      dataChannel.send(JSON.stringify({
+        type: 'file-meta',
+        name: file.name,
+        size: file.size,
+        chunks: chunks
+      }));
 
       for (let i = 0; i < chunks; i++) {
-        const chunk = file.slice(i * chunkSize, (i + 1) * chunkSize);
-        dataChannel.send(await chunk.arrayBuffer());
-        await new Promise(r => setTimeout(r, 10));
+        const start = i * chunkSize;
+        const end = Math.min(start + chunkSize, file.size);
+        const chunk = file.slice(start, end);
+        const buffer = await chunk.arrayBuffer();
+        dataChannel.send(buffer);
+        
+        // 小延迟避免阻塞
+        await new Promise(r => setTimeout(r, 5));
       }
+      
+      div.textContent = `Sent: ${file.name}`;
     }
 
     if (!isHost) {
       document.getElementById('startReceive').addEventListener('click', () => {
-        document.getElementById('guestStatus').textContent = 'Waiting for file...';
+        document.getElementById('guestStatus').textContent = 'Ready to receive';
         document.getElementById('startReceive').classList.add('hidden');
       });
     }
