@@ -94,7 +94,7 @@
         password: form.get('password') || ''
       };
 
-      const res = await fetch('/api/create-room', {
+      const res = await fetch('/chat/api/create-room', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data)
