@@ -34,7 +34,7 @@
       <% } else { %>
         <!-- Receiver View -->
         <div class="text-center py-8">
-          <p class="text-gray-600 mb-4">Waiting for files from the host...</p>
+          <p class="text-gray-600 mb-4" id="status">Waiting for files from the host...</p>
           <div class="text-4xl">📥</div>
         </div>
       <% } %>
@@ -51,6 +51,9 @@
   </div>
 
   <script>
+    const roomId = '<%= roomId %>';
+    const isHost = <%= isHost ? 'true' : 'false' %>;
+
     function copyLink() {
       const input = document.getElementById('inviteLink');
       if (input) {
@@ -60,18 +63,56 @@
       }
     }
 
+    // Simple signaling using the server (basic version)
+    // For full P2P you need WebSocket, this is a simplified demo
     <% if (isHost) { %>
-    document.getElementById('fileInput').addEventListener('change', (e) => {
+    document.getElementById('fileInput').addEventListener('change', async (e) => {
       const files = e.target.files;
       const list = document.getElementById('fileList');
       list.innerHTML = '';
+      
       for (let file of files) {
         const div = document.createElement('div');
         div.className = 'flex justify-between items-center bg-gray-50 p-3 rounded';
         div.innerHTML = `<span>${file.name}</span><span class="text-sm text-gray-500">${(file.size/1024/1024).toFixed(2)} MB</span>`;
         list.appendChild(div);
+
+        // Upload file to temporary storage on server (simplified for now)
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('roomId', roomId);
+
+        await fetch('/file-transfer/upload', {
+          method: 'POST',
+          body: formData
+        });
       }
+      alert('Files ready for download');
     });
+    <% } else { %>
+    // Receiver: poll for files
+    async function checkFiles() {
+      try {
+        const res = await fetch(`/file-transfer/files/${roomId}`);
+        const data = await res.json();
+        if (data.files && data.files.length > 0) {
+          document.getElementById('status').textContent = 'Files received:';
+          const list = document.getElementById('fileList');
+          list.innerHTML = '';
+          data.files.forEach(file => {
+            const div = document.createElement('div');
+            div.className = 'flex justify-between items-center bg-green-50 p-3 rounded';
+            div.innerHTML = `
+              <span>${file.name}</span>
+              <a href="/file-transfer/download/${roomId}/${file.name}" class="bg-green-600 text-white px-3 py-1 rounded text-sm">Download</a>
+            `;
+            list.appendChild(div);
+          });
+        }
+      } catch (e) {}
+    }
+    setInterval(checkFiles, 2000);
+    checkFiles();
     <% } %>
   </script>
 </body>
