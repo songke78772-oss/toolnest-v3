@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Join Chat Room - ToolNest</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center p-4">
+  <div class="bg-white rounded-xl shadow-lg p-8 w-full max-w-md">
+    <h1 class="text-2xl font-bold text-center mb-6">Join Chat Room</h1>
+
+    <div id="passwordSection" class="hidden">
+      <p class="text-sm text-gray-600 mb-4 text-center">This room requires a password</p>
+      <form id="passwordForm" class="space-y-4">
+        <input type="text" id="passwordInput" maxlength="5" class="w-full border rounded px-3 py-2" placeholder="Enter password" required>
+        <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700">
+          Enter Room
+        </button>
+      </form>
+      <p id="errorMsg" class="text-red-500 text-sm text-center mt-3 hidden"></p>
+    </div>
+
+    <div id="loading" class="text-center text-gray-500">
+      Checking invitation...
+    </div>
+  </div>
+
+  <script>
+    const pathParts = window.location.pathname.split('/');
+    const roomId = pathParts[2];
+    const token = pathParts[3];
+
+    async function tryJoin(password = '') {
+      const res = await fetch(`/api/join/${roomId}/${token}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password })
+      });
+      return res.json();
+    }
+
+    async function init() {
+      const result = await tryJoin();
+
+      if (result.error) {
+        if (result.error.includes('password') || result.error.includes('Password')) {
+          document.getElementById('loading').classList.add('hidden');
+          document.getElementById('passwordSection').classList.remove('hidden');
+          return;
+        }
+        alert(result.error);
+        window.location.href = '/';
+        return;
+      }
+
+      // Success, go to room
+      window.location.href = `/room/${roomId}`;
+    }
+
+    document.getElementById('passwordForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const password = document.getElementById('passwordInput').value;
+      const result = await tryJoin(password);
+
+      if (result.error) {
+        const err = document.getElementById('errorMsg');
+        err.textContent = result.error;
+        err.classList.remove('hidden');
+        return;
+      }
+
+      window.location.href = `/room/${roomId}`;
+    });
+
+    init();
+  </script>
+</body>
+</html>
