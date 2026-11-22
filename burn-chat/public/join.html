@@ -55,7 +55,7 @@
       }
 
       // Success, go to room
-      window.location.href = `/room/${roomId}`;
+      window.location.href = `/chat/room/${roomId}`;
     }
 
     document.getElementById('passwordForm').addEventListener('submit', async (e) => {
@@ -70,7 +70,7 @@
         return;
       }
 
-      window.location.href = `/room/${roomId}`;
+      window.location.href = `/chat/room/${roomId}`;
     });
 
     init();
