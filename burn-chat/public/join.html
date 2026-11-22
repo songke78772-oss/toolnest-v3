@@ -28,8 +28,8 @@
 
   <script>
     const pathParts = window.location.pathname.split('/');
-    const roomId = pathParts[2];
-    const token = pathParts[3];
+    const roomId = pathParts[3];
+    const token = pathParts[4];
 
     async function tryJoin(password = '') {
       const res = await fetch(`/chat/api/join/${roomId}/${token}`, {
