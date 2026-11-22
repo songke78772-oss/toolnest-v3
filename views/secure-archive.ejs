@@ -1,164 +1,164 @@
-<%- include('header') %>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Secure Archive - ToolNest</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50">
+  <nav class="bg-white shadow-sm border-b">
+    <div class="max-w-6xl mx-auto px-4 py-3 flex justify-between items-center">
+      <a href="/" class="text-2xl font-bold text-blue-600">ToolNest</a>
+      <a href="/" class="text-gray-600 hover:text-blue-600">← Back</a>
+    </div>
+  </nav>
 
-<div class="max-w-4xl mx-auto px-4 py-8">
-  <div class="mb-6">
-    <a href="/" class="text-blue-600 hover:underline text-sm">← Back to Tools</a>
+  <div class="max-w-4xl mx-auto px-4 py-8">
+    <h1 class="text-3xl font-bold mb-2">Secure Archive</h1>
+    <p class="text-gray-600 mb-8">Encrypt any file locally in your browser. Nothing is uploaded. You get an encrypted file, a self-contained decryptor, and key file(s).</p>
+
+    <!-- Encrypt Card -->
+    <div class="bg-white rounded-xl shadow-lg p-6 mb-6">
+      <h2 class="font-bold text-lg mb-4">Encrypt a File</h2>
+
+      <div class="mb-4">
+        <label class="block text-sm font-medium text-gray-700 mb-2">Select file</label>
+        <input type="file" id="fileInput" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+      </div>
+
+      <div class="mb-4">
+        <label class="block text-sm font-medium text-gray-700 mb-2">Number of key shares (1–5)</label>
+        <input type="number" id="keyCount" value="1" min="1" max="5" class="border rounded px-3 py-2 w-24">
+        <p class="text-xs text-gray-500 mt-1">Each share is a separate .key file. You need all of them to decrypt.</p>
+      </div>
+
+      <button id="encryptBtn" class="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 disabled:opacity-50" disabled>
+        Encrypt & Download
+      </button>
+
+      <div id="status" class="mt-4 text-sm text-gray-600"></div>
+    </div>
+
+    <!-- How to Use -->
+    <div class="bg-white rounded-xl shadow-lg p-6">
+      <div class="border-b mb-4">
+        <span class="text-blue-600 font-medium border-b-2 border-blue-600 pb-2">How to Use</span>
+      </div>
+      <div class="space-y-4 text-sm text-gray-600">
+        <div>
+          <strong class="text-gray-900">1. Select a file and set key shares</strong><br>
+          Choose how many separate key files you want. You will need all of them to decrypt later.
+        </div>
+        <div>
+          <strong class="text-gray-900">2. Encrypt & Download</strong><br>
+          The browser generates a random 256-bit key, encrypts the file locally, then downloads the encrypted file (.enc), a self-contained decryptor (decrypt.html), and key file(s) (.key).
+        </div>
+        <div>
+          <strong class="text-gray-900">3. Store them separately</strong><br>
+          Keep the .enc file and decrypt.html together (or publicly). Store the .key file(s) in a different place.
+        </div>
+        <div>
+          <strong class="text-gray-900">4. Decrypt later</strong><br>
+          Open decrypt.html in any browser (works offline). Upload the .enc file and all .key files. The original file is restored locally.
+        </div>
+        <div class="text-red-600">
+          <strong class="text-red-700">5. Important</strong><br>
+          If you lose the key file(s), the encrypted file cannot be recovered. There is no password reset or recovery.
+        </div>
+      </div>
+    </div>
   </div>
 
-  <h1 class="text-3xl font-bold mb-2">File Encryption</h1>
-  <p class="text-gray-600 mb-8">Encrypt any file locally in your browser. Nothing is uploaded. You get an encrypted file, a self-contained decryptor, and key file(s).</p>
+  <script>
+  const fileInput = document.getElementById('fileInput');
+  const keyCountInput = document.getElementById('keyCount');
+  const encryptBtn = document.getElementById('encryptBtn');
+  const statusDiv = document.getElementById('status');
 
-  <!-- Encrypt Card -->
-  <div class="bg-white rounded-xl shadow-lg p-6 mb-6">
-    <h2 class="font-bold text-lg mb-4">Encrypt a File</h2>
+  fileInput.addEventListener('change', () => {
+    encryptBtn.disabled = !fileInput.files.length;
+  });
 
-    <div class="mb-4">
-      <label class="block text-sm font-medium text-gray-700 mb-2">Select file</label>
-      <input type="file" id="fileInput" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
-    </div>
-
-    <div class="mb-4">
-      <label class="block text-sm font-medium text-gray-700 mb-2">Number of key shares (1–5)</label>
-      <input type="number" id="keyCount" value="1" min="1" max="5" class="border rounded px-3 py-2 w-24">
-      <p class="text-xs text-gray-500 mt-1">Each share is a separate .key file. You need all of them to decrypt (threshold = total).</p>
-    </div>
-
-    <button id="encryptBtn" class="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 disabled:opacity-50" disabled>
-      Encrypt & Download
-    </button>
-
-    <div id="status" class="mt-4 text-sm text-gray-600"></div>
-  </div>
-
-  <!-- How to Use -->
-  <div class="bg-white rounded-xl shadow-lg p-6">
-    <div class="border-b mb-4">
-      <span class="text-blue-600 font-medium border-b-2 border-blue-600 pb-2">How to Use</span>
-    </div>
-    <div class="space-y-4 text-sm text-gray-600">
-      <div>
-        <strong class="text-gray-900">1. Select a file and set key shares</strong><br>
-        Choose how many separate key files you want. You will need all of them to decrypt later.
-      </div>
-      <div>
-        <strong class="text-gray-900">2. Encrypt & Download</strong><br>
-        The browser generates a random 256-bit key, encrypts the file locally, then downloads three things:
-        the encrypted file (.enc), a self-contained decryptor (decrypt.html), and key file(s) (.key).
-      </div>
-      <div>
-        <strong class="text-gray-900">3. Store them separately</strong><br>
-        Keep the .enc file and decrypt.html together (or publicly). Store the .key file(s) in a different place. Anyone who has both can decrypt.
-      </div>
-      <div>
-        <strong class="text-gray-900">4. Decrypt later</strong><br>
-        Open decrypt.html in any browser (works offline). Upload the .enc file and all .key files. The original file is restored locally.
-      </div>
-      <div class="text-red-600">
-        <strong class="text-red-700">5. Important</strong><br>
-        If you lose the key file(s), the encrypted file cannot be recovered. There is no password reset or recovery.
-      </div>
-    </div>
-  </div>
-</div>
-
-<script>
-const fileInput = document.getElementById('fileInput');
-const keyCountInput = document.getElementById('keyCount');
-const encryptBtn = document.getElementById('encryptBtn');
-const statusDiv = document.getElementById('status');
-
-fileInput.addEventListener('change', () => {
-  encryptBtn.disabled = !fileInput.files.length;
-});
-
-function downloadBlob(blob, filename) {
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = filename;
-  a.click();
-  URL.revokeObjectURL(a.href);
-}
-
-function arrayBufferToBase64(buffer) {
-  let binary = '';
-  const bytes = new Uint8Array(buffer);
-  for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
-  return btoa(binary);
-}
-
-encryptBtn.addEventListener('click', async () => {
-  const file = fileInput.files[0];
-  if (!file) return;
-
-  const keyCount = Math.min(5, Math.max(1, parseInt(keyCountInput.value) || 1));
-  statusDiv.textContent = 'Encrypting...';
-  encryptBtn.disabled = true;
-
-  try {
-    // Generate random AES-256-GCM key
-    const key = await crypto.subtle.generateKey(
-      { name: 'AES-GCM', length: 256 },
-      true,
-      ['encrypt', 'decrypt']
-    );
-
-    const iv = crypto.getRandomValues(new Uint8Array(12));
-    const fileBuffer = await file.arrayBuffer();
-
-    const encrypted = await crypto.subtle.encrypt(
-      { name: 'AES-GCM', iv },
-      key,
-      fileBuffer
-    );
-
-    // Export raw key
-    const rawKey = await crypto.subtle.exportKey('raw', key);
-
-    // Simple key splitting: XOR shares (for threshold = total)
-    const shares = [];
-    const keyBytes = new Uint8Array(rawKey);
-    let remaining = new Uint8Array(keyBytes);
-
-    for (let i = 0; i < keyCount - 1; i++) {
-      const share = crypto.getRandomValues(new Uint8Array(32));
-      shares.push(share);
-      for (let j = 0; j < 32; j++) remaining[j] ^= share[j];
-    }
-    shares.push(remaining);
-
-    // Download encrypted file (IV + ciphertext)
-    const encBlob = new Blob([iv, new Uint8Array(encrypted)]);
-    const baseName = file.name.replace(/\.[^/.]+$/, '') || 'file';
-    downloadBlob(encBlob, baseName + '.enc');
-
-    // Download key files
-    shares.forEach((share, idx) => {
-      const keyBlob = new Blob([share]);
-      downloadBlob(keyBlob, `${baseName}-key-${idx + 1}.key`);
-    });
-
-    // Generate self-contained decrypt.html
-    const decryptHtml = generateDecryptHtml(baseName);
-    downloadBlob(new Blob([decryptHtml], { type: 'text/html' }), 'decrypt.html');
-
-    statusDiv.textContent = `Done. Downloaded ${baseName}.enc, decrypt.html, and ${keyCount} key file(s).`;
-  } catch (err) {
-    console.error(err);
-    statusDiv.textContent = 'Encryption failed: ' + err.message;
-  } finally {
-    encryptBtn.disabled = false;
+  function downloadBlob(blob, filename) {
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(a.href);
   }
-});
 
-function generateDecryptHtml(originalName) {
-  return `<!DOCTYPE html>
+  encryptBtn.addEventListener('click', async () => {
+    const file = fileInput.files[0];
+    if (!file) return;
+
+    const keyCount = Math.min(5, Math.max(1, parseInt(keyCountInput.value) || 1));
+    statusDiv.textContent = 'Encrypting...';
+    encryptBtn.disabled = true;
+
+    try {
+      const key = await crypto.subtle.generateKey(
+        { name: 'AES-GCM', length: 256 },
+        true,
+        ['encrypt', 'decrypt']
+      );
+
+      const iv = crypto.getRandomValues(new Uint8Array(12));
+      const fileBuffer = await file.arrayBuffer();
+
+      const encrypted = await crypto.subtle.encrypt(
+        { name: 'AES-GCM', iv },
+        key,
+        fileBuffer
+      );
+
+      const rawKey = await crypto.subtle.exportKey('raw', key);
+
+      // XOR key splitting
+      const shares = [];
+      const keyBytes = new Uint8Array(rawKey);
+      let remaining = new Uint8Array(keyBytes);
+
+      for (let i = 0; i < keyCount - 1; i++) {
+        const share = crypto.getRandomValues(new Uint8Array(32));
+        shares.push(share);
+        for (let j = 0; j < 32; j++) remaining[j] ^= share[j];
+      }
+      shares.push(remaining);
+
+      const baseName = file.name.replace(/\.[^/.]+$/, '') || 'file';
+
+      // Download encrypted file
+      const encBlob = new Blob([iv, new Uint8Array(encrypted)]);
+      downloadBlob(encBlob, baseName + '.enc');
+
+      // Download key files
+      shares.forEach((share, idx) => {
+        downloadBlob(new Blob([share]), baseName + '-key-' + (idx + 1) + '.key');
+      });
+
+      // Download self-contained decryptor
+      const decryptHtml = generateDecryptHtml(file.name);
+      downloadBlob(new Blob([decryptHtml], { type: 'text/html' }), 'decrypt.html');
+
+      statusDiv.textContent = 'Done. Downloaded ' + baseName + '.enc, decrypt.html, and ' + keyCount + ' key file(s).';
+    } catch (err) {
+      console.error(err);
+      statusDiv.textContent = 'Encryption failed: ' + err.message;
+    } finally {
+      encryptBtn.disabled = false;
+    }
+  });
+
+  function generateDecryptHtml(originalName) {
+    return `<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <title>Decrypt File</title>
 <style>
 body { font-family: system-ui, sans-serif; max-width: 600px; margin: 40px auto; padding: 20px; }
-input, button { margin: 8px 0; padding: 8px; }
+input, button { margin: 8px 0; padding: 8px; display: block; }
 button { background: #2563eb; color: white; border: none; border-radius: 4px; cursor: pointer; }
 #status { margin-top: 12px; color: #555; }
 </style>
@@ -166,8 +166,8 @@ button { background: #2563eb; color: white; border: none; border-radius: 4px; cu
 <body>
 <h2>Decrypt File</h2>
 <p>Select the encrypted file (.enc) and all key files (.key).</p>
-<input type="file" id="encFile" accept=".enc"><br>
-<input type="file" id="keyFiles" accept=".key" multiple><br>
+<input type="file" id="encFile" accept=".enc">
+<input type="file" id="keyFiles" accept=".key" multiple>
 <button id="decryptBtn">Decrypt</button>
 <div id="status"></div>
 <script>
@@ -176,37 +176,31 @@ document.getElementById('decryptBtn').onclick = async () => {
   const encFile = document.getElementById('encFile').files[0];
   const keyFiles = document.getElementById('keyFiles').files;
   if (!encFile || keyFiles.length === 0) { status.textContent = 'Please select both files.'; return; }
-
   status.textContent = 'Decrypting...';
   try {
     const encBuf = await encFile.arrayBuffer();
     const iv = new Uint8Array(encBuf.slice(0, 12));
     const ciphertext = encBuf.slice(12);
-
-    // Reconstruct key by XORing all shares
     let keyBytes = new Uint8Array(32);
     for (const kf of keyFiles) {
       const share = new Uint8Array(await kf.arrayBuffer());
       for (let i = 0; i < 32; i++) keyBytes[i] ^= share[i];
     }
-
     const key = await crypto.subtle.importKey('raw', keyBytes, 'AES-GCM', false, ['decrypt']);
     const decrypted = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, ciphertext);
-
-    const blob = new Blob([decrypted]);
     const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = '${originalName}';
+    a.href = URL.createObjectURL(new Blob([decrypted]));
+    a.download = ${JSON.stringify(originalName)};
     a.click();
     status.textContent = 'Decrypted successfully.';
   } catch (e) {
-    status.textContent = 'Decryption failed. Check that you have all key files.';
+    status.textContent = 'Decryption failed. Make sure you have all key files.';
   }
 };
 <\/script>
 </body>
 </html>`;
-}
-</script>
-
-<%- include('footer') %>
+  }
+  </script>
+</body>
+</html>
