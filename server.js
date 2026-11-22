@@ -286,6 +286,9 @@ app.get('/splitter', (req, res) => res.render('splitter'));
 app.get('/file-encrypt', (req, res) => res.render('file-encrypt'));
 app.get('/cipherdeck', (req, res) => res.render('cipherdeck'));
 app.get('/image-metadata', requireLogin, (req, res) => res.render('image-metadata'));
+app.get('/secure-archive', requireLogin, (req, res) => {
+  res.render('secure-archive');
+});
 
 // File Transfer
 app.get('/file-transfer', requireLogin, (req, res) => res.render('file-transfer'));
