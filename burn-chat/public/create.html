@@ -8,19 +8,17 @@
 </head>
 <body class="bg-gray-100 min-h-screen p-4">
   <div class="max-w-2xl mx-auto">
-    <!-- Back Button -->
     <a href="/" class="inline-flex items-center text-blue-600 hover:underline mb-6">
       ← Back to Tools
     </a>
 
-    <!-- Create Form -->
     <div class="bg-white rounded-xl shadow-lg p-8 mb-8">
       <h1 class="text-2xl font-bold text-center mb-6">Create Burn-After-Reading Chat</h1>
 
       <form id="createForm" class="space-y-5">
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-1">Max Participants (including you)</label>
-          <select id="maxParticipants" class="w-full border rounded px-3 py-2">
+          <select id="maxPeople" class="w-full border rounded px-3 py-2">
             <option value="2">2 people</option>
             <option value="3">3 people</option>
             <option value="5" selected>5 people</option>
@@ -30,18 +28,16 @@
 
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-1">Duration</label>
-          <select id="duration" class="w-full border rounded px-3 py-2">
-            <option value="30">30 minutes</option>
-            <option value="60">1 hour</option>
-            <option value="120" selected>2 hours</option>
-            <option value="240">4 hours</option>
-            <option value="480">8 hours</option>
+          <select id="hours" class="w-full border rounded px-3 py-2">
+            <option value="1">1 hour</option>
+            <option value="2" selected>2 hours</option>
+            <option value="5">5 hours</option>
           </select>
         </div>
 
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-1">Name Category</label>
-          <select id="nameCategory" class="w-full border rounded px-3 py-2">
+          <select id="category" class="w-full border rounded px-3 py-2">
             <option value="animals" selected>Animals</option>
             <option value="colors">Colors</option>
             <option value="fruits">Fruits</option>
@@ -51,7 +47,7 @@
 
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-1">Your Name</label>
-          <select id="myName" class="w-full border rounded px-3 py-2">
+          <select id="creatorName" class="w-full border rounded px-3 py-2">
             <option value="Lion" selected>Lion</option>
             <option value="Tiger">Tiger</option>
             <option value="Bear">Bear</option>
@@ -66,7 +62,7 @@
         </div>
 
         <div id="passwordSection" class="hidden">
-          <input type="text" id="password" maxlength="5" placeholder="Enter 5-character password" class="w-full border rounded px-3 py-2">
+          <input type="text" id="password" maxlength="5" placeholder="Enter up to 5 characters" class="w-full border rounded px-3 py-2">
         </div>
 
         <button type="submit" class="w-full bg-blue-600 text-white py-2.5 rounded hover:bg-blue-700 font-medium">
@@ -75,7 +71,6 @@
       </form>
     </div>
 
-    <!-- How to Use & Notes -->
     <div class="bg-white rounded-xl shadow p-6">
       <div class="border-b mb-4">
         <button class="tab-btn text-blue-600 border-b-2 border-blue-600 px-4 py-2 font-medium" data-tab="howto">How to Use</button>
@@ -84,22 +79,21 @@
 
       <div id="howto" class="tab-content space-y-4 text-sm text-gray-700">
         <p><strong>1. Set room options</strong><br>Choose how many people can join, how long the room lasts, and pick your display name.</p>
-        <p><strong>2. Create the room</strong><br>Click Create Room. You’ll get a one-time invite link. Share it only with people you want to join.</p>
-        <p><strong>3. Chat</strong><br>Everyone joins with the link. Messages are temporary and disappear when the room expires or is dissolved.</p>
+        <p><strong>2. Create the room</strong><br>Click Create Room. You’ll get one-time invite links. Share them only with people you want to join.</p>
+        <p><strong>3. Chat</strong><br>Everyone joins with a link. Messages disappear when the room expires or is dissolved.</p>
         <p><strong>4. Optional encryption</strong><br>Enable Deep Encryption and set a short password. Only people who know the password can read messages.</p>
       </div>
 
       <div id="notes" class="tab-content hidden space-y-4 text-sm text-gray-700">
-        <p class="text-red-600"><strong>Rooms are temporary.</strong> When the timer ends or the creator dissolves the room, all messages are permanently deleted. There is no history or recovery.</p>
-        <p>The invite link works only while the room exists. After it expires, the link becomes invalid.</p>
+        <p class="text-red-600"><strong>Rooms are temporary.</strong> When the timer ends or the creator dissolves the room, all messages are permanently deleted.</p>
+        <p>Invite links work only while the room exists. After it expires, they become invalid.</p>
         <p>Deep Encryption is client-side. If you lose the password, messages cannot be recovered.</p>
-        <p class="text-gray-500 text-xs mt-4">100% temporary. Nothing is stored after the room ends.</p>
+        <p class="text-gray-500 text-xs mt-4">Nothing is stored after the room ends.</p>
       </div>
     </div>
   </div>
 
   <script>
-    // Tab switching
     document.querySelectorAll('.tab-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         document.querySelectorAll('.tab-btn').forEach(b => {
@@ -108,30 +102,27 @@
         });
         btn.classList.add('text-blue-600', 'border-b-2', 'border-blue-600');
         btn.classList.remove('text-gray-500');
-
         document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
         document.getElementById(btn.dataset.tab).classList.remove('hidden');
       });
     });
 
-    // Show password field
     document.getElementById('deepEncrypt').addEventListener('change', (e) => {
       document.getElementById('passwordSection').classList.toggle('hidden', !e.target.checked);
     });
 
-    // Create room
     document.getElementById('createForm').addEventListener('submit', async (e) => {
       e.preventDefault();
 
-      const maxParticipants = document.getElementById('maxParticipants').value;
-      const duration = document.getElementById('duration').value;
-      const nameCategory = document.getElementById('nameCategory').value;
-      const myName = document.getElementById('myName').value;
+      const maxPeople = Number(document.getElementById('maxPeople').value);
+      const hours = Number(document.getElementById('hours').value);
+      const category = document.getElementById('category').value;
+      const creatorName = document.getElementById('creatorName').value;
       const deepEncrypt = document.getElementById('deepEncrypt').checked;
       const password = deepEncrypt ? document.getElementById('password').value.trim() : '';
 
-      if (deepEncrypt && password.length !== 5) {
-        alert('Password must be exactly 5 characters');
+      if (deepEncrypt && !password) {
+        alert('Please enter a password');
         return;
       }
 
@@ -140,22 +131,23 @@
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            maxParticipants: Number(maxParticipants),
-            duration: Number(duration),
-            nameCategory,
-            name: myName,
+            maxPeople,
+            hours,
+            category,
+            creatorName,
+            deepEncrypt,
             password: password || null
           })
         });
 
         const data = await res.json();
 
-        if (data.error) {
-          alert(data.error);
+        if (!res.ok || data.error) {
+          alert(data.error || 'Failed to create room');
           return;
         }
 
-        window.location.href = `/chat/room/${data.roomId}?creator=1&name=${encodeURIComponent(myName)}`;
+        window.location.href = `/chat/room/${data.roomId}?creator=1&name=${encodeURIComponent(creatorName)}`;
       } catch (err) {
         alert('Failed to create room');
       }
