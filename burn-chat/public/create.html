@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Create Chat Room - ToolNest</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center p-4">
+  <div class="bg-white rounded-xl shadow-lg p-8 w-full max-w-md">
+    <h1 class="text-2xl font-bold text-center mb-6">Create Burn-After-Reading Chat</h1>
+
+    <form id="createForm" class="space-y-5">
+      <div>
+        <label class="block text-sm font-medium mb-1">Max Participants (including you)</label>
+        <select name="maxPeople" class="w-full border rounded px-3 py-2" required>
+          <option value="2">2 people</option>
+          <option value="3">3 people</option>
+          <option value="5" selected>5 people</option>
+          <option value="8">8 people</option>
+          <option value="10">10 people</option>
+        </select>
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium mb-1">Duration</label>
+        <select name="hours" class="w-full border rounded px-3 py-2" required>
+          <option value="1">1 hour</option>
+          <option value="2" selected>2 hours</option>
+          <option value="5">5 hours</option>
+        </select>
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium mb-1">Name Category</label>
+        <select name="category" id="category" class="w-full border rounded px-3 py-2" required>
+          <option value="animal">Animals</option>
+          <option value="fruit">Fruits</option>
+          <option value="vegetable">Vegetables</option>
+        </select>
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium mb-1">Your Name</label>
+        <select name="creatorName" id="creatorName" class="w-full border rounded px-3 py-2" required></select>
+      </div>
+
+      <div class="flex items-center">
+        <input type="checkbox" name="deepEncrypt" id="deepEncrypt" class="mr-2">
+        <label for="deepEncrypt" class="text-sm">Enable Deep Encryption (password required)</label>
+      </div>
+
+      <div id="passwordBox" class="hidden">
+        <label class="block text-sm font-medium mb-1">Password (max 5 characters)</label>
+        <input type="text" name="password" maxlength="5" class="w-full border rounded px-3 py-2" placeholder="Enter password">
+      </div>
+
+      <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700">
+        Create & Enter
+      </button>
+    </form>
+  </div>
+
+  <script>
+    const namePools = {
+      animal: ['Lion', 'Tiger', 'Bear', 'Wolf', 'Fox', 'Deer', 'Eagle', 'Owl', 'Rabbit', 'Panda', 'Koala', 'Dolphin'],
+      fruit: ['Apple', 'Banana', 'Orange', 'Grape', 'Mango', 'Peach', 'Cherry', 'Lemon', 'Kiwi', 'Melon', 'Pear', 'Plum'],
+      vegetable: ['Carrot', 'Potato', 'Tomato', 'Onion', 'Cabbage', 'Broccoli', 'Spinach', 'Pepper', 'Corn', 'Bean', 'Pea', 'Radish']
+    };
+
+    const categorySelect = document.getElementById('category');
+    const nameSelect = document.getElementById('creatorName');
+
+    function updateNames() {
+      const cat = categorySelect.value;
+      nameSelect.innerHTML = namePools[cat].map(n => `<option value="${n}">${n}</option>`).join('');
+    }
+    categorySelect.addEventListener('change', updateNames);
+    updateNames();
+
+    document.getElementById('deepEncrypt').addEventListener('change', (e) => {
+      document.getElementById('passwordBox').classList.toggle('hidden', !e.target.checked);
+    });
+
+    document.getElementById('createForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const form = new FormData(e.target);
+      const data = {
+        maxPeople: form.get('maxPeople'),
+        hours: form.get('hours'),
+        category: form.get('category'),
+        creatorName: form.get('creatorName'),
+        deepEncrypt: form.get('deepEncrypt') === 'on',
+        password: form.get('password') || ''
+      };
+
+      const res = await fetch('/api/create-room', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+      const result = await res.json();
+
+      if (result.error) {
+        alert(result.error);
+        return;
+      }
+
+      // Creator enters directly
+      window.location.href = `/room/${result.roomId}?creator=1&name=${encodeURIComponent(data.creatorName)}`;
+    });
+  </script>
+</body>
+</html>
