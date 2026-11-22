@@ -363,6 +363,48 @@ app.get('/image-metadata', requireLogin, (req, res) => {
   res.render('image-metadata');
 });
 
+// File Transfer - Create Room Page
+app.get('/file-transfer', requireLogin, (req, res) => {
+  res.render('file-transfer');
+});
+
+// File Transfer - Create Room
+app.post('/file-transfer/create', requireLogin, (req, res) => {
+  const { maxParticipants, duration, encryption } = req.body;
+  
+  // Generate unique room ID
+  const roomId = Math.random().toString(36).substring(2, 10);
+  const expiresAt = Date.now() + (parseInt(duration) * 60 * 60 * 1000);
+  
+  // Store room info in memory (or database later)
+  // For now, just pass to the room page
+  const inviteLink = `${req.protocol}://${req.get('host')}/file-room/${roomId}`;
+  
+  res.render('file-room', { 
+    inviteLink,
+    roomId,
+    maxParticipants,
+    duration,
+    encryption: encryption === 'on'
+  });
+});
+
+// File Transfer - Join Room
+app.get('/file-room/:roomId', requireLogin, (req, res) => {
+  const { roomId } = req.params;
+  const inviteLink = `${req.protocol}://${req.get('host')}/file-room/${roomId}`;
+  
+  res.render('file-room', { 
+    inviteLink,
+    roomId,
+    maxParticipants: 5,
+    duration: 2,
+    encryption: false
+  });
+});
+
+
+
 app.get('/word-counter', (req, res) => res.render('word-counter'));
 app.get('/case-converter', (req, res) => {
   try {
