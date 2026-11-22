@@ -11,6 +11,9 @@ const io = new Server(server, {
 });
 
 app.use(express.static(path.join(__dirname, 'public')));
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'create.html'));
+});
 app.use(express.json());
 
 // 内存房间存储
