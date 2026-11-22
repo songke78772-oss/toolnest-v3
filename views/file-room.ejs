@@ -82,7 +82,7 @@
       
       if (data.type === 'peer-joined' && isHost) {
         document.getElementById('uploadSection').classList.remove('hidden');
-        log('Guest joined - Ready to send');
+        log('Guest joined - Establishing connection...');
         await createPeerConnection();
       }
 
@@ -92,6 +92,8 @@
     };
 
     async function createPeerConnection() {
+      if (pc) return;
+      
       pc = new RTCPeerConnection({ 
         iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] 
       });
@@ -124,6 +126,7 @@
           roomId, 
           payload: { offer } 
         }));
+        log('Waiting for guest to accept...');
       }
     }
 
@@ -143,10 +146,12 @@
             roomId, 
             payload: { answer } 
           }));
+          log('Connection accepted');
         }
 
         if (payload.answer) {
           await pc.setRemoteDescription(new RTCSessionDescription(payload.answer));
+          log('Peer connected');
         }
 
         if (payload.candidate) {
@@ -154,6 +159,7 @@
         }
       } catch (err) {
         console.error('Signal error:', err);
+        log('Connection error');
       }
     }
 
@@ -161,10 +167,12 @@
       channel.binaryType = 'arraybuffer';
       
       channel.onopen = () => {
-        log('P2P Connected');
+        log('P2P Connected - Ready');
         if (!isHost) {
-          document.getElementById('startReceive').classList.remove('hidden');
-          document.getElementById('guestStatus').textContent = 'Connected. Waiting for file...';
+          const btn = document.getElementById('startReceive');
+          if (btn) btn.classList.remove('hidden');
+          const guestStatus = document.getElementById('guestStatus');
+          if (guestStatus) guestStatus.textContent = 'Connected. Waiting for file...';
         }
       };
 
@@ -184,7 +192,9 @@
             const a = document.createElement('a');
             a.href = url;
             a.download = receivingFile.name;
+            document.body.appendChild(a);
             a.click();
+            document.body.removeChild(a);
             URL.revokeObjectURL(url);
             log('File received');
             receivingFile = null;
@@ -192,20 +202,48 @@
           }
         }
       };
+
+      channel.onerror = (err) => {
+        console.error('DataChannel error:', err);
+        log('Transfer error');
+      };
     }
 
     if (isHost) {
-      document.getElementById('fileInput').addEventListener('change', async (e) => {
-        const files = Array.from(e.target.files);
-        if (!dataChannel || dataChannel.readyState !== 'open') {
-          alert('Connection not ready. Please wait.');
-          return;
-        }
-        
-        for (const file of files) {
-          await sendFile(file);
-        }
-      });
+      const fileInput = document.getElementById('fileInput');
+      if (fileInput) {
+        fileInput.addEventListener('change', async (e) => {
+          const files = Array.from(e.target.files);
+          if (files.length === 0) return;
+
+          // 等待 DataChannel 打开
+          if (!dataChannel || dataChannel.readyState !== 'open') {
+            log('Waiting for connection...');
+            await new Promise(resolve => {
+              const check = setInterval(() => {
+                if (dataChannel && dataChannel.readyState === 'open') {
+                  clearInterval(check);
+                  resolve();
+                }
+              }, 300);
+              setTimeout(() => {
+                clearInterval(check);
+                resolve();
+              }, 15000);
+            });
+          }
+
+          if (!dataChannel || dataChannel.readyState !== 'open') {
+            alert('Connection not ready. Please refresh both pages and try again.');
+            return;
+          }
+          
+          for (const file of files) {
+            await sendFile(file);
+          }
+          fileInput.value = '';
+        });
+      }
     }
 
     async function sendFile(file) {
@@ -215,7 +253,7 @@
       const list = document.getElementById('fileList');
       const div = document.createElement('div');
       div.className = 'bg-gray-50 p-3 rounded text-sm';
-      div.textContent = `Sending: ${file.name}`;
+      div.textContent = `Sending: ${file.name}...`;
       list.appendChild(div);
 
       dataChannel.send(JSON.stringify({
@@ -230,20 +268,28 @@
         const end = Math.min(start + chunkSize, file.size);
         const chunk = file.slice(start, end);
         const buffer = await chunk.arrayBuffer();
-        dataChannel.send(buffer);
         
-        // 小延迟避免阻塞
-        await new Promise(r => setTimeout(r, 5));
+        // 等待 buffer 有空间
+        while (dataChannel.bufferedAmount > 1024 * 1024) {
+          await new Promise(r => setTimeout(r, 50));
+        }
+        
+        dataChannel.send(buffer);
       }
       
       div.textContent = `Sent: ${file.name}`;
+      log('File sent');
     }
 
     if (!isHost) {
-      document.getElementById('startReceive').addEventListener('click', () => {
-        document.getElementById('guestStatus').textContent = 'Ready to receive';
-        document.getElementById('startReceive').classList.add('hidden');
-      });
+      const btn = document.getElementById('startReceive');
+      if (btn) {
+        btn.addEventListener('click', () => {
+          const guestStatus = document.getElementById('guestStatus');
+          if (guestStatus) guestStatus.textContent = 'Ready to receive files';
+          btn.classList.add('hidden');
+        });
+      }
     }
   </script>
 </body>
