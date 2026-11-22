@@ -209,26 +209,153 @@
     }
   });
 
-  function generateDecryptHtml(originalName, threshold) {
+    function generateDecryptHtml(originalName, threshold) {
     return `<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Decrypt File</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Decrypt File - Secure Archive</title>
 <style>
-body { font-family: system-ui, sans-serif; max-width: 600px; margin: 40px auto; padding: 20px; }
-input, button { margin: 8px 0; padding: 8px; display: block; }
-button { background: #2563eb; color: white; border: none; border-radius: 4px; cursor: pointer; }
-#status { margin-top: 12px; color: #555; }
+* { box-sizing: border-box; }
+body {
+  font-family: system-ui, -apple-system, sans-serif;
+  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+  min-height: 100vh;
+  margin: 0;
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.container {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+  max-width: 520px;
+  width: 100%;
+  padding: 32px;
+}
+.logo {
+  text-align: center;
+  margin-bottom: 8px;
+}
+.logo span {
+  font-size: 28px;
+  font-weight: 700;
+  color: #2563eb;
+}
+h2 {
+  text-align: center;
+  margin: 0 0 8px 0;
+  color: #1e293b;
+}
+.subtitle {
+  text-align: center;
+  color: #64748b;
+  font-size: 14px;
+  margin-bottom: 24px;
+}
+.steps {
+  background: #f8fafc;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 20px;
+  font-size: 13px;
+  color: #475569;
+}
+.steps strong { color: #1e293b; }
+.steps ol { margin: 8px 0 0 0; padding-left: 20px; }
+.steps li { margin-bottom: 4px; }
+label {
+  display: block;
+  font-size: 14px;
+  font-weight: 500;
+  color: #334155;
+  margin-bottom: 6px;
+}
+input[type="file"] {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  font-size: 14px;
+}
+button {
+  width: 100%;
+  background: #2563eb;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 12px;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+button:hover { background: #1d4ed8; }
+#status {
+  margin-top: 16px;
+  text-align: center;
+  font-size: 14px;
+  color: #64748b;
+  min-height: 20px;
+}
+.footer {
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid #e2e8f0;
+  text-align: center;
+  font-size: 12px;
+  color: #94a3b8;
+}
+.footer a {
+  color: #2563eb;
+  text-decoration: none;
+}
+.footer a:hover { text-decoration: underline; }
+.badge {
+  display: inline-block;
+  background: #dbeafe;
+  color: #1d4ed8;
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  margin-left: 6px;
+}
 </style>
 </head>
 <body>
-<h2>Decrypt File</h2>
-<p>Upload the .enc file and at least ${threshold} key files.</p>
-<input type="file" id="encFile" accept=".enc">
-<input type="file" id="keyFiles" accept=".key" multiple>
-<button id="decryptBtn">Decrypt</button>
-<div id="status"></div>
+<div class="container">
+  <div class="logo"><span>🔐 Secure Archive</span></div>
+  <h2>Decrypt Your File</h2>
+  <p class="subtitle">Works offline. Your files never leave this browser.</p>
+
+  <div class="steps">
+    <strong>How to decrypt:</strong>
+    <ol>
+      <li>Select the encrypted file (.enc)</li>
+      <li>Select at least ${threshold} key files (.key)</li>
+      <li>Click Decrypt — the original file will download</li>
+    </ol>
+  </div>
+
+  <label>Encrypted file (.enc)</label>
+  <input type="file" id="encFile" accept=".enc">
+
+  <label>Key files (.key) — need at least ${threshold}</label>
+  <input type="file" id="keyFiles" accept=".key" multiple>
+
+  <button id="decryptBtn">Decrypt</button>
+  <div id="status"></div>
+
+  <div class="footer">
+    Created with <a href="https://protoolnest.com" target="_blank">ToolNest</a>
+    <span class="badge">Secure Archive</span><br>
+    More privacy-focused tools at protoolnest.com
+  </div>
+</div>
 <script>
 function gfMul(a, b) {
   let p = 0;
@@ -274,10 +401,12 @@ document.getElementById('decryptBtn').onclick = async () => {
   const encFile = document.getElementById('encFile').files[0];
   const keyFiles = document.getElementById('keyFiles').files;
   if (!encFile || keyFiles.length < ${threshold}) {
-    status.textContent = 'Need at least ${threshold} key files.';
+    status.textContent = 'Please select the .enc file and at least ${threshold} key files.';
+    status.style.color = '#dc2626';
     return;
   }
   status.textContent = 'Decrypting...';
+  status.style.color = '#64748b';
   try {
     const encBuf = await encFile.arrayBuffer();
     const iv = new Uint8Array(encBuf.slice(0, 12));
@@ -293,9 +422,11 @@ document.getElementById('decryptBtn').onclick = async () => {
     a.href = URL.createObjectURL(new Blob([decrypted]));
     a.download = ${JSON.stringify(originalName)};
     a.click();
-    status.textContent = 'Decrypted successfully.';
+    status.textContent = '✓ Decrypted successfully!';
+    status.style.color = '#16a34a';
   } catch (e) {
-    status.textContent = 'Decryption failed. Check that you have enough valid key files.';
+    status.textContent = 'Decryption failed. Make sure you have enough valid key files.';
+    status.style.color = '#dc2626';
   }
 };
 <\/script>
