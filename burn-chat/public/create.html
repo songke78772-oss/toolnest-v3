@@ -119,11 +119,46 @@
       document.getElementById('passwordSection').classList.toggle('hidden', !e.target.checked);
     });
 
-    // Form submit (keep your existing create logic)
+    // Create room
     document.getElementById('createForm').addEventListener('submit', async (e) => {
       e.preventDefault();
-      // 这里保留你原来创建房间的 fetch 代码
-      alert('Keep your original create room logic here');
+
+      const maxParticipants = document.getElementById('maxParticipants').value;
+      const duration = document.getElementById('duration').value;
+      const nameCategory = document.getElementById('nameCategory').value;
+      const myName = document.getElementById('myName').value;
+      const deepEncrypt = document.getElementById('deepEncrypt').checked;
+      const password = deepEncrypt ? document.getElementById('password').value.trim() : '';
+
+      if (deepEncrypt && password.length !== 5) {
+        alert('Password must be exactly 5 characters');
+        return;
+      }
+
+      try {
+        const res = await fetch('/chat/api/create', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            maxParticipants: Number(maxParticipants),
+            duration: Number(duration),
+            nameCategory,
+            name: myName,
+            password: password || null
+          })
+        });
+
+        const data = await res.json();
+
+        if (data.error) {
+          alert(data.error);
+          return;
+        }
+
+        window.location.href = `/chat/room/${data.roomId}?creator=1&name=${encodeURIComponent(myName)}`;
+      } catch (err) {
+        alert('Failed to create room');
+      }
     });
   </script>
 </body>
