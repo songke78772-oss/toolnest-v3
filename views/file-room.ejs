@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Secure File Transfer Room</title>
+  <title>File Transfer Room</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-50 min-h-screen p-4">
@@ -34,8 +34,7 @@
         </div>
       <% } else { %>
         <div class="text-center py-8">
-          <p class="text-gray-600 mb-4" id="guestStatus">Waiting for host...</p>
-          <button id="startReceive" class="bg-green-600 text-white px-6 py-2 rounded hidden hover:bg-green-700">Start Receiving</button>
+          <p class="text-gray-600" id="guestStatus">Waiting for host...</p>
         </div>
       <% } %>
 
@@ -56,20 +55,20 @@
     
     let pc = null;
     let dataChannel = null;
+    let iceCandidates = [];
     let receivingFile = null;
     let receivedChunks = [];
 
     function copyLink() {
-      const input = document.getElementById('inviteLink');
-      input.select();
+      document.getElementById('inviteLink').select();
       document.execCommand('copy');
       alert('Copied');
     }
 
     function log(msg) {
       console.log(msg);
-      const status = document.getElementById('statusText');
-      if (status) status.textContent = msg;
+      const el = document.getElementById('statusText');
+      if (el) el.textContent = msg;
     }
 
     ws.onopen = () => {
@@ -77,13 +76,13 @@
       log('Connected');
     };
 
-    ws.onmessage = async (event) => {
-      const data = JSON.parse(event.data);
+    ws.onmessage = async (e) => {
+      const data = JSON.parse(e.data);
       
       if (data.type === 'peer-joined' && isHost) {
         document.getElementById('uploadSection').classList.remove('hidden');
-        log('Guest joined - Establishing connection...');
-        await createPeerConnection();
+        log('Guest joined - Starting P2P...');
+        await startAsHost();
       }
 
       if (data.type === 'signal') {
@@ -91,75 +90,95 @@
       }
     };
 
-    async function createPeerConnection() {
-      if (pc) return;
-      
-      pc = new RTCPeerConnection({ 
-        iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] 
+    async function startAsHost() {
+      pc = new RTCPeerConnection({
+        iceServers: [
+          { urls: 'stun:stun.l.google.com:19302' },
+          { urls: 'stun:stun1.l.google.com:19302' }
+        ]
       });
 
-      if (isHost) {
-        dataChannel = pc.createDataChannel('fileTransfer');
-        setupDataChannel(dataChannel);
-      } else {
-        pc.ondatachannel = (e) => {
-          dataChannel = e.channel;
-          setupDataChannel(dataChannel);
-        };
-      }
+      dataChannel = pc.createDataChannel('files', { ordered: true });
+      setupDataChannel(dataChannel);
 
       pc.onicecandidate = (e) => {
         if (e.candidate) {
-          ws.send(JSON.stringify({ 
-            type: 'signal', 
-            roomId, 
-            payload: { candidate: e.candidate } 
+          ws.send(JSON.stringify({
+            type: 'signal',
+            roomId,
+            payload: { candidate: e.candidate }
           }));
         }
       };
 
-      if (isHost) {
-        const offer = await pc.createOffer();
-        await pc.setLocalDescription(offer);
-        ws.send(JSON.stringify({ 
-          type: 'signal', 
-          roomId, 
-          payload: { offer } 
-        }));
-        log('Waiting for guest to accept...');
-      }
+      pc.oniceconnectionstatechange = () => {
+        log('ICE: ' + pc.iceConnectionState);
+      };
+
+      const offer = await pc.createOffer();
+      await pc.setLocalDescription(offer);
+      
+      ws.send(JSON.stringify({
+        type: 'signal',
+        roomId,
+        payload: { offer: pc.localDescription }
+      }));
+      
+      log('Offer sent');
     }
 
     async function handleSignal(payload) {
-      if (!pc && !isHost) {
-        await createPeerConnection();
+      if (payload.offer && !isHost) {
+        pc = new RTCPeerConnection({
+          iceServers: [
+            { urls: 'stun:stun.l.google.com:19302' },
+            { urls: 'stun:stun1.l.google.com:19302' }
+          ]
+        });
+
+        pc.ondatachannel = (e) => {
+          dataChannel = e.channel;
+          setupDataChannel(dataChannel);
+        };
+
+        pc.onicecandidate = (e) => {
+          if (e.candidate) {
+            ws.send(JSON.stringify({
+              type: 'signal',
+              roomId,
+              payload: { candidate: e.candidate }
+            }));
+          }
+        };
+
+        pc.oniceconnectionstatechange = () => {
+          log('ICE: ' + pc.iceConnectionState);
+        };
+
+        await pc.setRemoteDescription(new RTCSessionDescription(payload.offer));
+        const answer = await pc.createAnswer();
+        await pc.setLocalDescription(answer);
+        
+        ws.send(JSON.stringify({
+          type: 'signal',
+          roomId,
+          payload: { answer: pc.localDescription }
+        }));
+        
+        log('Answer sent');
       }
-      if (!pc) return;
 
-      try {
-        if (payload.offer) {
-          await pc.setRemoteDescription(new RTCSessionDescription(payload.offer));
-          const answer = await pc.createAnswer();
-          await pc.setLocalDescription(answer);
-          ws.send(JSON.stringify({ 
-            type: 'signal', 
-            roomId, 
-            payload: { answer } 
-          }));
-          log('Connection accepted');
-        }
+      if (payload.answer && isHost && pc) {
+        await pc.setRemoteDescription(new RTCSessionDescription(payload.answer));
+        log('Answer received');
+      }
 
-        if (payload.answer) {
-          await pc.setRemoteDescription(new RTCSessionDescription(payload.answer));
-          log('Peer connected');
-        }
-
-        if (payload.candidate) {
+      if (payload.candidate && pc) {
+        try {
           await pc.addIceCandidate(new RTCIceCandidate(payload.candidate));
+        } catch (err) {
+          console.warn('ICE candidate error:', err);
         }
-      } catch (err) {
-        console.error('Signal error:', err);
-        log('Connection error');
       }
     }
 
@@ -167,22 +186,23 @@
       channel.binaryType = 'arraybuffer';
       
       channel.onopen = () => {
-        log('P2P Connected - Ready');
+        log('P2P Ready');
         if (!isHost) {
-          const btn = document.getElementById('startReceive');
-          if (btn) btn.classList.remove('hidden');
-          const guestStatus = document.getElementById('guestStatus');
-          if (guestStatus) guestStatus.textContent = 'Connected. Waiting for file...';
+          const el = document.getElementById('guestStatus');
+          if (el) el.textContent = 'Connected. Waiting for files...';
         }
       };
+
+      channel.onclose = () => log('Channel closed');
+      channel.onerror = (e) => console.error('Channel error:', e);
 
       channel.onmessage = (e) => {
         if (typeof e.data === 'string') {
           const msg = JSON.parse(e.data);
           if (msg.type === 'file-meta') {
-            receivingFile = msg;
+            receivingFile = { name: msg.name, size: msg.size, chunks: msg.chunks };
             receivedChunks = [];
-            log(`Receiving: ${msg.name}`);
+            log('Receiving: ' + msg.name);
           }
         } else {
           receivedChunks.push(e.data);
@@ -192,104 +212,58 @@
             const a = document.createElement('a');
             a.href = url;
             a.download = receivingFile.name;
-            document.body.appendChild(a);
             a.click();
-            document.body.removeChild(a);
             URL.revokeObjectURL(url);
-            log('File received');
+            log('Done: ' + receivingFile.name);
             receivingFile = null;
             receivedChunks = [];
           }
         }
       };
-
-      channel.onerror = (err) => {
-        console.error('DataChannel error:', err);
-        log('Transfer error');
-      };
     }
 
     if (isHost) {
-      const fileInput = document.getElementById('fileInput');
-      if (fileInput) {
-        fileInput.addEventListener('change', async (e) => {
-          const files = Array.from(e.target.files);
-          if (files.length === 0) return;
+      document.getElementById('fileInput').addEventListener('change', async (e) => {
+        if (!dataChannel || dataChannel.readyState !== 'open') {
+          alert('P2P not ready. Wait for "P2P Ready" status.');
+          return;
+        }
 
-          // 等待 DataChannel 打开
-          if (!dataChannel || dataChannel.readyState !== 'open') {
-            log('Waiting for connection...');
-            await new Promise(resolve => {
-              const check = setInterval(() => {
-                if (dataChannel && dataChannel.readyState === 'open') {
-                  clearInterval(check);
-                  resolve();
-                }
-              }, 300);
-              setTimeout(() => {
-                clearInterval(check);
-                resolve();
-              }, 15000);
-            });
-          }
-
-          if (!dataChannel || dataChannel.readyState !== 'open') {
-            alert('Connection not ready. Please refresh both pages and try again.');
-            return;
-          }
-          
-          for (const file of files) {
-            await sendFile(file);
-          }
-          fileInput.value = '';
-        });
-      }
+        for (const file of e.target.files) {
+          await sendFile(file);
+        }
+        e.target.value = '';
+      });
     }
 
     async function sendFile(file) {
       const chunkSize = 16384;
-      const chunks = Math.ceil(file.size / chunkSize);
+      const totalChunks = Math.ceil(file.size / chunkSize);
       
-      const list = document.getElementById('fileList');
       const div = document.createElement('div');
       div.className = 'bg-gray-50 p-3 rounded text-sm';
-      div.textContent = `Sending: ${file.name}...`;
-      list.appendChild(div);
+      div.textContent = 'Sending: ' + file.name;
+      document.getElementById('fileList').appendChild(div);
 
       dataChannel.send(JSON.stringify({
         type: 'file-meta',
         name: file.name,
         size: file.size,
-        chunks: chunks
+        chunks: totalChunks
       }));
 
-      for (let i = 0; i < chunks; i++) {
+      for (let i = 0; i < totalChunks; i++) {
         const start = i * chunkSize;
         const end = Math.min(start + chunkSize, file.size);
-        const chunk = file.slice(start, end);
-        const buffer = await chunk.arrayBuffer();
+        const buffer = await file.slice(start, end).arrayBuffer();
         
-        // 等待 buffer 有空间
-        while (dataChannel.bufferedAmount > 1024 * 1024) {
-          await new Promise(r => setTimeout(r, 50));
+        while (dataChannel.bufferedAmount > 512 * 1024) {
+          await new Promise(r => setTimeout(r, 10));
         }
-        
         dataChannel.send(buffer);
       }
-      
-      div.textContent = `Sent: ${file.name}`;
-      log('File sent');
-    }
 
-    if (!isHost) {
-      const btn = document.getElementById('startReceive');
-      if (btn) {
-        btn.addEventListener('click', () => {
-          const guestStatus = document.getElementById('guestStatus');
-          if (guestStatus) guestStatus.textContent = 'Ready to receive files';
-          btn.classList.add('hidden');
-        });
-      }
+      div.textContent = 'Sent: ' + file.name;
     }
   </script>
 </body>
