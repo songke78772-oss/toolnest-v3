@@ -373,7 +373,7 @@ app.post('/file-transfer/create', requireLogin, (req, res) => {
   const { maxParticipants, duration, encryption } = req.body;
   
   const roomId = Math.random().toString(36).substring(2, 10);
-  const inviteLink = `${req.protocol}://${req.get('host')}/file-room/${roomId}`;
+  const inviteLink = `https://${req.get('host')}/file-room/${roomId}`;
   
   res.render('file-room', { 
     inviteLink,
@@ -388,7 +388,7 @@ app.post('/file-transfer/create', requireLogin, (req, res) => {
 // File Transfer - Join Room (不需要登录)
 app.get('/file-room/:roomId', (req, res) => {
   const { roomId } = req.params;
-  const inviteLink = `${req.protocol}://${req.get('host')}/file-room/${roomId}`;
+  const inviteLink = `https://${req.get('host')}/file-room/${roomId}`;
   
   res.render('file-room', { 
     inviteLink,
