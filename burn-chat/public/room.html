@@ -35,7 +35,7 @@
   <script>
     const socket = io({ path: '/chat/socket.io' });
     const params = new URLSearchParams(window.location.search);
-    const roomId = window.location.pathname.split('/')[2];
+    const roomId = window.location.pathname.split('/')[3];
     const isCreator = params.get('creator') === '1';
     const creatorName = params.get('name') || '';
 
