@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Image Metadata Remover - ToolNest</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen p-4">
+  <div class="max-w-2xl mx-auto">
+    <a href="/" class="inline-flex items-center text-blue-600 hover:underline mb-6">
+      ← Back to Tools
+    </a>
+
+    <div class="bg-white rounded-xl shadow-lg p-8">
+      <h1 class="text-2xl font-bold text-center mb-2">Image Metadata Remover</h1>
+      <p class="text-center text-gray-500 text-sm mb-8">Remove EXIF and other metadata from images. Everything stays in your browser.</p>
+
+      <div class="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center hover:border-blue-400 transition" id="dropZone">
+        <input type="file" id="fileInput" accept="image/*" class="hidden">
+        <p class="text-gray-600 mb-4">Drag & drop image here, or</p>
+        <button type="button" onclick="document.getElementById('fileInput').click()" class="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700">
+          Choose Image
+        </button>
+        <p class="text-xs text-gray-400 mt-3">Supports JPG, PNG, WebP, GIF</p>
+      </div>
+
+      <div id="preview" class="hidden mt-6 text-center">
+        <img id="previewImg" class="max-h-64 mx-auto rounded shadow mb-4">
+        <p id="fileInfo" class="text-sm text-gray-500 mb-4"></p>
+        <button id="downloadBtn" class="bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700">
+          Download Clean Image
+        </button>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-xl shadow p-6 mt-6 text-sm text-gray-600">
+      <p class="font-medium text-gray-800 mb-2">How it works</p>
+      <ul class="list-disc list-inside space-y-1">
+        <li>Image is re-encoded in your browser</li>
+        <li>All EXIF, GPS, and other metadata are removed</li>
+        <li>No upload to any server</li>
+      </ul>
+    </div>
+  </div>
+
+  <script>
+    const dropZone = document.getElementById('dropZone');
+    const fileInput = document.getElementById('fileInput');
+    const preview = document.getElementById('preview');
+    const previewImg = document.getElementById('previewImg');
+    const fileInfo = document.getElementById('fileInfo');
+    const downloadBtn = document.getElementById('downloadBtn');
+
+    let cleanBlob = null;
+    let originalName = '';
+
+    function handleFile(file) {
+      if (!file.type.startsWith('image/')) {
+        alert('Please select an image file');
+        return;
+      }
+      originalName = file.name.replace(/\.[^/.]+$/, '') + '-clean.jpg';
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          canvas.width = img.width;
+          canvas.height = img.height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0);
+
+          canvas.toBlob((blob) => {
+            cleanBlob = blob;
+            previewImg.src = URL.createObjectURL(blob);
+            fileInfo.textContent = `${file.name} → ${originalName} (${(blob.size / 1024).toFixed(1)} KB)`;
+            preview.classList.remove('hidden');
+          }, 'image/jpeg', 0.92);
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    fileInput.addEventListener('change', (e) => {
+      if (e.target.files[0]) handleFile(e.target.files[0]);
+    });
+
+    dropZone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      dropZone.classList.add('border-blue-400', 'bg-blue-50');
+    });
+
+    dropZone.addEventListener('dragleave', () => {
+      dropZone.classList.remove('border-blue-400', 'bg-blue-50');
+    });
+
+    dropZone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dropZone.classList.remove('border-blue-400', 'bg-blue-50');
+      if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);
+    });
+
+    downloadBtn.addEventListener('click', () => {
+      if (!cleanBlob) return;
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(cleanBlob);
+      a.download = originalName;
+      a.click();
+    });
+  </script>
+</body>
+</html>
