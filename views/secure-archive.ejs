@@ -29,11 +29,12 @@
       <div class="grid grid-cols-2 gap-4 mb-4">
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-2">Total key shares</label>
-          <input type="number" id="keyCount" value="3" min="2" max="5" class="border rounded px-3 py-2 w-full">
+          <input type="number" id="keyCount" value="3" min="2" class="border rounded px-3 py-2 w-full">
+          <p class="text-xs text-gray-500 mt-1">Recommended: do not exceed 10 shares to reduce the risk of losing keys.</p>
         </div>
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-2">Minimum required</label>
-          <input type="number" id="threshold" value="2" min="2" max="5" class="border rounded px-3 py-2 w-full">
+          <input type="number" id="threshold" value="2" min="2" class="border rounded px-3 py-2 w-full">
           <p class="text-xs text-gray-500 mt-1">Any this many shares can decrypt</p>
         </div>
       </div>
@@ -75,16 +76,13 @@
   </div>
 
   <script>
-  // Shamir's Secret Sharing over GF(256)
-  const PRIME = 257; // Use 256 for bytes, but we work in GF(256) with irreducible polynomial
-
   function gfMul(a, b) {
     let p = 0;
     for (let i = 0; i < 8; i++) {
       if (b & 1) p ^= a;
       const hi = a & 0x80;
       a = (a << 1) & 0xff;
-      if (hi) a ^= 0x1b; // AES polynomial
+      if (hi) a ^= 0x1b;
       b >>= 1;
     }
     return p;
@@ -92,7 +90,6 @@
 
   function gfDiv(a, b) {
     if (b === 0) throw new Error('Division by zero');
-    // Find inverse of b
     let inv = 1;
     for (let i = 1; i < 256; i++) {
       if (gfMul(b, i) === 1) { inv = i; break; }
@@ -101,8 +98,7 @@
   }
 
   function shamirSplit(secret, n, k) {
-    // secret is Uint8Array(32), n shares, threshold k
-    const shares = Array.from({ length: n }, () => new Uint8Array(33)); // [x, ...32 bytes]
+    const shares = Array.from({ length: n }, () => new Uint8Array(33));
     for (let byteIdx = 0; byteIdx < 32; byteIdx++) {
       const coeffs = [secret[byteIdx]];
       for (let i = 1; i < k; i++) {
@@ -121,7 +117,6 @@
   }
 
   function shamirCombine(shares) {
-    // shares: array of Uint8Array(33) where [0]=x, [1..32]=y
     const k = shares.length;
     const secret = new Uint8Array(32);
     for (let byteIdx = 0; byteIdx < 32; byteIdx++) {
@@ -155,7 +150,6 @@
 
   keyCountInput.addEventListener('change', () => {
     const n = parseInt(keyCountInput.value) || 2;
-    thresholdInput.max = n;
     if (parseInt(thresholdInput.value) > n) thresholdInput.value = n;
   });
 
@@ -171,7 +165,7 @@
     const file = fileInput.files[0];
     if (!file) return;
 
-    const n = Math.min(5, Math.max(2, parseInt(keyCountInput.value) || 3));
+    const n = Math.max(2, parseInt(keyCountInput.value) || 3);
     const k = Math.min(n, Math.max(2, parseInt(thresholdInput.value) || 2));
 
     statusDiv.textContent = 'Encrypting...';
@@ -197,15 +191,12 @@
 
       const baseName = file.name.replace(/\.[^/.]+$/, '') || 'file';
 
-      // Download encrypted file
       downloadBlob(new Blob([iv, new Uint8Array(encrypted)]), baseName + '.enc');
 
-      // Download key shares
       shares.forEach((share, idx) => {
         downloadBlob(new Blob([share]), baseName + '-key-' + (idx + 1) + '.key');
       });
 
-      // Download decryptor
       const decryptHtml = generateDecryptHtml(file.name, k);
       downloadBlob(new Blob([decryptHtml], { type: 'text/html' }), 'decrypt.html');
 
