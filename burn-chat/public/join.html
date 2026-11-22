@@ -32,7 +32,7 @@
     const token = pathParts[3];
 
     async function tryJoin(password = '') {
-      const res = await fetch(`/api/join/${roomId}/${token}`, {
+      const res = await fetch(`/chat/api/join/${roomId}/${token}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ password })
