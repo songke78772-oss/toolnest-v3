@@ -14,40 +14,53 @@
         <span class="text-sm text-gray-500">Expires in <span id="timer">--:--</span></span>
       </div>
 
-      <div class="bg-gray-100 rounded-lg p-4 mb-4">
-        <p class="text-sm text-gray-600 mb-2">Invite Link (share with others):</p>
-        <div class="flex gap-2">
-          <input type="text" id="inviteLink" readonly class="flex-1 border rounded px-3 py-2 text-sm bg-white" value="<%= inviteLink %>">
-          <button onclick="copyLink()" class="bg-blue-600 text-white px-4 py-2 rounded text-sm hover:bg-blue-700">Copy</button>
+      <% if (isHost) { %>
+        <!-- Host View -->
+        <div class="bg-gray-100 rounded-lg p-4 mb-4">
+          <p class="text-sm text-gray-600 mb-2">Invite Link (share with others):</p>
+          <div class="flex gap-2">
+            <input type="text" id="inviteLink" readonly class="flex-1 border rounded px-3 py-2 text-sm bg-white" value="<%= inviteLink %>">
+            <button onclick="copyLink()" class="bg-blue-600 text-white px-4 py-2 rounded text-sm hover:bg-blue-700">Copy</button>
+          </div>
         </div>
-      </div>
 
-      <div class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center mb-4" id="dropZone">
-        <p class="text-gray-500">Drag & drop files here or</p>
-        <label class="mt-2 inline-block bg-blue-600 text-white px-4 py-2 rounded cursor-pointer hover:bg-blue-700">
-          Select Files
-          <input type="file" id="fileInput" multiple class="hidden">
-        </label>
-      </div>
+        <div class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center mb-4" id="dropZone">
+          <p class="text-gray-500">Drag & drop files here or</p>
+          <label class="mt-2 inline-block bg-blue-600 text-white px-4 py-2 rounded cursor-pointer hover:bg-blue-700">
+            Select Files
+            <input type="file" id="fileInput" multiple class="hidden">
+          </label>
+        </div>
+      <% } else { %>
+        <!-- Receiver View -->
+        <div class="text-center py-8">
+          <p class="text-gray-600 mb-4">Waiting for files from the host...</p>
+          <div class="text-4xl">📥</div>
+        </div>
+      <% } %>
 
       <div id="fileList" class="space-y-2"></div>
     </div>
 
     <div class="bg-white rounded-xl shadow-lg p-6">
       <h2 class="font-bold mb-3">Participants (<span id="participantCount">1</span>)</h2>
-      <div id="participants" class="text-sm text-gray-600">You (Host)</div>
+      <div id="participants" class="text-sm text-gray-600">
+        <%= isHost ? 'You (Host)' : 'You (Guest)' %>
+      </div>
     </div>
   </div>
 
   <script>
     function copyLink() {
       const input = document.getElementById('inviteLink');
-      input.select();
-      document.execCommand('copy');
-      alert('Link copied!');
+      if (input) {
+        input.select();
+        document.execCommand('copy');
+        alert('Link copied!');
+      }
     }
 
-    // Basic file selection UI (P2P logic will be added next)
+    <% if (isHost) { %>
     document.getElementById('fileInput').addEventListener('change', (e) => {
       const files = e.target.files;
       const list = document.getElementById('fileList');
@@ -59,6 +72,7 @@
         list.appendChild(div);
       }
     });
+    <% } %>
   </script>
 </body>
 </html>
