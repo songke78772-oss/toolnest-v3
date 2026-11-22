@@ -399,7 +399,44 @@ app.get('/file-room/:roomId', (req, res) => {
     isHost: false
   });
 });
+// ========== File Transfer File Handling ==========
+const roomUploadDir = path.join(__dirname, 'uploads', 'rooms');
+if (!fs.existsSync(roomUploadDir)) {
+  fs.mkdirSync(roomUploadDir, { recursive: true });
+}
 
+const roomStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const roomPath = path.join(roomUploadDir, req.body.roomId || 'temp');
+    if (!fs.existsSync(roomPath)) fs.mkdirSync(roomPath, { recursive: true });
+    cb(null, roomPath);
+  },
+  filename: (req, file, cb) => {
+    cb(null, file.originalname);
+  }
+});
+const roomUpload = multer({ storage: roomStorage });
+
+// Upload file to room
+app.post('/file-transfer/upload', roomUpload.single('file'), (req, res) => {
+  res.json({ success: true });
+});
+
+// List files in room
+app.get('/file-transfer/files/:roomId', (req, res) => {
+  const roomPath = path.join(roomUploadDir, req.params.roomId);
+  if (!fs.existsSync(roomPath)) return res.json({ files: [] });
+  
+  const files = fs.readdirSync(roomPath).map(name => ({ name }));
+  res.json({ files });
+});
+
+// Download file from room
+app.get('/file-transfer/download/:roomId/:filename', (req, res) => {
+  const filePath = path.join(roomUploadDir, req.params.roomId, req.params.filename);
+  if (!fs.existsSync(filePath)) return res.status(404).send('File not found');
+  res.download(filePath);
+});
 
 
 app.get('/word-counter', (req, res) => res.render('word-counter'));
